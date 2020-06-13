@@ -1,0 +1,43 @@
+name:                in-other-words
+version:             0.1.0.0
+synopsis:            Fast and unprecedently flexible extensible effect   system
+#description:
+homepage:            https://github.com/KingoftheHomeless/in-other-words#readme
+license:             BSD3
+author:              Love Waern
+maintainer:          combiner8761@gmail.com
+copyright:           BSD3
+category:            Web
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+  - transformers >= 0.5.6 && < 0.6
+  - mtl >= 2.2 && < 2.3
+  - monad-control >= 1.0 && < 1.1
+  - transformers-base >= 0.4.5 && < 0.5
+
+executables:
+  in-other-words:
+    source-dirs:      src
+    main:             Main.hs
+
+default-extensions:
+  - DataKinds
+  - DerivingVia
+  - UndecidableInstances
+  - ConstraintKinds
+  - FlexibleContexts
+  - GADTs
+  - LambdaCase
+  - FlexibleInstances
+  - MultiParamTypeClasses
+  - PolyKinds
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TypeApplications
+  - TypeOperators
+  - TypeFamilies
+  - QuantifiedConstraints

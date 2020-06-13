@@ -1,0 +1,60 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: e8a76d6364c35536f197cc0b3e70ab363b820cefdc4f75c81dda71c524057aaf
+
+name:           in-other-words
+version:        0.1.0.0
+synopsis:       Fast and unprecedently flexible extensible effect   system
+category:       Web
+homepage:       https://github.com/KingoftheHomeless/in-other-words#readme
+author:         Love Waern
+maintainer:     combiner8761@gmail.com
+copyright:      BSD3
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+executable in-other-words
+  main-is: Main.hs
+  other-modules:
+      Control.Effect
+      Control.Effect.Alt
+      Control.Effect.Carrier.Interpret
+      Control.Effect.Carrier.Reader
+      Control.Effect.Cofree
+      Control.Effect.Cont
+      Control.Effect.Error
+      Control.Effect.Internal
+      Control.Effect.Internal.Effly
+      Control.Effect.Internal.KnownList
+      Control.Effect.Internal.Membership
+      Control.Effect.Internal.Reflection
+      Control.Effect.Internal.Union
+      Control.Effect.Internal.Utils
+      Control.Effect.Reader
+      Control.Effect.Type.Alt
+      Control.Effect.Type.BaseControl
+      Control.Effect.Type.Embed
+      Control.Effect.Type.Error
+      Control.Effect.Type.Fail
+      Control.Effect.Type.Fix
+      Control.Effect.Type.Reader
+      Control.Effect.Type.State
+      Control.Effect.Union
+      Paths_in_other_words
+  hs-source-dirs:
+      src
+  default-extensions: DataKinds DerivingVia UndecidableInstances ConstraintKinds FlexibleContexts GADTs LambdaCase FlexibleInstances MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies QuantifiedConstraints
+  build-depends:
+      base >=4.7 && <5
+    , monad-control >=1.0 && <1.1
+    , mtl >=2.2 && <2.3
+    , transformers >=0.5.6 && <0.6
+    , transformers-base >=0.4.5 && <0.5
+  default-language: Haskell2010
