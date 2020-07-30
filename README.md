@@ -1,8 +1,10 @@
 # in-other-words
 
 ## Overview
-`in-other-words` is an effect system in the vein of `freer-simple`,
-`fused-effects`, `polysemy` and `eff`. It represents effects through data types,
+`in-other-words` is an effect system in the vein of [`freer-simple`](https://github.com/lexi-lambda/freer-simple),
+[`fused-effects`](https://github.com/fused-effects/fused-effects),
+[`polysemy`](https://github.com/polysemy-research/polysemy),
+and [`eff`](https://github.com/hasura/eff). It represents effects through data types,
 making it simple to define, use, and interpret them.
 `in-other-words`' hallmark feature is the novel approach it takes to support
 higher-order effects, making it significantly more powerful - and in some cases,
@@ -10,7 +12,7 @@ easier to use - than other effect libraries of its kind.
 
 If you're experienced with the mechanisms behind `freer-simple`,
 `fused-effects`, and `polysemy`, and would like to learn more about what makes
-`in-other-words` differ, see [this wiki page].
+`in-other-words` differ, see [this wiki page](TODO).
 
 Unfortunately, in its current state `in-other-words` is rather inaccessible.
 Ample documentation and guides are provided for the library, but inexperienced
@@ -128,10 +130,10 @@ runChallenge inputs =
 testChallenge :: Bool
 testChallenge =
     runChallenge ["4","-7", "i dunno", "7]
-  == Right ["What is 3 + 4?", Nope."
-           ,"What is 3 + 4?", Nope."
-           ,"What is 3 + 4?", Nope."
-           ,"What is 3 + 4?.", "Correct!"
+  == Right ["What is 3 + 4?", "Nope."
+           ,"What is 3 + 4?", "Nope."
+           ,"What is 3 + 4?", "Nope."
+           ,"What is 3 + 4?", "Correct!"
            ]
 
 -- Make a challenge to the user
@@ -170,14 +172,14 @@ profileTimingToIO = intepretSimple $ \case
 The examples above are somewhat disingeneuos; they cover only the simplest
 uses of the library. The library has a wide variety of features,
 and using them properly can get very complicated. Because of this,
-`in-other-words` offers a wiki with guides covering more advanced uses of the
-library. If you're interested in learning more about the library, or are
+[`in-other-words` offers a wiki with guides covering more advanced topics of the
+library.](TODO) If you're interested in learning more about the library, or are
 struggling with a feature you're having a diffult time with, I encourage you
 to check it out!
 
 
 ## Questions and errors
-The wiki has a page for common error messages.
+[The wiki has a page for common error messages.](TODO)
 If you run into any issues or strange error messages that you can't figure out
 from the wiki, feel free to make an issue about it. If not already covered, and
 if I can generalize the problem enough, then I'll expand the wiki to cover the
