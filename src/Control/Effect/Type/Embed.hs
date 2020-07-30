@@ -1,11 +1,6 @@
+{-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Type.Embed where
 
-import Control.Effect.Internal
-import Control.Effect.Internal.Utils
-
+-- | An effect for embedding actions of a base monad into the current one.
 newtype Embed b m a where
-  Embed :: b a -> Embed b m a
-
-embed :: Eff (Embed b) m => b a -> m a
-embed = send .# Embed
-{-# INLINE embed #-}
+  Embed :: { unEmbed :: b a } -> Embed b m a

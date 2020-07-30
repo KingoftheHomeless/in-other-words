@@ -4,12 +4,12 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e8a76d6364c35536f197cc0b3e70ab363b820cefdc4f75c81dda71c524057aaf
+-- hash: 42aabd0bbe2e2dfd86b03bc76f8efc5cccb5ad26755068a5eda973b0fddf57a3
 
 name:           in-other-words
 version:        0.1.0.0
-synopsis:       Fast and unprecedently flexible extensible effect   system
-category:       Web
+synopsis:       An extensible effect system as powerful as tagless final
+category:       Control
 homepage:       https://github.com/KingoftheHomeless/in-other-words#readme
 author:         Love Waern
 maintainer:     combiner8761@gmail.com
@@ -20,41 +20,107 @@ build-type:     Simple
 extra-source-files:
     README.md
 
-executable in-other-words
-  main-is: Main.hs
-  other-modules:
+library
+  exposed-modules:
       Control.Effect
       Control.Effect.Alt
-      Control.Effect.Carrier.Interpret
-      Control.Effect.Carrier.Reader
-      Control.Effect.Cofree
+      Control.Effect.AtomicState
+      Control.Effect.BaseControl
+      Control.Effect.Bracket
+      Control.Effect.Carrier
+      Control.Effect.Carrier.Internal.Compose
+      Control.Effect.Carrier.Internal.Interpret
+      Control.Effect.Carrier.Internal.Intro
+      Control.Effect.Carrier.Internal.Stepped
+      Control.Effect.Carrier.Stepped
+      Control.Effect.Conc
       Control.Effect.Cont
+      Control.Effect.Debug
+      Control.Effect.Embed
       Control.Effect.Error
+      Control.Effect.ErrorIO
+      Control.Effect.Exceptional
+      Control.Effect.Fail
+      Control.Effect.Fix
+      Control.Effect.Fresh
+      Control.Effect.Input
       Control.Effect.Internal
+      Control.Effect.Internal.BaseControl
+      Control.Effect.Internal.Cont
+      Control.Effect.Internal.Derive
       Control.Effect.Internal.Effly
+      Control.Effect.Internal.Error
+      Control.Effect.Internal.Itself
       Control.Effect.Internal.KnownList
       Control.Effect.Internal.Membership
+      Control.Effect.Internal.Newtype
+      Control.Effect.Internal.NonDet
+      Control.Effect.Internal.Optional
+      Control.Effect.Internal.Reader
       Control.Effect.Internal.Reflection
+      Control.Effect.Internal.Regional
+      Control.Effect.Internal.State
       Control.Effect.Internal.Union
+      Control.Effect.Internal.Unlift
       Control.Effect.Internal.Utils
+      Control.Effect.Internal.ViaAlg
+      Control.Effect.Internal.Writer
+      Control.Effect.Mask
+      Control.Effect.Newtype
+      Control.Effect.NonDet
+      Control.Effect.Optional
+      Control.Effect.Primitive
       Control.Effect.Reader
+      Control.Effect.Regional
+      Control.Effect.Select
+      Control.Effect.State
+      Control.Effect.Tagged
+      Control.Effect.Trace
       Control.Effect.Type.Alt
-      Control.Effect.Type.BaseControl
+      Control.Effect.Type.AtomicState
+      Control.Effect.Type.Bracket
+      Control.Effect.Type.Catch
+      Control.Effect.Type.Cont
+      Control.Effect.Type.Cull
+      Control.Effect.Type.Cut
       Control.Effect.Type.Embed
-      Control.Effect.Type.Error
+      Control.Effect.Type.ErrorIO
       Control.Effect.Type.Fail
       Control.Effect.Type.Fix
+      Control.Effect.Type.Input
+      Control.Effect.Type.Internal.BaseControl
+      Control.Effect.Type.Listen
+      Control.Effect.Type.Mask
+      Control.Effect.Type.NonDet
+      Control.Effect.Type.Optional
+      Control.Effect.Type.Pass
       Control.Effect.Type.Reader
+      Control.Effect.Type.Regional
+      Control.Effect.Type.Select
+      Control.Effect.Type.Split
       Control.Effect.Type.State
+      Control.Effect.Type.Tell
+      Control.Effect.Type.Throw
+      Control.Effect.Type.Unlift
       Control.Effect.Union
+      Control.Effect.Unlift
+      Control.Effect.Writer
+      Control.Monad.Trans.Free.Church.Alternate
+      Control.Monad.Trans.List.Church
+  other-modules:
       Paths_in_other_words
   hs-source-dirs:
       src
-  default-extensions: DataKinds DerivingVia UndecidableInstances ConstraintKinds FlexibleContexts GADTs LambdaCase FlexibleInstances MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies QuantifiedConstraints
+  default-extensions: BangPatterns ConstraintKinds DataKinds DerivingStrategies EmptyCase FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving LambdaCase PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies UndecidableInstances
+  ghc-options: -Wall -Wextra
   build-depends:
-      base >=4.7 && <5
+      async >=2.2 && <2.3
+    , base >=4.7 && <5
+    , exceptions >=0.10 && <0.11
     , monad-control >=1.0 && <1.1
     , mtl >=2.2 && <2.3
+    , stm >=2.5 && <2.6
+    , template-haskell >=2.15 && <2.17
     , transformers >=0.5.6 && <0.6
     , transformers-base >=0.4.5 && <0.5
   default-language: Haskell2010

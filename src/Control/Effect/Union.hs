@@ -1,43 +1,151 @@
-module Control.Effect.Union where
+{-# LANGUAGE DerivingVia #-}
+module Control.Effect.Union
+  ( -- * Effect
+    Union(..)
+  , ElemOf(..)
+
+    -- * Actions
+  , UnionizeC(UnionizeC)
+  , unionize
+
+  , UnionizeHeadC
+  , unionizeHead
+
+    -- * Interpretations
+  , UnionC(UnionC)
+  , runUnion
+
+    -- * Utilities
+  , inj
+  , decomp
+  , extract
+  , weaken
+  , absurdU
+  , absurdMember
+  , membership
+  ) where
 
 import Data.Coerce
 
-import Control.Effect.Internal
+import Control.Effect
+
+import Control.Effect.Carrier
+
 import Control.Effect.Internal.Utils
 import Control.Effect.Internal.Union
+import Control.Effect.Internal.Membership
 import Control.Effect.Internal.KnownList
 
-type UnionC b m = UnionC' b (StripPrefix b (Derivs m)) m
+-- For coercion purposes
+import Control.Monad.Trans.Identity
+import Control.Effect.Carrier.Internal.Compose
+import Control.Effect.Carrier.Internal.Intro
 
-newtype UnionC' (l :: [Effect]) (r :: [Effect]) m a = UnionC { unUnionC :: m a }
-  deriving (Functor, Applicative, Monad) via m
+
+newtype UnionC (l :: [Effect]) m a = UnionC { unUnionC :: m a }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b, MonadBaseControl b
+           )
+  deriving (MonadTrans, MonadTransControl) via IdentityT
 
 instance ( KnownList l
-         , Carrier m
-         , Derivs m ~ Append l r
-         ) => Carrier (UnionC' l r m) where
-  type (Derivs (UnionC' l r m)) = Union l ': r
-  type (Prims (UnionC' l r m)) = Prims m
+         , HeadEffs l m
+         )
+      => Carrier (UnionC l m) where
+  type Derivs (UnionC l m) = Union l ': StripPrefix l (Derivs m)
+  type Prims  (UnionC l m) = Prims m
 
-  algP = coerce (algP @m)
+  algPrims = coerce (algPrims @m)
+  {-# INLINE algPrims #-}
 
-  reformulate (n :: forall x. UnionC' l r m x -> z x) alg =
+  reformulate (n :: forall x. UnionC l m x -> z x) alg =
     let
-      algDerivs :: Algebra (Derivs m) z
-      algDerivs = reformulate @m (n .# UnionC) alg
+      algDerivs' :: Algebra (Derivs m) z
+      algDerivs' = reformulate @m (n .# UnionC) alg
     in
-      powerAlg (weakenAlgN (singList @l) algDerivs) $ \(Union pr e) ->
-        algDerivs (Union (lengthenMembership @r pr) e)
+      powerAlg (weakenAlgN (singList @l) algDerivs') $ \(Union pr e) ->
+        algDerivs' (Union (lengthenMembership @(StripPrefix l (Derivs m)) pr) e)
+  {-# INLINE reformulate #-}
 
-  algD =
+  algDerivs =
     let
-      algD' :: Algebra (Derivs m) (UnionC' l r m)
-      algD' = coerce (algD @m)
+      algD' :: Algebra (Derivs m) (UnionC l m)
+      algD' = coerce (algDerivs @m)
     in
       powerAlg (weakenAlgN (singList @l) algD') $ \(Union pr e) ->
-        algD' (Union (lengthenMembership @r pr) e)
+        algD' (Union (lengthenMembership @(StripPrefix l (Derivs m)) pr) e)
+  {-# INLINE algDerivs #-}
 
+-- | Run an @'Union' b@ effect by placing the effects of @b@ on top of the
+-- effect stack.
+--
+-- Transforms @(Union b ': 'Derivs' m, 'Prims' m)@
+-- to @(b ++ 'Derivs' m, 'Prims' m)
 runUnion :: forall b m a
-          . UnionC b m a
+          . ( HeadEffs b m
+            , KnownList b
+            )
+         => UnionC b m a
          -> m a
 runUnion = unUnionC
+{-# INLINE runUnion #-}
+
+-- Sends uses of effects in @b@ to a @'Union' b@ effect.
+--
+-- Transforms @(b ++ 'Derivs' m, 'Prims' m)@ to @('Derivs' m, 'Prims' m)@
+unionize :: ( Eff (Union b) m
+            , KnownList b
+            )
+         => UnionizeC b m a
+         -> m a
+unionize = unUnionizeC
+{-# INLINE unionize #-}
+
+type UnionizeHeadC b = CompositionC
+ '[ IntroC b '[Union b]
+  , UnionizeC b
+  ]
+
+
+unionizeHead :: ( HeadEff (Union b) m
+                , KnownList b
+                )
+             => UnionizeHeadC b m a
+             -> m a
+unionizeHead = coerce
+{-# INLINE unionizeHead #-}
+
+
+newtype UnionizeC b m a = UnionizeC { unUnionizeC :: m a }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b', MonadBaseControl b'
+           )
+  deriving (MonadTrans, MonadTransControl) via IdentityT
+
+instance ( KnownList b
+         , Eff (Union b) m
+         )
+      => Carrier (UnionizeC b m) where
+  type Derivs (UnionizeC b m) = Append b (Derivs m)
+  type Prims  (UnionizeC b m) = Prims m
+
+  algPrims = coerce (algPrims @m)
+  {-# INLINE algPrims #-}
+
+  reformulate n alg (Union pr e) =
+    case splitMembership @(Derivs m) (singList @b) pr of
+      Left pr'  -> reformulate (n .# UnionizeC) alg $ inj (Union pr' e)
+      Right pr' -> reformulate (n .# UnionizeC) alg (Union pr' e)
+  {-# INLINE reformulate #-}
+
+  algDerivs (Union pr e) =
+    case splitMembership @(Derivs m) (singList @b) pr of
+      Left pr'  -> UnionizeC $ algDerivs @m $ inj (Union pr' e)
+      Right pr' -> UnionizeC $ algDerivs @m (Union pr' e)
+  {-# INLINE algDerivs #-}

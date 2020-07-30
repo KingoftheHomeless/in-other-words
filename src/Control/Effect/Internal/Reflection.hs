@@ -1,7 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes, FunctionalDependencies #-}
 module Control.Effect.Internal.Reflection
-  (
-    Reifies (..)
+  ( Reifies (..)
   , Tagged(..)
   , unproxy
   , reify
