@@ -227,7 +227,6 @@ together with other IO operations for performance, with the eventual goal to
 support more effects than `eff` (currently) does.
 
 
-<b id="f1">[1](#a1)</b> This isn't actually true, but the restrictions `in-other-words`
-does place are very minor. If you can represent your effect with a `mtl`-style
+<b id="f1">[1](#a1)</b> If you can represent your effect with a `mtl`-style
 effect class that can be newtype derived, then you can represent your effect
 with `in-other-words`.
