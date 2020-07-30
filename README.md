@@ -37,7 +37,7 @@ continuations, coroutines, or nondeterminism.
 excludes actions such as `pass` from `MonadWriter`.
 
 In comparison, `in-other-words`' approach doesn't limit the scope of what
-effects may be represented <sup id="f1">[1](#f1)</sup> -- at the cost that
+effects may be represented <sup id="a1">[1](#f1)</sup> -- at the cost that
 certain effects may not be able to be used together depending on how they're
 interpreted.
 
@@ -203,7 +203,7 @@ together with other IO operations for performance, with the eventual goal to
 support more effects than `eff` (currently) does.
 
 
-[<b id="f1">1</b>](#a1) This isn't actually true, but the restrictions `in-other-words`
+<b id="f1">[1](#a1)</b> This isn't actually true, but the restrictions `in-other-words`
 does place are very minor. If you can represent your effect with a `mtl`-style
 effect class that can be newtype derived, then you can represent your effect
 with `in-other-words`.
