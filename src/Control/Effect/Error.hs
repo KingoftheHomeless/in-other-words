@@ -124,7 +124,8 @@ fromEither = either throw pure
 -- @'Derivs' (ThrowC e m) = 'Throw' e ': 'Derivs' m@
 --
 -- @'Prims' (ThrowC e m) = 'Prims' m@
-runThrow :: ( Carrier m
+runThrow :: forall e m a p
+          . ( Carrier m
             , Threaders '[ErrorThreads] m p
             )
          => ThrowC e m a

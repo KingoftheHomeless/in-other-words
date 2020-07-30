@@ -20,7 +20,6 @@ dependencies:
   - transformers-base >= 0.4.5 && < 0.5
   - exceptions >= 0.10 && < 0.11
   - stm >= 2.5 && < 2.6
-  - template-haskell >= 2.15 && < 2.17
 
 library:
   ghc-options: -Wall -Wextra

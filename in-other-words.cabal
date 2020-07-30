@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 42aabd0bbe2e2dfd86b03bc76f8efc5cccb5ad26755068a5eda973b0fddf57a3
+-- hash: f10bfad7caba87a93de5076a7b20d9138223a6d8c974325e9742c57f4c4294f2
 
 name:           in-other-words
 version:        0.1.0.0
@@ -120,7 +120,6 @@ library
     , monad-control >=1.0 && <1.1
     , mtl >=2.2 && <2.3
     , stm >=2.5 && <2.6
-    , template-haskell >=2.15 && <2.17
     , transformers >=0.5.6 && <0.6
     , transformers-base >=0.4.5 && <0.5
   default-language: Haskell2010

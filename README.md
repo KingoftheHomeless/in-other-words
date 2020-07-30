@@ -38,10 +38,13 @@ continuations, coroutines, or nondeterminism.
 - `eff` is limited to what's implementable with delimited continuations, which
 excludes actions such as `pass` from `MonadWriter`.
 
-In comparison, `in-other-words`' approach doesn't limit the scope of what
-effects may be represented <sup id="a1">[1](#f1)</sup> -- at the cost that
-certain effects may not be able to be used together depending on how they're
-interpreted.
+`in-other-words` also places restrictions on what effects may be represented
+-- but in comparison to the libraries mentioned above, these restrictions are
+very, very minor. <sup id="a1">[1](#f1)</sup> This is because `in-other-words`
+does not attempt to make every possible effect play nicely together with
+every other effect: instead, just like `mtl`, some effects can't be used
+together with other effects (depending on how they're interpreted), and
+this is enforced by constraints that interpreters may introduce.
 
 ## Required Language Extensions
 The following extensions are needed for basic usage of the library:
@@ -68,15 +71,16 @@ First-order usage:
 ```haskell
 
 import Control.Effect
+import Control.Effect.Error
 import Control.Effect.State
 import Control.Effect.Input
 import Control.Effect.Writer
 
-import Text.Read
+import Text.Read (readMaybe)
 
 data Teletype m a where
   ReadTTY  :: Teletype m String
-  WriteTTY ::  String -> Teletype m ()
+  WriteTTY :: String -> Teletype m ()
 
 readTTY :: Eff Teletype m => m String
 readTTY = send ReadTTY
@@ -94,7 +98,7 @@ challenge = do
   writeTTY "What is 3 + 4?"
   readMaybe @Int <$> readTTY >>= \case
     Just 7  -> writeTTY "Correct!"
-    Nothing -> writeTTY "Nope." >> challenge
+    _       -> writeTTY "Nope." >> challenge
 
 runTeletype :: Effs '[Input String, Tell String] m
             => SimpleInterpreterFor Teletype m
@@ -103,43 +107,45 @@ runTeletype = interpretSimple $ \case
   WriteTTY msg -> tell msg
 
 -- Runs a challenge with the provided inputs
-runChallenge :: [String] -> Either String [String]
-runChallenge inputs =
-    -- Extract the final result, now that all effects have been exhausted.
-    run 
+runChallengePure :: [String] -> Either String [String]
+runChallengePure testInputs =
+    -- Extract the final result, now that all effects have been interpreted.
+    run
     -- Run the @Throw String@ effect, resulting in @Either String [String]@
-  $ runThrow @String 
+  $ runThrow @String
     -- We discard the output of @challenge@; we're not interested in it.
-  $ fmap fst 
+  $ fmap fst
     -- Run the @Tell String@ effect by gathering all told
     -- strings into a list, resulting in ([String], ())
-  $ runTellList @String 
+  $ runTellList @String
     -- Run the @State [String]@ effect with initial state
     -- @inputs@. @evalState@ discards the end state.
-  $ evalState inputs 
+  $ evalState testInputs
     -- interpret the @Input String@ effect by going through the provided inputs.
-  $ interpretSimple @(Input String) \case
-    Input -> get >>= \case
-      []     -> throw "Inputs exhausted!"
-      (x:xs) -> put xs >> return x
+    -- Throw an input if we go through all the inputs without completing the
+    -- challenge.
+  $ interpretSimple @(Input String) (\case
+      Input -> get >>= \case
+        []     -> throw "Inputs exhausted!"
+        (x:xs) -> put xs >> return x
+    )
     -- Intepret @Teletype@ in terms of @Input String@ and @Tell String@
-  $ runTeletype 
+  $ runTeletype
   $ challenge
 
 -- evaluates to True
 testChallenge :: Bool
 testChallenge =
-    runChallenge ["4","-7", "i dunno", "7]
-  == Right ["What is 3 + 4?", "Nope."
-           ,"What is 3 + 4?", "Nope."
-           ,"What is 3 + 4?", "Nope."
-           ,"What is 3 + 4?", "Correct!"
-           ]
+    runChallengePure ["4","-7", "i dunno", "7"]
+ == Right ["What is 3 + 4?", "Nope."
+          ,"What is 3 + 4?", "Nope."
+          ,"What is 3 + 4?", "Nope."
+          ,"What is 3 + 4?", "Correct!"
+          ]
 
 -- Make a challenge to the user
-main :: IO ()
-main = runM $ teletypeToIO $ challenge
- 
+challengeIO :: IO ()
+challengeIO = runM $ teletypeToIO $ challenge
 ```
 
 Interpretation of higher-order effects:
@@ -158,13 +164,29 @@ time label m = send (ProfileTiming label m)
 
 profileTimingToIO :: Effs '[Embed IO, Trace, Bracket] m
                   => SimpleInterpreterFor ProfileTiming m
-profileTimingToIO = intepretSimple $ \case
+profileTimingToIO = interpretSimple $ \case
   ProfileTiming str m -> do
     before <- embed getMonotonicTime
     a <- m `onError` trace ("Timing of " ++ str ++ " failed due to some error!")
     after <- embed getMonotonicTime
-    trace ("Timing of " ++ str ++ ":" ++ after - before ++ " seconds.")
+    trace ("Timing of " ++ str ++ ": " ++ show (after - before) ++ " seconds.")
     return a
+
+spin :: Monad m => Integer -> m ()
+spin 0 = pure ()
+spin i = spin (i - 1)
+
+profileSpin :: IO ()
+profileSpin = runM $ bracketToIO $ runTracePrinting $ profileTimingToIO $ do
+  time "spin" (spin 1000000)
+  time "spinWithFail" (spin 1000000 >> undefined)
+{-
+This prints:
+
+  Timing of spin: 1.3399935999768786 seconds.
+  Timing of spinWithFail failed due to some error!
+  *** Exception: Prelude.undefined
+-]
 ```
 
 ## Advanced Usage
