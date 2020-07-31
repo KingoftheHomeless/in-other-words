@@ -26,13 +26,13 @@ messages. As such, if you're a beginner to effect systems,
 Unlike `fused-effects` and `polysemy` -- which both have intimidating
 boilerplate associated with the interpretation of higher-order effects
 --`in-other-words` makes it just as easy to interpret higher-order effects as
-first-order effects. As you can see below, this isn't very difficult.
+first-order effects. [Here's](#higher-order) an example.
 
-### No encumbering restrictions to effects
+### No cumbersome restrictions to effects
 Every effect-system previously mentioned has serious restrictions in what
 effects they may represent.
 - `freer-simple` is restricted to first-order effects.
-- `fused-effects` and `polysemy` are built around *Effect Handlers in Scope*,
+- `fused-effects` and `polysemy` are built around [*Effect Handlers in Scope*](https://www.cs.ox.ac.uk/people/nicolas.wu/papers/Scope.pdf),
 whose approach doesn't allow for sensible implementations of effects for
 continuations, coroutines, or nondeterminism.
 - `eff` is limited to what's implementable with delimited continuations, which
@@ -148,7 +148,7 @@ challengeIO :: IO ()
 challengeIO = runM $ teletypeToIO $ challenge
 ```
 
-Higher-order usage:
+<span id="higher-order">Higher-order usage:</span>
 ```haskell
 
 import Control.Effect
@@ -227,7 +227,6 @@ together with other IO operations for performance, with the eventual goal to
 support more effects than `eff` (currently) does.
 
 
-<b id="f1">[1](#a1)</b> This isn't actually true, but the restrictions `in-other-words`
-does place are very minor. If you can represent your effect with a `mtl`-style
+<b id="f1">[1](#a1)</b> If you can represent your effect with a `mtl`-style
 effect class that can be newtype derived, then you can represent your effect
 with `in-other-words`.
