@@ -122,10 +122,10 @@ runChallengePure testInputs =
     -- @inputs@. @evalState@ discards the end state.
   $ evalState testInputs
     -- interpret the @Input String@ effect by going through the provided inputs.
-    -- Throw an input if we go through all the inputs without completing the
+    -- Throw an exception if we go through all the inputs without completing the
     -- challenge.
-  $ interpretSimple @(Input String) (\case
-      Input -> get >>= \case
+  $ runInputActionSimple (do
+      get >>= \case
         []     -> throw "Inputs exhausted!"
         (x:xs) -> put xs >> return x
     )
@@ -148,7 +148,7 @@ challengeIO :: IO ()
 challengeIO = runM $ teletypeToIO $ challenge
 ```
 
-Interpretation of higher-order effects:
+Higher-order usage:
 ```haskell
 
 import Control.Effect
