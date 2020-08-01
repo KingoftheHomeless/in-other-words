@@ -135,7 +135,7 @@ class ( RepresentationalEff e
 -- Don't let the type overwhelm you; in most cases, you can treat this as
 -- @e m x -> m x@.
 --
--- Any 'Handler' is required to work with /any/ carrier monad @z@ that
+-- Any 'EffHandler' is required to work with /any/ carrier monad @z@ that
 -- lifts @m@, and has the same derived and primitive effects as @m@ does.
 -- The only constraints that are propagated to @z@ are membership
 -- constraints:

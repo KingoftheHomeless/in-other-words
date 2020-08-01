@@ -7,12 +7,12 @@
 and [`eff`](https://github.com/hasura/eff). It represents effects through data types,
 making it simple to define, use, and interpret them.
 `in-other-words`' hallmark feature is the novel approach it takes to support
-higher-order effects, making it significantly more powerful - and in some cases,
+higher-order effects, making it significantly more powerful - and sometimes
 easier to use - than other effect libraries of its kind.
 
 If you're experienced with the mechanisms behind `freer-simple`,
 `fused-effects`, and `polysemy`, and would like to learn more about what makes
-`in-other-words` differ, see [this wiki page](TODO).
+`in-other-words` different, see [this wiki page](TODO).
 
 Unfortunately, in its current state `in-other-words` is rather inaccessible.
 Ample documentation and guides are provided for the library, but inexperienced
@@ -31,11 +31,12 @@ first-order effects. [Here's](#higher-order) an example.
 ### No cumbersome restrictions to effects
 Every effect-system previously mentioned has serious restrictions in what
 effects they may represent.
-- `freer-simple` is restricted to first-order effects.
-- `fused-effects` and `polysemy` are built around [*Effect Handlers in Scope*](https://www.cs.ox.ac.uk/people/nicolas.wu/papers/Scope.pdf),
+* `freer-simple` is restricted to first-order effects.
+* `fused-effects` and `polysemy` are built around
+[*Effect Handlers in Scope*](https://www.cs.ox.ac.uk/people/nicolas.wu/papers/Scope.pdf),
 whose approach doesn't allow for sensible implementations of effects for
 continuations, coroutines, or nondeterminism.
-- `eff` is limited to what's implementable with delimited continuations, which
+* `eff` is limited to what's implementable with delimited continuations, which
 excludes actions such as `pass` from `MonadWriter`.
 
 `in-other-words` also places restrictions on what effects may be represented
@@ -103,7 +104,7 @@ challenge = do
 runTeletype :: Effs '[Ask String, Tell String] m
             => SimpleInterpreterFor Teletype m
 runTeletype = interpretSimple $ \case
-  ReadTTY -> input
+  ReadTTY -> ask
   WriteTTY msg -> tell msg
 
 -- Runs a challenge with the provided inputs
@@ -165,9 +166,11 @@ time label m = send (ProfileTiming label m)
 profileTimingToIO :: Effs '[Embed IO, Trace, Bracket] m
                   => SimpleInterpreterFor ProfileTiming m
 profileTimingToIO = interpretSimple $ \case
-  ProfileTiming str m -> do
+  ProfileTiming str action -> do
     before <- embed getMonotonicTime
-    a <- m `onError` trace ("Timing of " ++ str ++ " failed due to some error!")
+    a <-   action
+        `onError`
+           trace ("Timing of " ++ str ++ " failed due to some error!")
     after <- embed getMonotonicTime
     trace ("Timing of " ++ str ++ ": " ++ show (after - before) ++ " seconds.")
     return a
@@ -179,12 +182,12 @@ spin i = spin (i - 1)
 profileSpin :: IO ()
 profileSpin = runM $ bracketToIO $ runTracePrinting $ profileTimingToIO $ do
   time "spin" (spin 1000000)
-  time "spinWithFail" (spin 1000000 >> undefined)
+  time "spinAndFail" (spin 1000000 >> undefined)
 {-
-This prints:
+This prints the following (exact times are machine specific):
 
   Timing of spin: 1.3399935999768786 seconds.
-  Timing of spinWithFail failed due to some error!
+  Timing of spinAndFail failed due to some error!
   *** Exception: Prelude.undefined
 -]
 ```
@@ -194,10 +197,10 @@ This prints:
 The examples above are somewhat disingeneuos; they cover only the simplest
 uses of the library. The library has a wide variety of features,
 and using them properly can get very complicated. Because of this,
-[`in-other-words` offers a wiki with guides covering more advanced topics of the
-library.](TODO) If you're interested in learning more about the library, or are
-struggling with a feature you're having a diffult time with, I encourage you
-to check it out!
+[`in-other-words` offers a wiki covering more advanced topics of the
+library.](TODO) Check it out if you're interested in learning more about the
+library,  or are struggling with a feature or error message you're having a
+time with.
 
 
 ## Questions and errors
@@ -220,13 +223,16 @@ the incredible performance of `mtl` is more or less a myth that is only achievab
 under unrealistic conditions. Even if optimized, `in-other-words` would fall prey
 to the same problems.
 
-Thus, another future goal of mine is investigate if it's possible to take
+Thus, a goal in the far future is to investigate if it's possible to take
 inspiration from `in-other-words`' approach in order to develop an effect system
 with similar power, but relying on [delimited continuation primops](https://github.com/lexi-lambda/ghc-proposals/blob/delimited-continuation-primops/proposals/0000-delimited-continuation-primops.md)
 together with other IO operations for performance, with the eventual goal to
 support more effects than `eff` (currently) does.
 
 
-<b id="f1">[1](#a1)</b> If you can represent your effect with a `mtl`-style
-effect class that can be newtype derived, then you can represent your effect
-with `in-other-words`.
+<b id="f1">[1](#a1)</b> Every effect is required to be *representational* in the carrier monad.
+This means that if you can represent your effect using:
+* a `mtl`-style effect class
+* without any associated type families
+* and it can be newtype derived
+then you can represent your effect with `in-other-words`.
