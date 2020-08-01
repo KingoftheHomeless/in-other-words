@@ -12,7 +12,7 @@ easier to use - than other effect libraries of its kind.
 
 If you're experienced with the mechanisms behind `freer-simple`,
 `fused-effects`, and `polysemy`, and would like to learn more about what makes
-`in-other-words` differ, see [this wiki page](TODO).
+`in-other-words` differ, see [this wiki page](https://github.com/KingoftheHomeless/in-other-words/wiki/The-inner-workings-of-the-library).
 
 Unfortunately, in its current state `in-other-words` is rather inaccessible.
 Ample documentation and guides are provided for the library, but inexperienced
