@@ -236,4 +236,5 @@ This means that if you can represent your effect using:
 * a `mtl`-style effect class
 * without any associated type families
 * and it can be newtype derived
+
 then you can represent your effect with `in-other-words`.
