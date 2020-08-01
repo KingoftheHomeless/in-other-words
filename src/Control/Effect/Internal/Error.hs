@@ -69,6 +69,17 @@ instance ( Carrier m
   {-# INLINE reformulate #-}
 
 
+-- | 'ErrorThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.BaseControl.BaseControl' b@
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * @'Control.Effect.Mask.Mask'@
+-- * @'Control.Effect.Bracket.Bracket'@
+-- * @'Control.Effect.Fix.Fix'@
 class    ( forall e. Threads (ExceptT e) p
          ) => ErrorThreads p
 instance ( forall e. Threads (ExceptT e) p

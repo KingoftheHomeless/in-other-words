@@ -13,10 +13,10 @@ module Control.Effect.Writer
   , censor
 
   -- * Interpretations for Tell
-  , TellC(TellC)
+  , TellC
   , runTell
 
-  , TellLazyC(TellLazyC)
+  , TellLazyC
   , runTellLazy
 
   , TellListC
@@ -43,10 +43,10 @@ module Control.Effect.Writer
   , tellIntoTellSimple
 
   -- * Interpretations for Tell + Listen
-  , ListenC(ListenC)
+  , ListenC
   , runListen
 
-  , ListenLazyC(ListenLazyC)
+  , ListenLazyC
   , runListenLazy
 
   , ListenTVarC
@@ -56,10 +56,10 @@ module Control.Effect.Writer
   , listenIntoEndoListen
 
   -- * Interpretations for Writer (Tell + Listen + Pass)
-  , WriterC(WriterC)
+  , WriterC
   , runWriter
 
-  , WriterLazyC(WriterLazyC)
+  , WriterLazyC
   , runWriterLazy
 
   , WriterTVarC
@@ -96,7 +96,6 @@ import Control.Monad
 import Control.Effect
 import Control.Effect.Reader
 import Control.Effect.Bracket
-import Control.Effect.Type.Tell
 import Control.Effect.Type.Listen
 import Control.Effect.Type.Pass
 
@@ -114,7 +113,6 @@ import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Intro
 import Control.Monad.Trans.Identity
-
 
 -- | A pseudo-effect for connected @'Tell' s@, @'Listen' s@ and @'Pass' s@ effects.
 --
@@ -389,7 +387,7 @@ type TellIntoEndoTellC s =
 -- $ ...
 -- $ 'fromEndoWriter'
 -- $ 'runTell'
--- $ 'tellIntoEndoTell'
+-- $ 'tellIntoEndoTell' \@String -- The 'Monoid' must be specified
 -- $ ...
 -- @
 --
@@ -424,7 +422,7 @@ type ListenIntoEndoListenC s = CompositionC
 -- $ ...
 -- $ 'fromEndoWriter'
 -- $ 'runListen'
--- $ 'listenIntoEndoListen'
+-- $ 'listenIntoEndoListen' \@String -- The 'Monoid' must be specified
 -- $ ...
 -- @
 --
@@ -467,7 +465,7 @@ type WriterIntoEndoWriterC s = CompositionC
 -- $ ...
 -- $ 'fromEndoWriter'
 -- $ 'runWriter'
--- $ 'writerIntoEndoWriter'
+-- $ 'writerIntoEndoWriter' \@String -- The 'Monoid' must be specified
 -- $ ...
 -- @
 --
@@ -596,7 +594,7 @@ passTVar main = do
 data WriterToBracketH
 
 type WriterToBracketC s = CompositionC
- '[ IntroC '[Pass s, Listen s, Tell s] '[Reader (s -> STM ())]
+ '[ IntroC '[Pass s, Listen s, Tell s] '[Local (s -> STM ()), Ask (s -> STM ())]
   , InterpretC WriterToBracketH (Pass s)
   , InterpretC WriterToBracketH (Listen s)
   , InterpretC WriterTVarH (Tell s)
@@ -672,14 +670,14 @@ writerToBracketTVar tvar =
 data WriterTVarH
 
 type ListenTVarC s = CompositionC
- '[ IntroC '[Listen s, Tell s] '[Reader (s -> STM ())]
+ '[ IntroC '[Listen s, Tell s] '[Local (s -> STM ()), Ask (s -> STM ())]
   , InterpretPrimC WriterTVarH (Listen s)
   , InterpretC WriterTVarH (Tell s)
   , ReaderC (s -> STM ())
   ]
 
 type WriterTVarC s = CompositionC
- '[ IntroC '[Pass s, Listen s, Tell s] '[Reader (s -> STM ())]
+ '[ IntroC '[Pass s, Listen s, Tell s] '[Local (s -> STM ()), Ask (s -> STM ())]
   , InterpretPrimC WriterTVarH (Pass s)
   , InterpretPrimC WriterTVarH (Listen s)
   , InterpretC WriterTVarH (Tell s)

@@ -10,7 +10,6 @@ import Control.Monad
 
 import Control.Effect
 import Control.Effect.Bracket
-import Control.Effect.Type.Tell
 import Control.Effect.Type.Listen
 import Control.Effect.Type.Pass
 
@@ -24,6 +23,10 @@ import qualified Control.Monad.Trans.Writer.CPS as W
 import qualified Control.Monad.Trans.Writer.Lazy as LW
 
 import Control.Effect.Internal.Utils
+
+-- | An effect for arbitrary output.
+data Tell s m a where
+  Tell :: s -> Tell s m ()
 
 newtype TellC s m a = TellC {
     unTellC :: WriterT s m a
@@ -252,11 +255,35 @@ instance ( Monoid s
   reformulate = addPrim (coerceReform (reformulate @(ListenLazyC s m)))
   {-# INLINE reformulate #-}
 
+-- | 'WriterThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.BaseControl.BaseControl' b@
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * @'Control.Effect.Mask.Mask'@
+-- * @'Control.Effect.Bracket.Bracket'@
+-- * @'Control.Effect.Fix.Fix'@
+-- * @'Control.Effect.NonDet.Split'@
 class    ( forall s. Monoid s => Threads (WriterT s) p
          ) => WriterThreads p
 instance ( forall s. Monoid s => Threads (WriterT s) p
          ) => WriterThreads p
 
+-- | 'WriterLazyThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.BaseControl.BaseControl' b@
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * @'Control.Effect.Mask.Mask'@
+-- * @'Control.Effect.Bracket.Bracket'@
+-- * @'Control.Effect.Fix.Fix'@
+-- * @'Control.Effect.NonDet.Split'@
 class    ( forall s. Monoid s => Threads (LW.WriterT s) p
          ) => WriterLazyThreads p
 instance ( forall s. Monoid s => Threads (LW.WriterT s) p

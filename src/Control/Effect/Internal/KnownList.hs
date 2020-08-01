@@ -40,9 +40,6 @@ instance KnownList xs => KnownList (x ': xs) where
   singList = SCons singList
   {-# INLINE singList #-}
 
-type family Append l r where
-  Append '[] r = r
-  Append (x ': l) r = x ': (Append l r)
 
 extendMembership :: forall r e l. SList l -> ElemOf e r -> ElemOf e (Append l r)
 extendMembership SEnd pr = pr

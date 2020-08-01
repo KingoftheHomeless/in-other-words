@@ -18,14 +18,12 @@ module Control.Effect.Cont
   ) where
 
 import Control.Effect
-import Control.Effect.Type.Cont
 import Control.Effect.Internal.Cont
 
 import Control.Effect.Internal.Utils
 
 import qualified Control.Monad.Trans.Cont as C
 import Control.Monad.Trans.Free.Church.Alternate
-
 
 -- | Call with current continuation. The argument computation is provided
 -- the /continuation/ of the program at the point that 'callCC' was invoked.

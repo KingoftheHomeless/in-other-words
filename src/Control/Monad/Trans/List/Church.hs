@@ -12,7 +12,7 @@ import Control.Effect.Type.Listen
 import Control.Effect.Type.Pass
 import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
-import Control.Effect.Type.Reader
+import Control.Effect.Type.ReaderPrim
 
 newtype ListT m a = ListT {
   unListT :: forall r
@@ -71,8 +71,8 @@ instance ThreadsEff (Pass s) ListT where
       fromLayeredListT (go (toLayeredListT main))
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Reader s) ListT where
-  threadEff = threadReaderViaRegional
+instance ThreadsEff (ReaderPrim i) ListT where
+  threadEff = threadReaderPrimViaRegional
   {-# INLINE threadEff #-}
 
 instance MonadBase b m => MonadBase b (ListT m) where

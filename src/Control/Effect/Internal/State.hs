@@ -5,11 +5,14 @@ import Data.Coerce
 
 import Control.Effect
 import Control.Effect.Carrier
-import Control.Effect.Type.State
 
 import qualified Control.Monad.Trans.State.Strict as SSt
 import qualified Control.Monad.Trans.State.Lazy as LSt
 
+-- | An effect for non-atomic stateful operations
+data State s m a where
+  Get :: State s m s
+  Put :: s -> State s m ()
 
 newtype StateC s m a = StateC { unStateC :: SSt.StateT s m a }
   deriving ( Functor, Applicative, Monad
@@ -59,11 +62,35 @@ instance ( Carrier m
     Get   -> n (StateLazyC LSt.get)
   {-# INLINE reformulate #-}
 
+-- | 'StateLazyThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.BaseControl.BaseControl' b@
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * @'Control.Effect.Mask.Mask'@
+-- * @'Control.Effect.Bracket.Bracket'@
+-- * @'Control.Effect.Fix.Fix'@
+-- * @'Control.Effect.NonDet.Split'@
 class    ( forall s. Threads (LSt.StateT s) p
          ) => StateLazyThreads p
 instance ( forall s. Threads (LSt.StateT s) p
          ) => StateLazyThreads p
 
+-- | 'StateThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.BaseControl.BaseControl' b@
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * @'Control.Effect.Mask.Mask'@
+-- * @'Control.Effect.Bracket.Bracket'@
+-- * @'Control.Effect.Fix.Fix'@
+-- * @'Control.Effect.NonDet.Split'@
 class    ( forall s. Threads (SSt.StateT s) p
          ) => StateThreads p
 instance ( forall s. Threads (SSt.StateT s) p

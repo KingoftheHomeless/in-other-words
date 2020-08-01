@@ -39,13 +39,11 @@ import Data.IORef
 import Data.Tuple
 
 import Control.Effect
-import Control.Effect.Type.State
 
 import Control.Effect.Internal.State
 
 import qualified Control.Monad.Trans.State.Strict as SSt
 import qualified Control.Monad.Trans.State.Lazy as LSt
-
 
 state :: Eff (State s) m => (s -> (s, a)) -> m a
 state f = do

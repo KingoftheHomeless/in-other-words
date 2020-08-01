@@ -159,6 +159,10 @@ inj :: Member e r => e m a -> Union r m a
 inj = Union membership
 {-# INLINE inj #-}
 
+-- | 'ReaderThreads' accepts all the primitive effects
+-- (intended to be used as such) offered in this library.
+--
+-- Most notably, 'ReaderThreads' accepts @'Unlift' b@.
 class    (forall i. Threads (ReaderT i) p) => ReaderThreads p
 instance (forall i. Threads (ReaderT i) p) => ReaderThreads p
 
@@ -197,11 +201,17 @@ coerceAlg = coerce
 -- effects into one.
 data Bundle :: [Effect] -> Effect
 
-type family EffMember (e :: Effect) (r :: [Effect]) :: Constraint where
-  EffMember (Bundle xs) r = EffMembers xs r
-  EffMember e r = Member e r
+type family Append l r where
+  Append '[] r = r
+  Append (x ': l) r = x ': (Append l r)
 
-type family EffMembers (xs :: [Effect]) (r :: [Effect]) :: Constraint where
-  EffMembers '[] r = ()
-  EffMembers (Bundle as ': xs) r = (EffMembers as r, EffMembers xs r)
-  EffMembers (e ': xs) r = (Member e r, EffMembers xs r)
+type family FlattenBundles (e :: [Effect]) :: [Effect] where
+  FlattenBundles '[] = '[]
+  FlattenBundles (Bundle bs ': es) = Append (FlattenBundles bs) (FlattenBundles es)
+  FlattenBundles (e ': es) = e ': FlattenBundles es
+
+type family Members (es :: [Effect]) (r :: [Effect]) :: Constraint where
+  Members '[] r = ()
+  Members (e ': es) r = (Member e r, Members es r)
+
+type EffMembers (xs :: [Effect]) (r :: [Effect]) = Members (FlattenBundles xs) r

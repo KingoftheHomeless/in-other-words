@@ -73,7 +73,7 @@ First-order usage:
 import Control.Effect
 import Control.Effect.Error
 import Control.Effect.State
-import Control.Effect.Input
+import Control.Effect.Reader
 import Control.Effect.Writer
 
 import Text.Read (readMaybe)
@@ -100,7 +100,7 @@ challenge = do
     Just 7  -> writeTTY "Correct!"
     _       -> writeTTY "Nope." >> challenge
 
-runTeletype :: Effs '[Input String, Tell String] m
+runTeletype :: Effs '[Ask String, Tell String] m
             => SimpleInterpreterFor Teletype m
 runTeletype = interpretSimple $ \case
   ReadTTY -> input
@@ -121,15 +121,15 @@ runChallengePure testInputs =
     -- Run the @State [String]@ effect with initial state
     -- @inputs@. @evalState@ discards the end state.
   $ evalState testInputs
-    -- interpret the @Input String@ effect by going through the provided inputs.
+    -- interpret the @Ask String@ effect by going through the provided inputs.
     -- Throw an exception if we go through all the inputs without completing the
     -- challenge.
-  $ runInputActionSimple (do
+  $ runAskActionSimple (do
       get >>= \case
         []     -> throw "Inputs exhausted!"
         (x:xs) -> put xs >> return x
     )
-    -- Intepret @Teletype@ in terms of @Input String@ and @Tell String@
+    -- Intepret @Teletype@ in terms of @Ask String@ and @Tell String@
   $ runTeletype
   $ challenge
 

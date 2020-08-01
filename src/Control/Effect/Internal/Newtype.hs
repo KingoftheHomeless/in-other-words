@@ -1,4 +1,4 @@
-{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE DefaultSignatures, DerivingVia #-}
 {-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Internal.Newtype
   (
@@ -8,7 +8,7 @@ module Control.Effect.Internal.Newtype
 
   , UnwrapC(UnwrapC)
   , unwrap
-  , unwrapWith
+  , Unwrapped(..)
   ) where
 
 import Data.Coerce
@@ -16,7 +16,6 @@ import Data.Coerce
 import Control.Monad.Trans.Identity
 import Control.Effect
 import Control.Effect.Carrier
-import Control.Effect.Union
 import Control.Effect.Internal.Utils
 
 newtype WrapC (e :: Effect)
@@ -62,24 +61,23 @@ newtype UnwrapC (e :: Effect)
            )
   deriving (MonadTrans, MonadTransControl) via IdentityT
 
-instance ( IntroConsistent '[] '[e] m
-         , Coercible e' e
+instance ( IntroConsistent '[] '[e'] m
+         , Unwrapped e e'
          , Carrier m
          )
       => Carrier (UnwrapC e e' m) where
-  type Derivs (UnwrapC e e' m) = e' ': StripPrefix '[e] (Derivs m)
+  type Derivs (UnwrapC e e' m) = e ': StripPrefix '[e'] (Derivs m)
   type Prims  (UnwrapC e e' m) = Prims m
 
   algPrims = coerce (algPrims @m)
   {-# INLINE algPrims #-}
 
   reformulate n alg = powerAlg' (weakenAlg (reformulate (n .# UnwrapC) alg)) $
-    \(e :: e' z x) ->
-      reformulate (n .# UnwrapC) alg (Union Here (coerce e :: e z x))
+    \e -> reformulate (n .# UnwrapC) alg (Union Here (unwrapped e))
   {-# INLINE reformulate #-}
 
   algDerivs = powerAlg' (weakenAlg (coerce (algDerivs @m))) $
-    \(e :: e' z x) -> coerceAlg (algDerivs @m) (Union Here (coerce e :: e z x))
+    \e -> coerceAlg (algDerivs @m) (Union Here (unwrapped e))
   {-# INLINE algDerivs #-}
 
 
@@ -115,23 +113,19 @@ wrapWith :: ( Member e (Derivs m)
 wrapWith _ = wrap
 {-# INLINE wrapWith #-}
 
+-- | Unwrap uses of an effect, placing its unwrapped version on top
+-- of the effect stack.
 unwrap :: forall e unwrappedE m a
         . ( IntroConsistent '[] '[unwrappedE] m
           , Carrier m
-          , Coercible unwrappedE e
+          , Unwrapped e unwrappedE
           )
-       => UnwrapC unwrappedE e m a
+       => UnwrapC e unwrappedE m a
        -> m a
 unwrap = unUnwrapC
 {-# INLINE unwrap #-}
 
-unwrapWith :: forall e unwrappedE m a z x
-            . ( IntroConsistent '[] '[unwrappedE] m
-              , Carrier m
-              , Coercible unwrappedE e
-              )
-           => (e z x -> unwrappedE z x)
-           -> UnwrapC unwrappedE e m a
-           -> m a
-unwrapWith _ = unwrap
-{-# INLINE unwrapWith #-}
+class Unwrapped (e :: Effect) (e' :: Effect) | e -> e' where
+  unwrapped :: e z x -> e' z x
+  default unwrapped :: Coercible e e' => e z x -> e' z x
+  unwrapped = coerce

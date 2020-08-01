@@ -6,7 +6,7 @@ import Control.Monad.Base
 import qualified Control.Monad.Fail as Fail
 import Control.Effect.Internal.Union
 import Control.Effect.Type.Listen
-import Control.Effect.Type.Reader
+import Control.Effect.Type.ReaderPrim
 import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
 import Control.Monad.Catch hiding (handle)
@@ -84,26 +84,26 @@ instance MonadThrow m => MonadThrow (FreeT f m) where
 instance MonadCatch m => MonadCatch (FreeT f m) where
   catch main handle = FreeT $ \bind handler c ->
     unFreeT main
-               (\m cn ->
-                  (`bind` id) $
-                   fmap cn m
-                     `catch`
-                   \e -> pure $ unFreeT (handle e) bind handler c
-               )
-               handler
-               c
+            (\m cn ->
+               (`bind` id) $
+                fmap cn m
+                  `catch`
+                \e -> pure $ unFreeT (handle e) bind handler c
+            )
+            handler
+            c
   {-# INLINE catch #-}
 
 instance Monoid w => ThreadsEff (Listen w) (FreeT f) where
   threadEff alg (Listen main) = FreeT $ \bind handler c ->
     unFreeT main
-               (\m cn acc ->
-                  alg (Listen m) `bind` \(s, a) ->
-                     cn a $! acc <> s
-               )
-               (\eff cn acc -> handler eff (`cn` acc))
-               (\a acc -> c (acc, a))
-               mempty
+            (\m cn acc ->
+               alg (Listen m) `bind` \(s, a) ->
+                  cn a $! acc <> s
+            )
+            (\eff cn acc -> handler eff (`cn` acc))
+            (\a acc -> c (acc, a))
+            mempty
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (FreeT f) where
@@ -114,13 +114,13 @@ instance ThreadsEff (Regional s) (FreeT f) where
 instance Functor s => ThreadsEff (Optional s) (FreeT f) where
   threadEff alg (Optional sa main) = FreeT $ \bind handler c ->
     unFreeT main
-               (\m cn ->
-                  (`bind` id) $ alg $ Optional (fmap c sa) (fmap cn m)
-               )
-               handler
-               c
+            (\m cn ->
+               (`bind` id) $ alg $ Optional (fmap c sa) (fmap cn m)
+            )
+            handler
+            c
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Reader i) (FreeT f) where
-  threadEff = threadReaderViaRegional
+instance ThreadsEff (ReaderPrim i) (FreeT f) where
+  threadEff = threadReaderPrimViaRegional
   {-# INLINE threadEff #-}

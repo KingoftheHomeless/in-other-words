@@ -105,7 +105,7 @@ class Monad m => Carrier m where
 --
 -- If you need access to some completetely polymorphic effect @e@,
 -- use @('Member' e ('Derivs' m), 'Carrier' m)@ instead of @Eff e m@.
-type Eff e m = (EffMember e (Derivs m), Carrier m)
+type Eff e m = Effs '[e] m
 
 -- | A variant of 'Eff' that takes a list of effects, and expands them into
 -- multiple 'Member' constraints on @'Derivs' m@.

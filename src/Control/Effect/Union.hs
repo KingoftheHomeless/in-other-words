@@ -12,7 +12,7 @@ module Control.Effect.Union
   , unionizeHead
 
     -- * Interpretations
-  , UnionC(UnionC)
+  , UnionC
   , runUnion
 
     -- * Utilities
@@ -29,10 +29,10 @@ import Data.Coerce
 
 import Control.Effect
 
-import Control.Effect.Carrier
-
+import Control.Effect.Internal
 import Control.Effect.Internal.Utils
 import Control.Effect.Internal.Union
+import Control.Effect.Internal.Derive
 import Control.Effect.Internal.Membership
 import Control.Effect.Internal.KnownList
 
@@ -93,9 +93,9 @@ runUnion :: forall b m a
 runUnion = unUnionC
 {-# INLINE runUnion #-}
 
--- Sends uses of effects in @b@ to a @'Union' b@ effect.
+-- | Sends uses of effects in @b@ to a @'Union' b@ effect.
 --
--- Transforms @(b ++ 'Derivs' m, 'Prims' m)@ to @('Derivs' m, 'Prims' m)@
+-- @'Derivs' (UnionizeC b m) = b ++ 'Derivs' m@
 unionize :: ( Eff (Union b) m
             , KnownList b
             )
@@ -104,6 +104,9 @@ unionize :: ( Eff (Union b) m
 unionize = unUnionizeC
 {-# INLINE unionize #-}
 
+-- | Rewrite uses of effects in @b@ into a @'Union' b@ effect on top of the effect stack.
+--
+-- @'Derivs' (UnionizeC b m) = b ++ StripPrefix '['Union' b] 'Derivs' m@
 type UnionizeHeadC b = CompositionC
  '[ IntroC b '[Union b]
   , UnionizeC b

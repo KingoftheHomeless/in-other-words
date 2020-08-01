@@ -5,7 +5,7 @@ import Control.Effect.Type.Throw
 import Control.Effect.Internal.Union
 
 -- | An effect for catching exceptions of type @e@.
-data Catch e :: Effect where
+data Catch e m a where
   Catch :: m a -> (e -> m a) -> Catch e m a
 
 -- | A pseudo-effect for connected @'Throw' e@ and @'Catch' e@ effects.

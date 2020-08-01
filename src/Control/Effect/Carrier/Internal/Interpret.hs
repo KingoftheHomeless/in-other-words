@@ -122,6 +122,18 @@ newtype InterpretPrimC (s :: *) (e :: Effect) (m :: * -> *) a =
 -- Alternatively, you can use 'interpret' or 'interpretSimple',
 -- which lets you avoid the need to define instances of 'Handler',
 -- but come at other costs.
+class ( RepresentationalEff e
+      , Carrier m
+      )
+   => Handler (h :: *) e m where
+  effHandler :: EffHandler e m
+
+
+-- | The type of effect handlers for a derived effect @e@ with current
+-- carrier @m@.
+--
+-- Don't let the type overwhelm you; in most cases, you can treat this as
+-- @e m x -> m x@.
 --
 -- Any 'Handler' is required to work with /any/ carrier monad @z@ that
 -- lifts @m@, and has the same derived and primitive effects as @m@ does.
@@ -144,17 +156,6 @@ newtype InterpretPrimC (s :: *) (e :: Effect) (m :: * -> *) a =
 -- Any effect to be handled needs to be
 -- /representational in the monad parameter/. See 'RepresentationalEff'
 -- for more information.
-class ( RepresentationalEff e
-      , Carrier m
-      )
-   => Handler (h :: *) e m where
-  effHandler :: EffHandler e m
-
-
--- | The type of effect handlers for a derived effect @e@ with current monad @m@.
---
--- Don't let the type overwhelm you; in most cases, you can treat this as
--- @e m x -> m x@.
 type EffHandler e m =
      forall z x
    . ( Carrier z
@@ -164,10 +165,47 @@ type EffHandler e m =
      )
   => e (Effly z) x -> Effly z x
 
+-- | The type of effect handlers for a primitive effect @e@ with current
+-- carrier @m@.
+--
+-- Unlike 'EffHandler's, 'EffPrimHandler's gain direct access to @m@,
+-- giving them significantly more power.
+--
+-- That said, **you should interpret your own effects as primitives only as a**
+-- **last resort.** Primitive effects come at the cost of enormous amounts of
+-- boilerplate: namely, the need for a 'ThreadsEff' instance for every monad
+-- transformer that can thread that effect.
+--
+-- Some effects in this library are intended to be used as primitive effects,
+-- such as 'Control.Effect.Regional.Regional'. Try to use such effects
+-- to gain the power you need to interpret your effects instead of
+-- defining your own primitive effects, since the primitive effects offered
+-- in this library already have 'ThreadsEff' instances defined for them.
+type EffPrimHandler e m = forall x. e m x -> m x
+
+-- | The class of effect handlers for primitive effects.
+-- Instances of this class can be used together 'interpretPrimViaHandler'
+-- in order to interpret primitive effects.
+--
+-- @h@ is the tag for the handler, @e@ is the effect to interpret,
+-- and @m@ is the 'Carrier' on which the handler operates.
+--
+-- To define your own interpreter using this method, create a new
+-- datatype without any constructors to serve as the tag
+-- for the handler, and then define a 'PrimHandler' instance for it.
+-- Then, you can use your handler to interpret effects with
+-- 'interpretViaPrimHandler'.
+--
+-- Alternatively, you can use 'interpretPrim' or 'interpretPrimSimple',
+-- which lets you avoid the need to define instances of 'PrimHandler',
+-- but come at other costs.
+--
+-- **Only interpret your own effects as primitives as a last resort.**
+-- See 'EffPrimHandler'.
 class ( RepresentationalEff e
       , Carrier m
       ) => PrimHandler (h :: *) e m where
-  effPrimHandler :: e m a -> m a
+  effPrimHandler :: EffPrimHandler e m
 
 instance ( Carrier m
          , Handler h e m
@@ -263,7 +301,7 @@ type InterpretPrimReifiedC e m a =
   => InterpretPrimC (ViaReifiedH s) e m a
 
 newtype InterpretSimpleC (e :: Effect) (m :: * -> *) a = InterpretSimpleC {
-      _unInterpretSimpleC :: ReaderT (ReifiedHandler e m) m a
+      unInterpretSimpleC :: ReaderT (ReifiedHandler e m) m a
     }
   deriving ( Functor, Applicative, Monad
            , Alternative, MonadPlus
@@ -298,7 +336,7 @@ instance ( Threads (ReaderT (ReifiedHandler e m)) (Prims m)
 
 newtype InterpretPrimSimpleC (e :: Effect) (m :: * -> *) a =
     InterpretPrimSimpleC {
-      _unInterpretPrimSimpleC :: ReaderT (ReifiedPrimHandler e m) m a
+      unInterpretPrimSimpleC :: ReaderT (ReifiedPrimHandler e m) m a
     }
   deriving ( Functor, Applicative, Monad
            , Alternative, MonadPlus
@@ -335,30 +373,28 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
 -- define an explicit 'Handler' instance. This is an alternative to
 -- 'interpretViaHandler', and is more performant than 'interpretSimple'.
 --
--- See 'Handler' for more information about the handler you pass to
+-- See 'EffHandler' for more information about the handler you pass to
 -- this function.
 --
--- Note that 'InterpretReifiedC' is a type synonym for a higher-ranked type.
--- This unfortunately makes 'interpret' difficult to work with; you typically
--- can't use it partially applied, otherwise you get scary type errors.
--- For example, you can't compose 'interpret' with other interpreters
--- by using '.'; you must use '$' instead.
+-- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
+-- **This makes 'interpret' very difficult to use partially applied.**
+-- **In particular, it can't be composed using @'.'@.** You must use
+-- paranthesis or '$'.
 --
 -- Consider using 'interpretSimple' instead if performance is secondary.
-interpret
-  :: forall e m a
-   . (RepresentationalEff e, Carrier m)
-  => EffHandler e m
-  -> InterpretReifiedC e m a
-  -> m a
+interpret :: forall e m a
+           . (RepresentationalEff e, Carrier m)
+          => EffHandler e m
+          -> InterpretReifiedC e m a
+          -> m a
 interpret h m = reify (ReifiedHandler h) $ \(_ :: p s) ->
   unInterpretC @(ViaReifiedH s) m
 {-# INLINE interpret #-}
 
--- | A significantly slower variant of 'interpret' that doesn't rely
--- on a higher-ranked type, making it simpler to use partially applied.
+-- | A significantly slower variant of 'interpret' that doesn't have
+-- a higher-ranked type, making it much easier to use partially applied.
 --
--- See 'Handler' for more information about the handler you pass to
+-- See 'EffHandler' for more information about the handler you pass to
 -- this function.
 interpretSimple
   :: forall e m a p
@@ -378,7 +414,8 @@ interpretSimple h m = coerce m (ReifiedHandler @e @m h)
 -- See 'Handler' for more information.
 --
 -- Unlike 'interpret', this does not have a higher-rank type,
--- making it easier to use partially applied.
+-- making it easier to use partially applied, and unlike
+-- 'interpretSimple' doesn't sacrifice performance.
 interpretViaHandler :: forall h e m a
                      . Handler h e m
                     => InterpretC h e m a
@@ -388,31 +425,21 @@ interpretViaHandler = unInterpretC
 
 -- | Interpret an effect as a new primitive effect.
 --
--- Unlike 'interpret', the handler gains direct access to @m@,
--- which gives it significantly more power. In particular, this allows you
--- to interpret higher order effects in terms of the base monad
--- by making use of 'MonadBaseControl'.
+-- ***Only interpret your own effects as primitives as a last resort.**
+-- See 'EffPrimHandler'.
 --
--- However, if 'interpretPrim' is used, the interpreted effect is treated as a
--- /primitive/
--- effect, meaning that it must be lifted on a carrier-by-carrier basis via
--- the @'ThreadsEff'@ class, which could incur a massive amount of boilerplate.
+-- This has a higher-rank type, as it makes use of 'InterpretPrimReifiedC'.
+-- **This makes 'interpretPrim' very difficult to use partially applied.**
+-- **In particular, it can't be composed using @'.'@.** You must use
+-- paranthesis or '$'.
 --
--- Use 'interpret' instead if you don't need direct access to @m@. In particular,
--- try to find effects that could do the same job you intended to do by having access to @m@.
--- For example, instead of using 'interpretPrim' so that you may reach 'IO' in order to
--- use 'X.mask', you could use the 'Mask' effect instead; or if you want to catch exceptions,
--- you could use 'ErrorIO' instead.
---
--- That said, there are particular use-cases of 'interpretPrim' where incurred
--- boilerplate is minimal. See the [Guide] for more information.
-interpretPrim
-  :: forall e m a
-   . (RepresentationalEff e, Carrier m)
-  => InterpretPrimReifiedC e m a
-  -> (forall x. e m x -> m x)
-  -> m a
-interpretPrim m h =
+-- Consider using 'interpretPrimSimple' instead if performance is secondary.
+interpretPrim :: forall e m a
+               . (RepresentationalEff e, Carrier m)
+              => EffPrimHandler e m
+              -> InterpretPrimReifiedC e m a
+              -> m a
+interpretPrim h m =
   let
     int :: ReifiedPrimHandler e m
     int = ReifiedPrimHandler (h .# coerce)
@@ -421,6 +448,17 @@ interpretPrim m h =
       \(_ :: p s) -> interpretPrimViaHandler @(ViaReifiedH s) m
 {-# INLINE interpretPrim #-}
 
+-- | Interpret an effect as a new primitive effect by using
+-- an explicit 'PrimHandler' instance.
+--
+-- See 'PrimHandler' for more information.
+--
+-- **Only interpret your own effects as primitives as a last resort.**
+-- See 'EffPrimHandler'.
+--
+-- Unlike 'interpretPrim', this does not have a higher-rank type,
+-- making it easier to use partially applied, and unlike
+-- 'interpretPrimSimple' doesn't sacrifice performance.
 interpretPrimViaHandler
   :: forall h e m a
    . PrimHandler h e m
@@ -429,19 +467,23 @@ interpretPrimViaHandler
 interpretPrimViaHandler = unInterpretPrimC
 {-# INLINE interpretPrimViaHandler #-}
 
--- | A significantly slower variant of 'interpretPrim' that doesn't rely
--- on a higher-ranked type, making it simpler to use partially applied.
+-- | A significantly slower variant of 'interpretPrim' that doesn't have
+-- a higher-ranked type, making it much easier to use partially applied.
 --
--- See 'Handler' for more information about the handler you pass to
--- this function.
+-- ***Only interpret your own effects as primitives as a last resort.**
+-- See 'EffPrimHandler'.
+--
+-- Note the @ReaderThreads '[e]@ constraint, meaning
+-- you need to define a @ThreadsEff e (ReaderT i).@ instance in order
+-- to use 'interpretPrimSimple'.
 interpretPrimSimple
   :: forall e m a p
    . ( RepresentationalEff e
      , Threaders '[ReaderThreads] m p
-     , (forall i. ThreadsEff e (ReaderT i))
+     , ReaderThreads '[e]
      , Carrier m
      )
-  => (forall x. e m x -> m x)
+  => EffPrimHandler e m
   -> InterpretPrimSimpleC e m a
   -> m a
 interpretPrimSimple h m = coerce m (ReifiedPrimHandler @e @m (h .# coerce))
@@ -449,6 +491,9 @@ interpretPrimSimple h m = coerce m (ReifiedPrimHandler @e @m (h .# coerce))
 
 -- | Add a derived effect to a reformulation
 -- by providing a handler for that effect.
+--
+-- The handler is an 'EffHandler', but with derived and primitive effects
+-- determined by the transformed 'Reformulation'.
 addDeriv :: ( RepresentationalEff e
             , Monad m
             )
@@ -504,6 +549,17 @@ type ReinterpretReifiedC e new m a =
    . ReifiesHandler s e m
   => ReinterpretC (ViaReifiedH s) e new m a
 
+-- | Reinterpret an effect in terms of newly introduced effects.
+--
+-- This combines 'interpret' and 'introUnder' in order to introduce the effects
+-- @new@ under @e@, which you then may make use of inside the handler for @e@.
+--
+-- This has a higher-rank type, as it makes use of 'ReinterpretReifiedC'.
+-- **This makes 'reinterpret' very difficult to use partially applied.**
+-- **In particular, it can't be composed using @'.'@.** You must use
+-- paranthesis or '$'.
+--
+-- Consider using 'reinterpretSimple' instead if performance is secondary.
 reinterpret :: forall new e m a
              . ( RepresentationalEff e
                , KnownList new
@@ -515,6 +571,18 @@ reinterpret :: forall new e m a
 reinterpret h main = interpret h $ introUnder (unReinterpretC main)
 {-# INLINE reinterpret #-}
 
+-- | Reinterpret an effect in terms of newly introduced effects by using
+-- an explicit 'Handler' instance.
+--
+-- See 'Handler' for more information.
+--
+-- This combines 'interpretViaHandler' and 'introUnder' in order to introduce
+-- the effects @new@ under @e@, which you then may make use of inside the handler
+-- for @e@.
+--
+-- Unlike 'reinterpret', this does not have a higher-rank type,
+-- making it easier to use partially applied, and unlike
+-- 'reinterpretSimple' doesn't sacrifice performance.
 reinterpretViaHandler :: forall h new e m a
                        . ( Handler h e m
                          , KnownList new
@@ -545,6 +613,14 @@ deriving via IntroUnderC e new (InterpretSimpleC e m)
              )
           => Carrier (ReinterpretSimpleC e new m)
 
+-- | Reinterpret an effect in terms of newly introduced effects.
+--
+-- This combines 'interpretSimple' and 'introUnder' in order to introduce
+-- the effects @new@ under @e@, which you then may make use of inside the
+-- handler for @e@.
+--
+-- This is a significantly slower variant of 'reinterpret' that doesn't have
+-- a higher-ranked type, making it much easier to use partially applied.
 reinterpretSimple :: forall new e m a p
                    . ( RepresentationalEff e
                      , KnownList new

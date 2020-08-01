@@ -9,13 +9,15 @@ import qualified Control.Monad.Fail as Fail
 
 import Control.Effect
 import Control.Effect.Carrier
-import Control.Effect.Type.Cont
 
 import Control.Effect.Internal.Utils
 
 import qualified Control.Monad.Trans.Cont as C
 import Control.Monad.Trans.Free.Church.Alternate
 
+-- | An effect for abortive continuations.
+data Cont m a where
+  CallCC :: ((forall b. a -> m b) -> m a) -> Cont m a
 
 data ContBase s a where
   Jump    :: s -> ContBase s a
@@ -84,8 +86,17 @@ instance ( Carrier m
         Right a -> return a
   {-# INLINE reformulate #-}
 
+-- | 'ContThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
 type ContThreads = FreeThreads
 
+-- | 'ContFastThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
 class    ( forall s. Threads (C.ContT s) p
          ) => ContFastThreads p
 instance ( forall s. Threads (C.ContT s) p

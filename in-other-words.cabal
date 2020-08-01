@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f10bfad7caba87a93de5076a7b20d9138223a6d8c974325e9742c57f4c4294f2
+-- hash: ea25312157755694e8204dd2c830df5eb6a961085c4297e720a41d0e058c893b
 
 name:           in-other-words
 version:        0.1.0.0
@@ -43,7 +43,6 @@ library
       Control.Effect.Fail
       Control.Effect.Fix
       Control.Effect.Fresh
-      Control.Effect.Input
       Control.Effect.Internal
       Control.Effect.Internal.BaseControl
       Control.Effect.Internal.Cont
@@ -59,6 +58,7 @@ library
       Control.Effect.Internal.Reader
       Control.Effect.Internal.Reflection
       Control.Effect.Internal.Regional
+      Control.Effect.Internal.Select
       Control.Effect.Internal.State
       Control.Effect.Internal.Union
       Control.Effect.Internal.Unlift
@@ -74,32 +74,22 @@ library
       Control.Effect.Regional
       Control.Effect.Select
       Control.Effect.State
-      Control.Effect.Tagged
       Control.Effect.Trace
       Control.Effect.Type.Alt
-      Control.Effect.Type.AtomicState
       Control.Effect.Type.Bracket
       Control.Effect.Type.Catch
-      Control.Effect.Type.Cont
-      Control.Effect.Type.Cull
-      Control.Effect.Type.Cut
       Control.Effect.Type.Embed
       Control.Effect.Type.ErrorIO
       Control.Effect.Type.Fail
       Control.Effect.Type.Fix
-      Control.Effect.Type.Input
       Control.Effect.Type.Internal.BaseControl
       Control.Effect.Type.Listen
       Control.Effect.Type.Mask
-      Control.Effect.Type.NonDet
       Control.Effect.Type.Optional
       Control.Effect.Type.Pass
-      Control.Effect.Type.Reader
+      Control.Effect.Type.ReaderPrim
       Control.Effect.Type.Regional
-      Control.Effect.Type.Select
       Control.Effect.Type.Split
-      Control.Effect.Type.State
-      Control.Effect.Type.Tell
       Control.Effect.Type.Throw
       Control.Effect.Type.Unlift
       Control.Effect.Union

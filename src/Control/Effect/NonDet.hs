@@ -38,18 +38,7 @@ import Control.Monad
 import Control.Effect
 import Control.Effect.Internal.NonDet
 
-import Control.Effect.Type.NonDet
-import Control.Effect.Type.Cull
-import Control.Effect.Type.Cut
 import Control.Effect.Type.Split
-
-
--- | A pseudo-effect for connected 'NonDet', 'Cull', 'Cut', and 'Split' effects.
---
-  -- @'Logic'@ should only ever be used inside of 'Eff' and 'Effs'
--- constraints. It is not a real effect! See 'Bundle'.
-type Logic = Bundle '[NonDet, Cull, Cut, Split]
-
 
 -- | Introduce new branches stemming from the current one using a list of values.
 fromList :: Eff NonDet m => [a] -> m a

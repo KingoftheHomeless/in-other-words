@@ -29,11 +29,15 @@ module Control.Effect.Carrier
 
     -- * Primitive effects
   , module Control.Effect.Primitive
+
+    -- * Union
+  , module Control.Effect.Union
   ) where
 
 import Control.Effect
 import Control.Effect.Internal
 import Control.Effect.Primitive
+import Control.Effect.Union
 import Control.Effect.Internal.Derive
 import Control.Effect.Internal.KnownList
 import Control.Effect.Internal.Union

@@ -4,8 +4,10 @@ module Control.Effect.Debug where
 import Control.Effect.Carrier
 import GHC.TypeLits
 
+-- Type family needed to delay the TypeError until when 'debugEffects'
+-- is used.
 type family DebugEffects (m :: * -> *) :: k where
-  DebugEffects m = TypeError (     'Text "Control.Effect.Debug.debugStack"
+  DebugEffects m = TypeError (     'Text "Control.Effect.Debug.debugEffects"
                              ':$$: 'Text "Derivs: " ':<>: 'ShowType (Derivs m)
                              ':$$: 'Text "Prims:  " ':<>: 'ShowType (Prims m)
                              ':$$: 'Text "Carrier is:"
@@ -18,4 +20,4 @@ type family DebugEffects (m :: * -> *) :: k where
 -- Doesn't work when @m@ is polymorphic.
 debugEffects :: DebugEffects m
              => m a
-debugEffects = undefined
+debugEffects = errorWithoutStackTrace "debugEffects: impossible"

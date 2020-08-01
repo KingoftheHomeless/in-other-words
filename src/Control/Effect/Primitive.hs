@@ -1,6 +1,7 @@
 module Control.Effect.Primitive
   (-- Interpretation of primitive effects
-    PrimHandler(..)
+    EffPrimHandler
+  , PrimHandler(..)
   , InterpretPrimC
   , interpretPrimViaHandler
 

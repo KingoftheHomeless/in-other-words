@@ -32,7 +32,6 @@ import Control.Concurrent.STM
 
 import Control.Effect
 import Control.Effect.State
-import Control.Effect.Type.AtomicState
 
 #if MIN_VERSION_base(4,14,0)
 import GHC.IO (atomicModifyIORefP)
@@ -46,6 +45,14 @@ atomicModifyIORefP ref f = do
   return a
 {-# INLINE atomicModifyIORefP #-}
 # endif
+
+-- | An effect for atomically reading and writing a piece of state.
+--
+-- Convention: the interpreter for the @AtomicState@ action must force
+-- the resulting tuple of the function, but not the end state or returned value.
+data AtomicState s m a where
+  AtomicState :: (s -> (s, a)) -> AtomicState s m a
+  AtomicGet   :: AtomicState s m s
 
 -- | Atomically read and modify the state.
 --

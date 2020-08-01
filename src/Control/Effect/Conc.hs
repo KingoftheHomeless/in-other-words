@@ -88,7 +88,6 @@ import Control.Effect.Internal.Newtype
 -- For coercion purposes
 import Control.Effect.Internal.Utils
 import Control.Monad.Trans.Identity
-import Control.Effect.Carrier.Internal.Intro
 import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Interpret
 
@@ -99,18 +98,16 @@ unliftConc :: Eff Conc m => ((forall x. m x -> IO x) -> IO a) -> m a
 unliftConc main = wrapWith Conc $ unlift (\lower -> main (lower .# lift))
 {-# INLINE unliftConc #-}
 
-data ConcH
-
-instance Eff (Unlift IO) m
-      => Handler ConcH Conc m where
-  effHandler (Conc e) = send e
-  {-# INLINE effHandler #-}
-
-type ConcToUnliftIOC = InterpretC ConcH Conc
+instance Unwrapped Conc (Unlift IO)
 
 type ConcToIOC = CompositionC
- '[ ReinterpretC ConcH Conc '[Unlift IO]
+ '[ UnwrapC Conc (Unlift IO)
   , UnliftToFinalC IO
+  ]
+
+type ConcToUnliftIOC = CompositionC
+ '[ UnwrapC Conc (Unlift IO)
+  , SubsumeC (Unlift IO)
   ]
 
 -- | Run a 'Conc' effect if all effects in the effect stack are
@@ -122,7 +119,7 @@ concToIO :: ( Carrier m
           -> m a
 concToIO =
      unliftToFinal
-  .# reinterpretViaHandler
+  .# unwrap
   .# runComposition
 {-# INLINE concToIO #-}
 
@@ -130,7 +127,7 @@ concToIO =
 concToUnliftIO :: Eff (Unlift IO) m
                => ConcToUnliftIOC m a
                -> m a
-concToUnliftIO = interpretViaHandler
+concToUnliftIO = subsume .# unwrap .# runComposition
 {-# INLINE concToUnliftIO #-}
 
 async :: Eff Conc m => m a -> m (Async a)

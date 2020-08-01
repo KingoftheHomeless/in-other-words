@@ -5,11 +5,7 @@ import Data.Coerce
 
 import Control.Effect
 import Control.Effect.Carrier
-import Control.Effect.Union
 
-import Control.Effect.Type.NonDet
-import Control.Effect.Type.Cull
-import Control.Effect.Type.Cut
 import Control.Effect.Type.Split
 import Control.Effect.Type.Regional
 
@@ -18,6 +14,33 @@ import Control.Effect.Internal.Utils
 
 import qualified Control.Monad.Trans.List.Church as L
 
+-- | An effect for nondeterministic computations
+data NonDet m a where
+  FromList :: [a] -> NonDet m a
+
+-- | An effect for culling nondeterministic computations.
+newtype Cull m a where
+  Cull :: m a -> Cull m a
+
+-- | An effect to delimit backtracking within nondeterministic contexts.
+data Cut m a where
+  Cutfail :: Cut m a
+  Call    :: m a -> Cut m a
+
+-- | A pseudo-effect for connected 'NonDet', 'Cull', 'Cut', and 'Split' effects.
+--
+-- @'Logic'@ should only ever be used inside of 'Eff' and 'Effs'
+-- constraints. It is not a real effect! See 'Bundle'.
+type Logic = Bundle '[NonDet, Cull, Cut, Split]
+
+
+-- 'NonDetThreads' accepts the following primitive effects:
+--
+-- * @'Control.Effect.Regional.Regional' s@
+-- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
+-- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
+-- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
 type NonDetThreads = Threads L.ListT
 
 newtype LogicC m a = LogicC { unLogicC :: L.ListT m a }

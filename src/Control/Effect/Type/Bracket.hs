@@ -20,6 +20,10 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 
 
 -- | An effect for exception-safe acquisition and release of resources.
+--
+-- **'Bracket' is typically used as a primitive effect**.
+-- If you define your own novel, non-trivial 'Control.Effect.Carrier',
+-- then you need to make a @'ThreadsEff' 'Bracket'@ instance for it (if possible).
 data Bracket m a where
   GeneralBracket :: m a
                  -> (a -> ExitCase b -> m c)
