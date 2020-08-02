@@ -131,7 +131,7 @@ runChallengePure testInputs =
         []     -> throw "Inputs exhausted!"
         (x:xs) -> put xs >> return x
     )
-    -- Intepret @Teletype@ in terms of @Ask String@ and @Tell String@
+    -- Interpret @Teletype@ in terms of @Ask String@ and @Tell String@
   $ runTeletype
   $ challenge
 

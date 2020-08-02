@@ -97,6 +97,10 @@ type BracketToIOC = InterpretPrimC BracketToIOH Bracket
 -- | Run a 'Bracket' by effect that protects against
 -- any abortive computation of any effect, as well
 -- as any IO exceptions and asynchronous exceptions.
+--
+-- @'Derivs' ('BracketToIOC' m) = 'Bracket' ': 'Derivs' m@
+--
+-- @'Prims'  ('BracketToIOC' m) = 'Bracket' ': 'Prims' m@
 bracketToIO :: (Carrier m, MonadMask m)
             => BracketToIOC m a
             -> m a
@@ -126,6 +130,10 @@ type BracketLocallyC = InterpretPrimC BracketLocallyH Bracket
 --
 -- This is more situational compared to 'bracketToIO',
 -- but can be useful. For an example, see the [Guide].
+--
+-- @'Derivs' ('BracketLocallyC' m) = 'Bracket' ': 'Derivs' m@
+--
+-- @'Prims'  ('BracketLocallyC' m) = 'Bracket' ': 'Prims' m@
 runBracketLocally :: Carrier m
                   => BracketLocallyC m a
                   -> m a
@@ -146,9 +154,12 @@ instance Carrier m => Handler IgnoreBracketH Bracket m where
   {-# INLINE effHandler #-}
 
 -- | Run a 'Bracket' effect by ignoring it, providing no protection at all.
+--
+-- @'Derivs' ('IgnoreBracketC' m) = 'Bracket' ': 'Derivs' m@
+--
+-- @'Prims'  ('IgnoreBracketC' m) = 'Prims' m@
 ignoreBracket :: Carrier m
               => IgnoreBracketC m a
               -> m a
 ignoreBracket = interpretViaHandler
 {-# INLINE ignoreBracket #-}
-
