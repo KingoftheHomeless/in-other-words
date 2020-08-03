@@ -12,9 +12,9 @@
 [Features]: https://github.com/KingoftheHomeless/in-other-words#features
 [Required Language Extensions]: https://github.com/KingoftheHomeless/in-other-words#required-language-extensions
 [Examples of Simple Usage]: https://github.com/KingoftheHomeless/in-other-words#examples-of-simple-usage
-[Advanced Usage]: https://github.com/KingoftheHomeless/in-other-words#examples-of-simple-usage
-[Troubleshooting]: https://github.com/KingoftheHomeless/in-other-words/wiki/The-inner-workings-of-the-library#troubleshooting
-[Performance]: https://github.com/KingoftheHomeless/in-other-words/wiki/The-inner-workings-of-the-library#performance
+[Advanced Usage]: https://github.com/KingoftheHomeless/in-other-words#advanced-usage
+[Troubleshooting]: https://github.com/KingoftheHomeless/in-other-words#troubleshooting
+[Performance]: https://github.com/KingoftheHomeless/in-other-words#performance
 
 ## Overview
 `in-other-words` is an effect system in the vein of [`freer-simple`](https://github.com/lexi-lambda/freer-simple),
