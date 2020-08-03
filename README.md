@@ -1,5 +1,21 @@
 # in-other-words
 
+- [Overview][]
+- [Features][]
+- [Required Language Extensions][]
+- [Examples of Simple Usage][]
+- [Advanced Usage][]
+- [Troubleshooting][]
+- [Performance][]
+
+[Overview]: https://github.com/KingoftheHomeless/in-other-words#overview
+[Features]: https://github.com/KingoftheHomeless/in-other-words#features
+[Required Language Extensions]: https://github.com/KingoftheHomeless/in-other-words#required-language-extensions
+[Examples of Simple Usage]: https://github.com/KingoftheHomeless/in-other-words#examples-of-simple-usage
+[Advanced Usage]: https://github.com/KingoftheHomeless/in-other-words#examples-of-simple-usage
+[Troubleshooting]: https://github.com/KingoftheHomeless/in-other-words/wiki/The-inner-workings-of-the-library#troubleshooting
+[Performance]: https://github.com/KingoftheHomeless/in-other-words/wiki/The-inner-workings-of-the-library#performance
+
 ## Overview
 `in-other-words` is an effect system in the vein of [`freer-simple`](https://github.com/lexi-lambda/freer-simple),
 [`fused-effects`](https://github.com/fused-effects/fused-effects),
@@ -204,7 +220,7 @@ library,  or are struggling with a feature or error message you're having a
 time with.
 
 
-## Questions and errors
+## Troubleshooting
 [The wiki has a page for common error messages.](TODO)
 If you run into any issues or strange error messages that you can't figure out
 from the wiki, feel free to make an issue about it. If not already covered, and
@@ -230,7 +246,7 @@ with similar power, but relying on [delimited continuation primops](https://gith
 together with other IO operations for performance, with the eventual goal to
 support more effects than `eff` (currently) does.
 
-
+***
 <b id="f1">[1](#a1)</b> Every effect is required to be *representational* in the carrier monad.
 This means that if you can represent your effect using:
 * a `mtl`-style effect class
