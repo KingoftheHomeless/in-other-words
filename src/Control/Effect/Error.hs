@@ -316,8 +316,9 @@ type ErrorToIOC e m a =
 -- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
 -- by making use of 'IO' exceptions.
 --
--- @'Derivs' (ErrorToIOC e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
--- @'Prims' (ErrorToIOC e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
+-- @'Derivs' ('ErrorToIOC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
+--
+-- @'Prims' ('ErrorToIOC' e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
 --
 -- This has a higher-rank type, as it makes use of 'ErrorToIOC'.
 -- **This makes 'errorToIO' very difficult to use partially applied.**
@@ -376,8 +377,8 @@ catchToErrorSimple from = interpretSimple $ \case
 
 
 type InterpretErrorSimpleC e = CompositionC
- '[ InterpretSimpleC (Throw e)
-  , InterpretSimpleC (Catch e)
+ '[ InterpretSimpleC (Catch e)
+  , InterpretSimpleC (Throw e)
   ]
 
 -- | Transforms connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
@@ -395,14 +396,15 @@ errorToErrorSimple :: forall smallExc bigExc m a p
                    -> InterpretErrorSimpleC smallExc m a
                    -> m a
 errorToErrorSimple to from =
-     catchToErrorSimple from
-  .  throwToThrowSimple to
+     throwToThrowSimple to
+  .  interpretSimple \case
+       Catch m h -> intro1 $ catchJust from (lift m) (lift #. h)
   .# runComposition
 {-# INLINE errorToErrorSimple #-}
 
 
 type ErrorToIOSimpleC e = CompositionC
- '[ IntroC '[Throw e, Catch e] '[ErrorIO]
+ '[ IntroC '[Catch e, Throw e] '[ErrorIO]
   , InterpretErrorSimpleC e
   , ErrorIOToIOC
   ]
@@ -424,13 +426,13 @@ errorToErrorIOSimple main = do
   let
     main' =
         interpretSimple \case
+          Throw e -> throwIO (OpaqueExc uniq (unsafeCoerce e))
+      $ interpretSimple \case
           Catch m h -> m `catchIO` \exc@(OpaqueExc uniq' e) ->
             if uniq == uniq' then
               h (unsafeCoerce e)
             else
               throwIO exc
-      $ interpretSimple \case
-          Throw e -> throwIO (OpaqueExc uniq (unsafeCoerce e))
       $ runComposition
       $ main
   fmap Right main' `catchIO` \exc@(OpaqueExc uniq' e) ->
