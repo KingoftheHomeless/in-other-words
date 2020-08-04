@@ -93,20 +93,19 @@ import Control.Effect.Carrier.Internal.Interpret
 
 -- | An effect for concurrent operations.
 newtype Conc m a = Conc (Unlift IO m a)
+  deriving EffNewtype via Conc `WrapperOf` Unlift IO
 
 unliftConc :: Eff Conc m => ((forall x. m x -> IO x) -> IO a) -> m a
 unliftConc main = wrapWith Conc $ unlift (\lower -> main (lower .# lift))
 {-# INLINE unliftConc #-}
 
-instance Unwrapped Conc (Unlift IO)
-
 type ConcToIOC = CompositionC
- '[ UnwrapC Conc (Unlift IO)
+ '[ UnwrapC Conc
   , UnliftToFinalC IO
   ]
 
 type ConcToUnliftIOC = CompositionC
- '[ UnwrapC Conc (Unlift IO)
+ '[ UnwrapC Conc
   , SubsumeC (Unlift IO)
   ]
 

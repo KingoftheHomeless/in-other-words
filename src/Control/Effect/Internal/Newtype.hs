@@ -8,7 +8,13 @@ module Control.Effect.Internal.Newtype
 
   , UnwrapC(UnwrapC)
   , unwrap
-  , Unwrapped(..)
+
+  , UnwrapTopC(UnwrapTopC)
+  , unwrapTop
+
+  , EffNewtype(..)
+
+  , WrapperOf(..)
   ) where
 
 import Data.Coerce
@@ -49,38 +55,6 @@ instance ( Member e' (Derivs m)
     \(e :: e z x) -> algDerivs (Union membership (coerce e :: e' z x))
   {-# INLINE algDerivs #-}
 
-newtype UnwrapC (e :: Effect)
-                (e' :: Effect)
-                m
-                (a :: *) = UnwrapC { unUnwrapC :: m a }
-  deriving ( Functor, Applicative, Monad
-           , Alternative, MonadPlus
-           , MonadFix, MonadFail, MonadIO
-           , MonadThrow, MonadCatch, MonadMask
-           , MonadBase b, MonadBaseControl b
-           )
-  deriving (MonadTrans, MonadTransControl) via IdentityT
-
-instance ( IntroConsistent '[] '[e'] m
-         , Unwrapped e e'
-         , Carrier m
-         )
-      => Carrier (UnwrapC e e' m) where
-  type Derivs (UnwrapC e e' m) = e ': StripPrefix '[e'] (Derivs m)
-  type Prims  (UnwrapC e e' m) = Prims m
-
-  algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
-
-  reformulate n alg = powerAlg' (weakenAlg (reformulate (n .# UnwrapC) alg)) $
-    \e -> reformulate (n .# UnwrapC) alg (Union Here (unwrapped e))
-  {-# INLINE reformulate #-}
-
-  algDerivs = powerAlg' (weakenAlg (coerce (algDerivs @m))) $
-    \e -> coerceAlg (algDerivs @m) (Union Here (unwrapped e))
-  {-# INLINE algDerivs #-}
-
-
 wrap :: ( Member e (Derivs m)
         , Carrier m
         , Coercible unwrappedE e
@@ -113,19 +87,98 @@ wrapWith :: ( Member e (Derivs m)
 wrapWith _ = wrap
 {-# INLINE wrapWith #-}
 
--- | Unwrap uses of an effect, placing its unwrapped version on top
--- of the effect stack.
-unwrap :: forall e unwrappedE m a
-        . ( IntroConsistent '[] '[unwrappedE] m
-          , Carrier m
-          , Unwrapped e unwrappedE
+newtype UnwrapC (e :: Effect)
+                m
+                (a :: *) = UnwrapC { unUnwrapC :: m a }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b, MonadBaseControl b
+           )
+  deriving (MonadTrans, MonadTransControl) via IdentityT
+
+instance ( Carrier m
+         , Member (UnwrappedEff e) (Derivs m)
+         , EffNewtype e
+         )
+      => Carrier (UnwrapC e m) where
+  type Derivs (UnwrapC e m) = e ': Derivs m
+  type Prims  (UnwrapC e m) = Prims m
+
+  algPrims = coerce (algPrims @m)
+  {-# INLINE algPrims #-}
+
+  reformulate n alg = powerAlg' (reformulate (n .# UnwrapC) alg) $
+    \e -> reformulate (n .# UnwrapC) alg (Union membership (unwrapped e))
+  {-# INLINE reformulate #-}
+
+  algDerivs = powerAlg' (coerce (algDerivs @m)) $
+    \e -> coerceAlg (algDerivs @m) (Union membership (unwrapped e))
+  {-# INLINE algDerivs #-}
+
+newtype UnwrapTopC (e :: Effect)
+                m
+                (a :: *) = UnwrapTopC { unUnwrapTopC :: m a }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b, MonadBaseControl b
+           )
+  deriving (MonadTrans, MonadTransControl) via IdentityT
+
+instance ( IntroConsistent '[] '[UnwrappedEff e] m
+         , EffNewtype e
+         , Carrier m
+         )
+      => Carrier (UnwrapTopC e m) where
+  type Derivs (UnwrapTopC e m) = e ': StripPrefix '[UnwrappedEff e] (Derivs m)
+  type Prims  (UnwrapTopC e m) = Prims m
+
+  algPrims = coerce (algPrims @m)
+  {-# INLINE algPrims #-}
+
+  reformulate n alg = powerAlg' (weakenAlg (reformulate (n .# UnwrapTopC) alg)) $
+    \e -> reformulate (n .# UnwrapTopC) alg (Union Here (unwrapped e))
+  {-# INLINE reformulate #-}
+
+  algDerivs = powerAlg' (weakenAlg (coerce (algDerivs @m))) $
+    \e -> coerceAlg (algDerivs @m) (Union Here (unwrapped e))
+  {-# INLINE algDerivs #-}
+
+
+
+-- | Unwrap uses of an effect
+unwrap :: forall e m a
+        . ( Carrier m
+          , Member (UnwrappedEff e) (Derivs m)
+          , EffNewtype e
           )
-       => UnwrapC e unwrappedE m a
+       => UnwrapC e m a
        -> m a
 unwrap = unUnwrapC
 {-# INLINE unwrap #-}
 
-class Unwrapped (e :: Effect) (e' :: Effect) | e -> e' where
-  unwrapped :: e z x -> e' z x
-  default unwrapped :: Coercible e e' => e z x -> e' z x
+-- | Unwrap uses of an effect, placing its unwrapped version on top
+-- of the effect stack.
+unwrapTop :: forall e m a
+           . ( IntroConsistent '[] '[UnwrappedEff e] m
+             , Carrier m
+             , EffNewtype e
+             )
+          => UnwrapTopC e m a
+          -> m a
+unwrapTop = unUnwrapTopC
+{-# INLINE unwrapTop #-}
+
+class EffNewtype (e :: Effect) where
+  type UnwrappedEff e :: Effect
+  unwrapped :: e z x -> UnwrappedEff e z x
+  default unwrapped :: Coercible e (UnwrappedEff e) => e z x -> UnwrappedEff e z x
   unwrapped = coerce
+
+newtype WrapperOf (e :: Effect) (e' :: Effect) m a = WrapperOf (e m a)
+
+instance Coercible e e' => EffNewtype (WrapperOf e e') where
+  type UnwrappedEff (WrapperOf e e') = e'

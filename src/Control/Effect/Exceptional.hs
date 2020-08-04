@@ -81,9 +81,9 @@ import Control.Effect.Carrier.Internal.Compose
 -- will throw that exception without it being caught.
 newtype Exceptional eff exc m a = Exceptional (Union '[eff, Catch exc] m a)
 
--- | A particularly useful specialization of 'Exceptional',
--- which makes 'catching' give you access to @'Error' exc@
--- inside of the region.
+-- | A particularly useful specialization of 'Exceptional', for gaining
+-- restricted access to an @'Error' exc@ effect.
+-- Main combinators are 'catchSafe' and 'trySafe'.
 type SafeError exc = Exceptional (Throw exc) exc
 
 {-
@@ -358,10 +358,10 @@ bombPure = errorWithoutStackTrace
 
 bombIO :: String -> a
 bombIO str = errorWithoutStackTrace $
-  str ++ ": Escaped exception! This is likely because an `async`ed exceptional\
+  str ++ ": Escaped exception! This is likely because an `async`ed exceptional \
   \computation escaped a `catching` through an `Async`. See \
   \Control.Effect.Exceptional.Exceptional. If that sounds unlikely, and you \
-  \haven't imported any internal modules and do something really stupid, \
+  \didn't import any internal modules and do something really stupid, \
   \then this could be a bug. If so, make an issue about \
   \it on the GitHub repository for in-other-words."
 

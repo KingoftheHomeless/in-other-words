@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d9c44d57b17764093165ecedec972c7d4a1c5123cb0ab0254def1068b5ad6ccb
+-- hash: 33f679136047534cbd724cf3fb9332610e614f204be61c05218c4ea65db67a6d
 
 name:           in-other-words
 version:        0.1.0.0
-synopsis:       An higher-order effect system where the sky's the limit
+synopsis:       A higher-order effect system where the sky's the limit
 category:       Control
 homepage:       https://github.com/KingoftheHomeless/in-other-words#readme
 author:         Love Waern
