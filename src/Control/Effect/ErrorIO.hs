@@ -16,7 +16,6 @@ module Control.Effect.ErrorIO
     -- * MonadCatch
   , C.MonadCatch
 
-
     -- * Carriers
   , ErrorIOToIOC
   , ErrorIOToErrorC
