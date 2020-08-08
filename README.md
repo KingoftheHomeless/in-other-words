@@ -218,13 +218,14 @@ The examples above are somewhat disingeneuos; they cover only the simplest
 uses of the library. The library has a wide variety of features,
 and using them properly can get very complicated. Because of this,
 [`in-other-words` offers a wiki covering more advanced topics of the
-library.](TODO) Check it out if you're interested in learning more about the
+library.](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics)
+Check it out if you're interested in learning more about the
 library,  or are struggling with a feature or error message you're having a
 time with.
 
 
 ## Troubleshooting
-[The wiki has a page for common error messages.](TODO)
+[The wiki has a page for common error messages.](https://github.com/KingoftheHomeless/in-other-words/wiki/Common-Error-Messages-and-Issues)
 If you run into any issues or strange error messages that you can't figure out
 from the wiki, feel free to make an issue about it. If not already covered, and
 if I can generalize the problem enough, then I'll expand the wiki to cover the
