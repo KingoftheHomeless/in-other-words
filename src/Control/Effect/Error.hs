@@ -1,6 +1,6 @@
 {-# LANGUAGE BlockArguments #-}
 module Control.Effect.Error
-  ( -- * Effect
+  ( -- * Effects
     Throw(..)
   , Catch(..)
   , Error
@@ -15,20 +15,13 @@ module Control.Effect.Error
   , fromEither
 
     -- * Main Interpreters
-  , ThrowC
   , runThrow
 
-  , ErrorC
   , runError
 
-  , ErrorToIOC
-  , ErrorToIOC'
-  , ReifiesErrorHandler
   , errorToIO
 
     -- * Other interpreters
-  , InterpretErrorC
-  , InterpretErrorC'
   , errorToErrorIO
 
   , throwToThrow
@@ -36,17 +29,26 @@ module Control.Effect.Error
   , errorToError
 
     -- * Simple variants
-  , ErrorToIOSimpleC
   , errorToIOSimple
   , errorToErrorIOSimple
 
-  , InterpretErrorSimpleC
   , throwToThrowSimple
   , catchToErrorSimple
   , errorToErrorSimple
 
     -- * Threading constraints
   , ErrorThreads
+
+    -- * Carriers
+  , ThrowC
+  , ErrorC
+  , ErrorToIOC
+  , ErrorToIOC'
+  , ReifiesErrorHandler
+  , InterpretErrorC
+  , InterpretErrorC'
+  , ErrorToIOSimpleC
+  , InterpretErrorSimpleC
   ) where
 
 import Data.Function
@@ -115,7 +117,7 @@ fromEither :: Eff (Throw e) m => Either e a -> m a
 fromEither = either throw pure
 {-# INLINE fromEither #-}
 
--- Run a 'Throw' effect purely.
+-- | Run a 'Throw' effect purely.
 --
 -- Unlike 'runError', this does not provide the ability to catch exceptions.
 -- However, it also doesn't impose any primitive effects, meaning 'runThrow' doesn't
@@ -133,11 +135,11 @@ runThrow :: forall e m a p
 runThrow = coerce
 {-# INLINE runThrow #-}
 
--- Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' -- purely.
+-- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' -- purely.
 --
--- @'Derivs' (ErrorC e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
+-- @'Derivs' ('ErrorC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
--- @'Prims' (ErrorC e m) = 'Optional' ((->) e) ': 'Prims' m@
+-- @'Prims' ('ErrorC' e m) = 'Control.Effect.Optional.Optional' ((->) e) ': 'Prims' m@
 runError :: forall e m a p
           . ( Carrier m
             , Threaders '[ErrorThreads] m p
@@ -153,8 +155,8 @@ runError = coerce
 -- @smallExc@ to the larger exception type @bigExc@.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'throwToThrow' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'throwToThrow' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'throwToThrowSimple', which doesn't have a higher-rank type.
@@ -172,8 +174,8 @@ throwToThrow to = interpret $ \case
 -- @bigExc@ correspond to exceptions of the smaller exception type @smallExc@.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'catchToError' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'catchToError' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'catchToErrorSimple', which doesn't have a higher-rank type.
@@ -207,8 +209,8 @@ type InterpretErrorC e m a =
 -- between the two types of exceptions.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretErrorC'.
--- **This makes 'errorToError' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'errorToError' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'errorToErrorSimple', which doesn't have a higher-rank type.
@@ -273,8 +275,8 @@ instance X.Exception OpaqueExc
 -- by transforming them into 'ErrorIO' and @'Embed' IO@
 --
 -- This has a higher-rank type, as it makes use of 'InterpretErrorC'.
--- **This makes 'errorToErrorIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'errorToErrorIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'throwToThrowSimple', which doesn't have a higher-rank type.
@@ -318,11 +320,11 @@ type ErrorToIOC e m a =
 --
 -- @'Derivs' ('ErrorToIOC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
--- @'Prims' ('ErrorToIOC' e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
+-- @'Prims' ('ErrorToIOC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Prims' m@
 --
 -- This has a higher-rank type, as it makes use of 'ErrorToIOC'.
--- **This makes 'errorToIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'errorToIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'errorToIOSimple', which doesn't have a higher-rank type.
@@ -444,8 +446,9 @@ errorToErrorIOSimple main = do
 -- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
 -- by making use of 'IO' exceptions.
 --
--- @'Derivs' (ErrorToIOC e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
--- @'Prims' (ErrorToIOC e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
+-- @'Derivs' ('ErrorToIOSimpleC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
+--
+-- @'Prims' ('ErrorToIOSimpleC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Prims' m@
 --
 -- This is a less performant version of 'errorToIO' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.

@@ -12,17 +12,19 @@ module Control.Effect.Bracket
   , finally
 
     -- * Interpretations
-  , BracketToIOC
   , bracketToIO
 
-  , BracketLocallyC
   , runBracketLocally
 
-  , IgnoreBracketC
   , ignoreBracket
 
     -- * Threading utilities
   , threadBracketViaClass
+
+    -- * Carriers
+  , BracketToIOC
+  , BracketLocallyC
+  , IgnoreBracketC
   ) where
 
 import Control.Effect
@@ -129,7 +131,7 @@ type BracketLocallyC = InterpretPrimC BracketLocallyH Bracket
 -- including asynchronous exceptions.
 --
 -- This is more situational compared to 'bracketToIO',
--- but can be useful. For an example, see the [Guide].
+-- but can be useful. For an example, see the [wiki](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics#bracket).
 --
 -- @'Derivs' ('BracketLocallyC' m) = 'Bracket' ': 'Derivs' m@
 --

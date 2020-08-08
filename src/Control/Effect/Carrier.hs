@@ -19,10 +19,15 @@ module Control.Effect.Carrier
   , addDeriv
   , addPrim
   , weakenReform
+  , weakenReformUnder
+  , weakenReformUnderMany
   , coerceReform
 
     -- * Hiding effects
   , StripPrefix
+
+    -- * Type Coercion
+  , module Data.Coerce
 
     -- * Common classes for newtype deriving
   , module Control.Effect.Internal.Derive
@@ -34,6 +39,7 @@ module Control.Effect.Carrier
   , module Control.Effect.Union
   ) where
 
+import Data.Coerce
 import Control.Effect
 import Control.Effect.Internal
 import Control.Effect.Primitive

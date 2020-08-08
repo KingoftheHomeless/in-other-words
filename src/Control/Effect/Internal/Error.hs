@@ -8,10 +8,9 @@ import Control.Applicative
 import Control.Monad
 
 import Control.Effect
-import Control.Effect.Union
 import Control.Effect.Type.Throw
 import Control.Effect.Type.Catch
-import Control.Effect.Type.Optional
+import Control.Effect.Optional
 
 import Control.Effect.Carrier
 
@@ -58,28 +57,28 @@ instance ( Carrier m
   type Prims  (ErrorC e m) = Optional ((->) e) ': Prims m
 
   algPrims = powerAlg (coerce (algPrims @(ThrowC e m))) $ \case
-    Optional h m -> ErrorC (unErrorC m `catchE` (return . h))
+    Optionally h m -> ErrorC (unErrorC m `catchE` (return . h))
   {-# INLINE algPrims #-}
 
   reformulate n alg =
     powerAlg (
       coerceReform (reformulate @(ThrowC e m)) n (weakenAlg alg)
     ) $ \case
-      Catch m h -> join $ (alg . inj) $ Optional h (fmap pure m)
+      Catch m h -> join $ (alg . inj) $ Optionally h (fmap pure m)
   {-# INLINE reformulate #-}
 
 
 -- | 'ErrorThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Regional.Regional' s@
--- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
--- * @'Control.Effect.BaseControl.BaseControl' b@
--- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
--- * @'Control.Effect.Mask.Mask'@
--- * @'Control.Effect.Bracket.Bracket'@
--- * @'Control.Effect.Fix.Fix'@
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.BaseControl.BaseControl' @b@
+-- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
+-- * 'Control.Effect.Mask.Mask'
+-- * 'Control.Effect.Bracket.Bracket'
+-- * 'Control.Effect.Fix.Fix'
 class    ( forall e. Threads (ExceptT e) p
          ) => ErrorThreads p
 instance ( forall e. Threads (ExceptT e) p

@@ -14,7 +14,7 @@ import qualified Control.Monad.Trans.Writer.CPS    as CPSWr
 -- | An effect for spliting a nondeterministic computation
 -- into its head and tail.
 --
--- **'Split' is typically used as a primitive effect.**
+-- __'Split' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff' 'Split'@ instance for that monad transformer

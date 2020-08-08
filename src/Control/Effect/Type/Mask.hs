@@ -22,7 +22,7 @@ data MaskMode
 
 -- | An effect for masking asynchronous exceptions.
 --
--- **'Mask' is typically used as a primitive effect.**
+-- __'Mask' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff' 'Mask'@ instance for that monad transformer
@@ -58,10 +58,11 @@ instance ( Reifies s (ReifiedEffAlgebra Mask m)
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' 'Mask t@ instance,
 -- given that @t@ lifts @'MonadMask'@.
 --
--- **BEWARE**: 'threadMaskViaClass' is only safe if the implementation of
--- 'mask' and 'uninterruptibleMask' for @t m@ only makes use of 'mask'
--- and 'uninterruptibleMask' for @m@, and no other methods of 'MonadThrow', 'MonadCatch',
--- and 'MonadMask'.
+-- __BEWARE__: 'threadMaskViaClass' is only safe if the implementation of
+-- 'Control.Monad.Catch.mask' and 'Control.Monad.Catch.uninterruptibleMask'
+-- for @t m@ only makes use of 'Conrol.Monad.Catch.mask'
+-- and 'Control.Monad.Catch.uninterruptibleMask' for @m@, and no other methods of
+-- 'MonadThrow', 'MonadCatch', and 'MonadMask'.
 threadMaskViaClass :: forall t m a
                     . Monad m
                    => ( RepresentationalT t

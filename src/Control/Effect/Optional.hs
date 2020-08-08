@@ -5,18 +5,20 @@ module Control.Effect.Optional
   , HoistOptionCall(..)
 
     -- * Actions
-  , optional
+  , optionally
   , hoistOption
 
-    -- * Interpreters
-  , HoistOptionC
+    -- * Interpretations
   , runHoistOption
 
-  , HoistOptionToFinalC
   , hoistOptionToFinal
 
     -- * Threading utilities
   , threadOptionalViaBaseControl
+
+    -- * Carriers
+  , HoistOptionC
+  , HoistOptionToFinalC
   ) where
 
 import Control.Monad
@@ -33,9 +35,9 @@ import Control.Effect.Type.Optional
 -- | Execute the provided computation, providing the
 -- interpretation of @'Optional' s@ the option to execute
 -- it in full or in part.
-optional :: Eff (Optional s) m => s a -> m a -> m a
-optional s m = send (Optional s m)
-{-# INLINE optional #-}
+optionally :: Eff (Optional s) m => s a -> m a -> m a
+optionally s m = send (Optionally s m)
+{-# INLINE optionally #-}
 
 -- | Hoist a natural transformation of the base monad into the current
 -- monad, equipped with the option to execute the provided computation
@@ -43,7 +45,7 @@ optional s m = send (Optional s m)
 hoistOption :: Eff (HoistOption b) m
             => (forall x. (a -> x) -> b x -> b x)
             -> m a -> m a
-hoistOption n = optional (HoistOptionCall n)
+hoistOption n = optionally (HoistOptionCall n)
 {-# INLINE hoistOption #-}
 
 -- | Runs a @'HoistOption' m@ effect, where the base monad
@@ -63,7 +65,7 @@ instance ( Carrier m
          , MonadBaseControl b m
          )
       => PrimHandler HoistOptionToFinalH (HoistOption b) m where
-  effPrimHandler (Optional (HoistOptionCall b) m) =
+  effPrimHandler (Optionally (HoistOptionCall b) m) =
     join $ liftBaseWith $ \lower ->
       b pure (restoreM <$> lower m)
   {-# INLINE effPrimHandler #-}

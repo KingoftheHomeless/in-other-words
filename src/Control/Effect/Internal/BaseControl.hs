@@ -9,12 +9,12 @@ import Control.Effect.Carrier.Internal.Interpret
 import Control.Monad.Trans.Identity
 import Control.Effect.Type.Internal.BaseControl
 
-import GHC.Exts (proxy#)
+import GHC.Exts (Proxy#, proxy#)
 
 data BaseControlH
 
 instance Carrier m => PrimHandler BaseControlH (BaseControl m) m where
-  effPrimHandler (GainBaseControl main) = return $ main (proxy# @_ @(Itself m))
+  effPrimHandler (GainBaseControl main) = return $ main (proxy# :: Proxy# (Itself m))
   {-# INLINE effPrimHandler #-}
 
 newtype BaseControlC m a = BaseControlC {

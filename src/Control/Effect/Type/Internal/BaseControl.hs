@@ -30,10 +30,12 @@ import Control.Monad.Trans.Writer.CPS as CPSWr
 -- already have 'ThreadsEff' instances defined for them; so you don't have to
 -- define any for your own effect.
 --
--- The helper primitive effects offered in this library are - in order
--- of ascending power - 'Regional', 'Optional', 'BaseControl' and 'Unlift'.
+-- The helper primitive effects offered in this library are -- in order of
+-- ascending power -- 'Control.Effect.Regional.Regional',
+-- 'Control.Effect.Optional.Optional', 'Control.Effect.BaseControl.BaseControl'
+-- and 'Control.Effect.Unlift.Unlift'.
 --
--- **'BaseControl' is typically used as a primitive effect**.
+-- __'BaseControl' is typically used as a primitive effect__.
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff' ('BaseControl' b)@ instance for that monad transformer
@@ -61,7 +63,7 @@ threadBaseControlViaClass :: forall b t m a
                           => (forall x. BaseControl b m x -> m x)
                           -> BaseControl b (t m) a -> t m a
 threadBaseControlViaClass alg (GainBaseControl main) =
-  lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) -> main (proxy# @_ @(t z))
+  lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) -> main (proxy# :: Proxy# (t z))
 {-# INLINE threadBaseControlViaClass #-}
 
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Optional' s) t@ instance,
@@ -74,15 +76,15 @@ threadOptionalViaBaseControl :: forall s t m a
                                 )
                              => (forall x. Optional s m x -> m x)
                              -> Optional s (t m) a -> t m a
-threadOptionalViaBaseControl alg (Optional sa m) =
+threadOptionalViaBaseControl alg (Optionally sa m) =
     join
-  $ threadEff (\(GainBaseControl main) -> return $ main (proxy# @_ @(Itself m)))
+  $ threadEff (\(GainBaseControl main) -> return $ main (proxy# :: Proxy# (Itself m)))
   $ GainBaseControl @m $ \(_ :: Proxy# z) ->
       coerce $ control @m @z @a $ \lower -> do
         join $ coerce
              $ alg
-             $ Optional (fmap (lower . pure) sa)
-                        (fmap pure (coerce (lower @a) m))
+             $ Optionally (fmap (lower . pure) sa)
+                          (fmap pure (coerce (lower @a) m))
 {-# INLINE threadOptionalViaBaseControl #-}
 
 
@@ -108,7 +110,7 @@ THREAD_BASE_CONTROL_CTX(Monoid w, SWr.WriterT w)
 instance Monoid w => ThreadsEff (BaseControl b) (CPSWr.WriterT w) where
   threadEff alg (GainBaseControl main) =
     lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) ->
-      main (proxy# @_ @(WriterCPS w z))
+      main (proxy# :: Proxy# (WriterCPS w z))
   {-# INLINE threadEff #-}
 
 

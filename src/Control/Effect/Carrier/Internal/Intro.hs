@@ -61,7 +61,7 @@ instance ( Carrier m
   {-# INLINE algDerivs #-}
 
 
-type IntroTopC = IntroC '[] 
+type IntroTopC = IntroC '[]
 type IntroUnderC e = IntroC '[e]
 
 -- | A constraint that the effect stack of @m@ -- @'Control.Effect.Derivs' m@ --

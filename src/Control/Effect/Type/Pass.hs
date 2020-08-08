@@ -17,7 +17,7 @@ import Control.Effect.Internal.Union
 -- | An effect for altering what a computation
 -- 'Control.Effect.Writer.tell's.
 --
--- **'Pass' is typically used as a primitive effect.**
+-- __'Pass' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'Monoid' s => 'ThreadsEff' ('Pass' s)@ instance for that monad transformer
@@ -44,7 +44,7 @@ instance ( Reifies s (ReifiedEffAlgebra (Pass w) m)
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Pass' w) t@ instance,
 -- given that @t@ lifts @'MonadWriter' w@.
 --
--- **BEWARE**: 'threadPassViaClass' is only safe if the implementation of
+-- __BEWARE__: 'threadPassViaClass' is only safe if the implementation of
 -- 'pass' for @t m@ only makes use of 'pass' for @m@, and no other methods
 -- of 'MonadWriter'.
 threadPassViaClass :: forall w t m a

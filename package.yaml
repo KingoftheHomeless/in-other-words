@@ -22,7 +22,7 @@ dependencies:
   - stm >= 2.5 && < 2.6
 
 library:
-  ghc-options: -Wall -Wextra
+  ghc-options: -Wall
   source-dirs: src
 
 default-extensions:

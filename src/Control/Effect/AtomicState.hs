@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 module Control.Effect.AtomicState
-  ( -- * Effect
+  ( -- * Effects
     AtomicState(..)
 
     -- * Actions
@@ -18,13 +18,15 @@ module Control.Effect.AtomicState
   , runAtomicStateIORef
   , runAtomicStateTVar
 
-  , AtomicStateToStateC
   , atomicStateToState
 
     -- * Simple variants of interpretations
   , atomicStateToIOSimple
   , runAtomicStateIORefSimple
   , runAtomicStateTVarSimple
+
+    -- * Carriers
+  , AtomicStateToStateC
   ) where
 
 import Data.IORef
@@ -112,8 +114,8 @@ atomicPut s = atomicState $ \_ -> (s, ())
 -- of the 'IORef'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'atomicStateToIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'atomicStateToIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'atomicStateToIOSimple', which doesn't have a higher-rank type.
@@ -129,6 +131,14 @@ atomicStateToIO sInit main = do
   return (sEnd, a)
 {-# INLINE atomicStateToIO #-}
 
+-- | Run an 'AtomicState' effect in terms of atomic operations in IO.
+--
+-- Internally, this simply creates a new 'IORef', passes it to
+-- 'runAtomicStateIORefSimple', and then returns the result and the final value
+-- of the 'IORef'.
+--
+-- This is a less performant version of 'runAtomicStateIORefSimple' that doesn't
+-- have a higher-rank type, making it much easier to use partially applied.
 atomicStateToIOSimple :: forall s m a p
                        . ( Eff (Embed IO) m
                          , Threaders '[ReaderThreads] m p
@@ -147,8 +157,8 @@ atomicStateToIOSimple sInit main = do
 -- over an 'IORef'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runAtomicStateIORef' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runAtomicStateIORef' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'runAtomicStateIORefSimple', which doesn't have a higher-rank type.
@@ -183,8 +193,8 @@ runAtomicStateIORefSimple ref = interpretSimple $ \case
 -- over an 'TVar'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runAtomicStateTVar' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runAtomicStateTVar' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'runAtomicStateTVarSimple', which doesn't have a higher-rank type.

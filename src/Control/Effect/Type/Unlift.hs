@@ -58,10 +58,12 @@ unliftT main = liftWith $ \lower ->
 -- already have 'ThreadsEff' instances defined for them, so you don't have to
 -- define any for your own effect.
 --
--- The helper primitive effects offered in this library are - in ascending
--- levels of power - 'Regional', 'Optional', 'BaseControl' and 'Unlift'.
+-- The helper primitive effects offered in this library are -- in order of
+-- ascending power -- 'Control.Effect.Regional.Regional',
+-- 'Control.Effect.Optional.Optional', 'Control.Effect.BaseControl.BaseControl'
+-- and 'Control.Effect.Unlift.Unlift'.
 --
--- **'Unlift' is typically used as a primitive effect.**
+-- __'Unlift' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff' ('Unlift' b)@ instance for that monad transformer

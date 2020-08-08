@@ -32,7 +32,11 @@ type Effect = (* -> *) -> * -> *
 data Union (r :: [Effect]) m a where
   Union :: Coercible z m => ElemOf e r -> e z a -> Union r m a
 
+-- | An @'Algebra' r m@ desribes a collection of effect handlers for @m@ over
+-- all effects in the list @r@.
 type Algebra r m = forall x. Union r m x -> m x
+
+-- | A first-rank type which can often be used instead of 'Algebra'
 type Algebra' r m a = Union r m a -> m a
 
 -- | 'RepresentationalEff' is the constraint every effect is expected
@@ -48,7 +52,8 @@ type Algebra' r m a = Union r m a -> m a
 -- equally powerful variants that do.
 --
 -- If you ever encounter that an effect you've written doesn't satisfy
--- 'RepresentationalEff', please consult [this guide.]
+-- 'RepresentationalEff', please consult
+-- [the wiki](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics#making-effects-representationaleff).
 class    ( forall m n x. Coercible m n => Coercible (e m x) (e n x) )
       => RepresentationalEff (e :: Effect)
 instance ( forall m n x. Coercible m n => Coercible (e m x) (e n x) )
@@ -62,6 +67,7 @@ decomp (Union Here e) = Right (coerce e)
 decomp (Union (There pr) e) = Left (Union pr e)
 {-# INLINE decomp #-}
 
+-- | Extract the only effect of an 'Union'.
 extract :: RepresentationalEff e
         => Union '[e] m a
         -> e m a
@@ -77,11 +83,13 @@ absurdU :: Union '[] m a -> b
 absurdU (Union pr _) = case pr of {}
 {-# INLINE absurdU #-}
 
+
+-- | Weaken an 'Algebra' by removing the topmost effect.
 weakenAlg :: Algebra' (e ': r) m a -> Algebra' r m a
 weakenAlg alg u = alg (weaken u)
 {-# INLINE weakenAlg #-}
 
--- | Strengthen an algebra by providing a handler for a new effect @e@.
+-- | Strengthen an 'Algebra' by providing a handler for a new effect @e@.
 powerAlg :: forall e r m a
           . RepresentationalEff e
          => Algebra' r m a
@@ -99,18 +107,21 @@ powerAlg' alg _ (Union (There pr) e) = alg (Union pr e)
 {-# INLINE powerAlg' #-}
 
 
--- | Add a primitive effect and corresponding derived effect to a reformulation.
-addPrim :: Monad z
+-- | Add a primitive effect and corresponding derived effect to a 'Reformulation'.
+addPrim :: forall e r p m z a
+         . Monad z
         => Reformulation' r p m z a
         -> Reformulation' (e ': r) (e ': p) m z a
 addPrim reform n alg = powerAlg' (reform n (weakenAlg alg)) (alg . Union Here)
 {-# INLINE addPrim #-}
 
+-- | Lift an @m@-based 'Reformulation' to a @t m@-based 'Reformulation',
+-- where @t@ is any 'MonadTrans'
 liftReform
   :: (MonadTrans t, Monad m)
   => Reformulation' r p m z a
   -> Reformulation' r p (t m) z a
-liftReform reform n = reform (n . lift)
+liftReform reform = \n -> reform (n . lift)
 {-# INLINE liftReform #-}
 
 coerceReform :: Coercible m n
@@ -119,6 +130,8 @@ coerceReform :: Coercible m n
 coerceReform reform n alg = coerce (reform (n .# coerce) alg)
 {-# INLINE coerceReform #-}
 
+-- | Weaken a 'Reformulation' by removing the topmost
+-- derived effect.
 weakenReform :: Reformulation' (e ': r) p m z a
              -> Reformulation' r p m z a
 weakenReform reform n alg = weakenAlg (reform n alg)
@@ -155,6 +168,7 @@ instance (ThreadsEff e t, Threads t p) => Threads t (e ': p) where
   thread alg = powerAlg (thread (weakenAlg alg)) (threadEff (alg . Union Here))
   {-# INLINE thread #-}
 
+-- | Inject an effect into a 'Union' containing that effect.
 inj :: Member e r => e m a -> Union r m a
 inj = Union membership
 {-# INLINE inj #-}
@@ -162,7 +176,7 @@ inj = Union membership
 -- | 'ReaderThreads' accepts all the primitive effects
 -- (intended to be used as such) offered in this library.
 --
--- Most notably, 'ReaderThreads' accepts @'Unlift' b@.
+-- Most notably, 'ReaderThreads' accepts @'Control.Effect.Unlift.Unlift' b@.
 class    (forall i. Threads (ReaderT i) p) => ReaderThreads p
 instance (forall i. Threads (ReaderT i) p) => ReaderThreads p
 
@@ -192,7 +206,7 @@ coerceAlg = coerce
 -- so
 --
 -- @
--- 'Control.Effect.Eff' ('Error' e) m = ('Control.Effect.Carrier' m, 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m), 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m))
+-- 'Control.Effect.Eff' ('Control.Effect.Error.Error' e) m = ('Control.Effect.Carrier' m, 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m), 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m))
 -- @
 --
 -- 'Bundle' should /never/ be used in any other contexts but within 'Control.Effect.Eff' and 'Control.Effect.Effs'.

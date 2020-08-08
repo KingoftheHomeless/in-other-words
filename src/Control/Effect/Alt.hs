@@ -1,27 +1,31 @@
 {-# LANGUAGE BlockArguments, DerivingVia #-}
 module Control.Effect.Alt
-  ( -- * Effect
+  ( -- * Effects
     Alt(..)
   , Alternative(..)
 
     -- * Interpretations
-  , AltMaybeC
   , runAltMaybe
-
-  , InterpretAltC(..)
-  , InterpretAltReifiedC
 
   , altToError
 
-  , AltToNonDetC
   , altToNonDet
 
-    -- * Simple variants
-  , InterpretAltSimpleC(..)
+    -- * Simple variants of interpretations
   , altToErrorSimple
 
     -- * Threading constraints
   , ErrorThreads
+
+    -- * Carriers
+  , AltMaybeC
+
+  , InterpretAltC(..)
+  , InterpretAltReifiedC
+
+  , AltToNonDetC
+
+  , InterpretAltSimpleC(..)
   ) where
 
 import Control.Applicative
@@ -108,6 +112,12 @@ type AltMaybeC = CompositionC
 
 -- | Run an 'Alt' effect purely, returning @Nothing@ on an unhandled
 -- 'empty'.
+--
+-- 'AltMaybeC' has an 'Alternative' instance based on the 'Alt'
+-- effect it interprets.
+--
+-- @'Derivs' ('AltMaybeC' m) = 'Alt' ': 'Derivs' m@
+-- @'Prims'  ('AltMaybeC' m) = 'Control.Effect.Optional.Optional' ((->) ()) ': 'Prims' m@
 runAltMaybe :: forall m a p
              . ( Threaders '[ErrorThreads] m p
                , Carrier m
@@ -126,9 +136,13 @@ runAltMaybe =
 -- | Transform an 'Alt' effect into 'Error' by describing it in
 -- terms of 'throw' and 'catch', using the provided exception to act as 'empty'.
 --
+-- You can use this in application code to locally get access to an 'Alternative'
+-- instance (since 'InterpretAltReifiedC' has an 'Alternative' instance based
+-- on the 'Alt' effect this interprets).
+--
 -- This has a higher-rank type, as it makes use of 'InterpretAltReifiedC'.
--- **This makes 'failToThrow' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'altToError' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'altToErrorSimple',
 -- which doesn't have a higher-rank type.
@@ -158,6 +172,10 @@ type AltToNonDetC = InterpretAltC AltToNonDetH
 
 -- | Transform an 'Alt' effect into 'NonDet' by describing it
 -- in terms of 'lose' and 'choose'.
+--
+-- You can use this in application code to locally get access to an 'Alternative'
+-- instance (since 'AltToNonDetC' has an 'Alternative' instance based
+-- on the 'Alt' effect this interprets).
 altToNonDet :: Eff NonDet m
             => AltToNonDetC m a
             -> m a
@@ -167,6 +185,10 @@ altToNonDet = interpretViaHandler .# unInterpretAltC
 
 -- | Transform an 'Alt' in terms of 'throw' and 'catch', by providing an
 -- exception to act as 'empty'.
+--
+-- You can use this in application code to locally get access to an 'Alternative'
+-- instance (since 'InterpretAltSimpleC' has an 'Alternative' instance based
+-- on the 'Alt' effect this interprets).
 --
 -- This is a less performant version of 'altToError' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.

@@ -10,6 +10,7 @@ data Catch e m a where
 
 -- | A pseudo-effect for connected @'Throw' e@ and @'Catch' e@ effects.
 --
--- @'Error' e@ should only ever be used inside of 'Eff' and 'Effs'
--- constraints. It is not a real effect! See 'Bundle'.
+-- @'Error' e@ should only ever be used inside of 'Control.Effect.Eff'
+-- and 'Control.Effect.Effs' constraints. It is not a real effect!
+-- See 'Bundle'.
 type Error e = Bundle '[Throw e, Catch e]

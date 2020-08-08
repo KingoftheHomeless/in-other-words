@@ -64,16 +64,16 @@ instance ( Carrier m
 
 -- | 'StateLazyThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Regional.Regional' s@
--- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
--- * @'Control.Effect.BaseControl.BaseControl' b@
--- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
--- * @'Control.Effect.Mask.Mask'@
--- * @'Control.Effect.Bracket.Bracket'@
--- * @'Control.Effect.Fix.Fix'@
--- * @'Control.Effect.NonDet.Split'@
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.BaseControl.BaseControl' @b@
+-- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
+-- * 'Control.Effect.Mask.Mask'
+-- * 'Control.Effect.Bracket.Bracket'
+-- * 'Control.Effect.Fix.Fix'
+-- * 'Control.Effect.NonDet.Split'
 class    ( forall s. Threads (LSt.StateT s) p
          ) => StateLazyThreads p
 instance ( forall s. Threads (LSt.StateT s) p
@@ -81,16 +81,16 @@ instance ( forall s. Threads (LSt.StateT s) p
 
 -- | 'StateThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Regional.Regional' s@
--- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
--- * @'Control.Effect.BaseControl.BaseControl' b@
--- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
--- * @'Control.Effect.Mask.Mask'@
--- * @'Control.Effect.Bracket.Bracket'@
--- * @'Control.Effect.Fix.Fix'@
--- * @'Control.Effect.NonDet.Split'@
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.BaseControl.BaseControl' @b@
+-- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
+-- * 'Control.Effect.Mask.Mask'
+-- * 'Control.Effect.Bracket.Bracket'
+-- * 'Control.Effect.Fix.Fix'
+-- * 'Control.Effect.NonDet.Split'
 class    ( forall s. Threads (SSt.StateT s) p
          ) => StateThreads p
 instance ( forall s. Threads (SSt.StateT s) p

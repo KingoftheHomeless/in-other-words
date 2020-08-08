@@ -21,10 +21,10 @@ import Control.Effect.Internal.Itself
 -- and /primitive/ effects. Typically, only the derived effects are relevant
 -- for the end user.
 --
--- The "Control.Effect#interpretation tools" are typically powerful enough to
+-- The standard interpretation tools are typically powerful enough to
 -- let you avoid making instances of this class directly. If you need to make
 -- your own instance of 'Carrier', import "Control.Effect.Carrier" and consult the
--- [Guide].
+-- [wiki](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics#novel-carriers).
 class Monad m => Carrier m where
   -- | The derived effects that @m@ carries. Each derived effect is eventually
   -- reformulated into terms of the primitive effects @'Prims' m@ or other
@@ -50,7 +50,7 @@ class Monad m => Carrier m where
   -- whose handlers aren't expressed in terms of other effects, and thus need to
   -- be lifted on a carrier-by-carrier basis.
   --
-  -- **Never place membership constraints on @'Prims' m@.**
+  -- __Never place membership constraints on @'Prims' m@.__
   -- You should only gain access to effects by placing membership constraints
   -- on @'Derivs' m@.
   --
@@ -72,6 +72,7 @@ class Monad m => Carrier m where
 
   -- | Any 'Carrier' @m@ must provide a way to describe the derived effects it
   -- carries in terms of the primitive effects.
+  --
   -- 'reformulate' is that decription: given any monad @z@ such that
   -- @z@ lifts @m@, then a @z@-based 'Algebra' (i.e. effect handler)
   -- over the derived effects can be created out of a @z@-based 'Algebra' over
@@ -79,7 +80,7 @@ class Monad m => Carrier m where
   reformulate :: Monad z
               => Reformulation' (Derivs m) (Prims m) m z a
 
-  -- An @m@-based algebra (i.e. effect handler) over the union of derived
+  -- | An @m@-based algebra (i.e. effect handler) over the union of derived
   -- effects (see @'Derivs' m@).
   --
   -- This is what 'send' makes use of.
@@ -96,7 +97,7 @@ class Monad m => Carrier m where
   {-# INLINE algDerivs #-}
 
 -- | (Morally) a type synonym for
--- @('Member' e ('Derivs' m), 'Carrier' m).
+-- @('Member' e ('Derivs' m), 'Carrier' m)@.
 -- This and 'Effs' are the typical methods to gain
 -- access to effects.
 --
@@ -159,8 +160,9 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 -- For example, the 'Control.Effect.State.runState' places the threading
 -- constraint @StateThreads@ on @'Prims' m@.
 -- If you want to use interpreters that generate threading constraints
--- inside of application code, then those constraints need to be propagated
--- throughout the application.
+-- inside of application code (and for some reason can't use
+-- [Split Interpretation](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics#abstract-effect-interpretation)),
+-- then those constraints need to be propagated throughout the application.
 --
 -- 'Threaders' is used for this purpose. For example,
 -- @'Threaders' '['Control.Effect.State.StateThreads', 'Control.Effect.Error.ExceptThreads'] m p@
@@ -174,9 +176,9 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 -- threading constraints often involve quantified constraints, which are fragile
 -- in combination with type families -- like 'Prims'.
 --
--- So @'Threaders' '[Control.Effect.State.StateThreads]' m p@
--- doesn't expand to @Control.Effect.State.StateThreads (Prims m)@, but rather,
--- @(p ~ Prims m, Control.Effect.State.StateThreads p)@
+-- So @'Threaders' '['Control.Effect.State.StateThreads']' m p@
+-- doesn't expand to @'Control.Effect.State.StateThreads' (Prims m)@, but rather,
+-- @(p ~ 'Prims' m, 'Control.Effect.State.StateThreads' p)@
 type Threaders cs m p = (p ~ Prims m, SatisfiesAll p cs)
 
 type family SatisfiesAll (q :: k) cs :: Constraint where
@@ -243,8 +245,8 @@ instance ( Carrier m
 -- reinterpreters into regular interpreters.
 --
 -- For example,
--- @'subsume' . 'reinterpretSimple' h@ is morally equivalent
--- to @'interpretSimple' h@
+-- @'subsume' . 'Control.Effect.reinterpretSimple' h@ is morally equivalent
+-- to @'Control.Effect.interpretSimple' h@
 subsume :: ( Carrier m
            , Member e (Derivs m)
            )

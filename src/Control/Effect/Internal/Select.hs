@@ -64,6 +64,10 @@ instance ( Carrier m
 
 -- | Run a @'Select' s@ effect by providing an evaluator
 -- for the final result of type @a@.
+--
+--  @'Derivs' ('SelectC' s t u m) = 'Select' s ': 'Derivs' m@
+--
+--  @'Prims'  ('SelectC' s t u m) = 'Prims' m@
 runSelect :: forall s m a p
            . ( Carrier m
              , Threaders '[SelectThreads] m p
@@ -120,6 +124,10 @@ instance ( Carrier m
 -- very few primitive effects that the carrier for 'runSelectFast' is able to thread.
 -- In fact, of all the primitive effects featured in this library, only
 -- one satisfies 'ContThreads': namely, 'Control.Effect.Reader.Reader'.
+--
+--  @'Derivs' ('SelectFastC' s r m) = 'Select' s ': 'Derivs' m@
+--
+--  @'Prims'  ('SelectFastC' s r m) = 'Prims' m@
 runSelectFast :: forall s m a p
              . ( Carrier m
                , Threaders '[SelectFastThreads] m p
@@ -133,13 +141,13 @@ runSelectFast eval m = fmap snd $ C.runContT (unSelectFastC m) $ \a ->
 
 -- | 'SelectThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Regional.Regional' s@
--- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
--- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type SelectThreads = FreeThreads
 
 -- | 'SelectFastThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type SelectFastThreads = ContFastThreads

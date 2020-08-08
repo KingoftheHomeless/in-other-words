@@ -163,9 +163,9 @@ unwrap = unUnwrapC
 -- | Unwrap uses of an effect, placing its unwrapped version on top
 -- of the effect stack.
 unwrapTop :: forall e m a
-           . ( IntroConsistent '[] '[UnwrappedEff e] m
-             , Carrier m
+           . ( HeadEff (UnwrappedEff e) m
              , EffNewtype e
+             , Carrier m
              )
           => UnwrapTopC e m a
           -> m a
@@ -178,6 +178,12 @@ class EffNewtype (e :: Effect) where
   default unwrapped :: Coercible e (UnwrappedEff e) => e z x -> UnwrappedEff e z x
   unwrapped = coerce
 
+-- | Useful for deriving instances of 'EffNewtype'.
+--
+-- @
+-- newtype SomeWrapper m a = SomeWrapper (SomeEffect m a)
+--   deriving 'EffNewtype' via SomeWrapper `'WrapperOf'` SomeEffect
+-- @
 newtype WrapperOf (e :: Effect) (e' :: Effect) m a = WrapperOf (e m a)
 
 instance Coercible e e' => EffNewtype (WrapperOf e e') where

@@ -9,14 +9,17 @@ module Control.Effect.Mask
   , uninterruptibleMask
   , uninterruptibleMask_
 
-  , MaskToIOC
+    -- * Interpretations
   , maskToIO
 
-  , IgnoreMaskC
   , ignoreMask
 
     -- * Threading utilities
   , threadMaskViaClass
+
+    -- * Carriers
+  , MaskToIOC
+  , IgnoreMaskC
   ) where
 
 import Control.Effect
@@ -58,6 +61,7 @@ type MaskToIOC = InterpretPrimC MaskToIOH Mask
 -- 'Control.Exception.uninterruptibleMask'.
 --
 -- @'Derivs' ('MaskToIOC' m) = 'Mask' ': 'Derivs' m@
+--
 -- @'Prims'  ('MaskToIOC' m) = 'Mask' ': 'Prims' m@
 maskToIO :: ( Carrier m
             , MonadMask m

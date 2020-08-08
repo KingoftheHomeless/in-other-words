@@ -1,14 +1,13 @@
 {-# LANGUAGE DerivingVia #-}
+-- | Interface adapted from "Control.Concurrent.Async"
 module Control.Effect.Conc
-  ( -- * Effect
+  ( -- * Effects
     Conc
   , A.Async
 
     -- * Interpretations
-  , ConcToIOC
   , concToIO
 
-  , ConcToUnliftIOC
   , concToUnliftIO
 
     -- * Key actions
@@ -60,7 +59,7 @@ module Control.Effect.Conc
   , replicateConcurrently
   , replicateConcurrently_
 
-    -- Re-exports from Control.Concurrent.Async
+    -- * Re-exports from "Control.Concurrent.Async"
   , A.asyncThreadId
   , A.AsyncCancelled(..)
   , A.ExceptionInLinkedThread(..)
@@ -71,6 +70,10 @@ module Control.Effect.Conc
   , A.waitEitherSTM_
   , A.waitBothSTM
   , A.compareAsyncs
+
+    -- * Carriers
+  , ConcToIOC
+  , ConcToUnliftIOC
   ) where
 
 import Control.Applicative

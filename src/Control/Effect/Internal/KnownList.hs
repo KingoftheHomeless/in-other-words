@@ -17,8 +17,8 @@ import Control.Effect.Internal.Union
 -- For example:
 --
 -- @
---    'Derivs' ('Control.Effect.ReinterpretSimpleC' e '[newE, newE2])
---  = e ': 'StripPrefix' '[newE, newE2] ('Derivs' m)
+--    'Control.Effect.Derivs' ('Control.Effect.ReinterpretSimpleC' e '[newE, newE2])
+--  = e ': 'StripPrefix' '[newE, newE2] ('Control.Effcet.Derivs' m)
 -- @
 --
 type family StripPrefix xs r where
@@ -89,3 +89,38 @@ weakenAlgMid :: forall right m left mid
              -> Algebra (Append left right) m
 weakenAlgMid sl sm alg u = alg (weakenMid @right sl sm u)
 {-# INLINE weakenAlgMid #-}
+
+
+weakenReformMid :: forall right p m z a left mid
+                 . SList left -> SList mid
+                -> Reformulation' (Append left (Append mid right)) p m z a
+                -> Reformulation' (Append left right) p m z a
+weakenReformMid sl sm reform = \n alg u -> reform n alg (weakenMid @right sl sm u)
+{-# INLINE weakenReformMid #-}
+
+
+-- | Weaken a 'Reformulation' by removing a number of derived effects under
+-- the the topmost effect.
+--
+-- This needs a type application to specify what effects to remove.
+weakenReformUnder :: forall new e r p m z a
+                   . KnownList new
+                  => Reformulation' (e ': Append new r) p m z a
+                  -> Reformulation' (e ': r) p m z a
+weakenReformUnder = weakenReformMid @r (singList @'[e]) (singList @new)
+{-# INLINE weakenReformUnder #-}
+
+-- | Weaken a 'Reformulation' by removing a number of derived effects under
+-- a number of topmost effects.
+--
+-- This needs a type application to specify what effects to remove,
+-- and another type application to specify the top effects of the stack
+-- underneath which effects are removed.
+weakenReformUnderMany :: forall new top r p m z a
+                       . ( KnownList new
+                         , KnownList top
+                         )
+                      => Reformulation' (Append top (Append new r)) p m z a
+                      -> Reformulation' (Append top r) p m z a
+weakenReformUnderMany = weakenReformMid @r (singList @top) (singList @new)
+{-# INLINE weakenReformUnderMany #-}

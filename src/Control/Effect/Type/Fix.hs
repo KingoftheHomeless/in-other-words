@@ -22,7 +22,7 @@ import Control.Effect.Internal.Union
 -- on this effect; by having access to 'Fix', you're able to
 -- use recursive do notation inside of effect handlers.
 --
--- **Fix is typically used as a primitive effect**.
+-- __Fix is typically used as a primitive effect__.
 -- If you define your own novel, non-trivial 'Control.Effect.Carrier',
 -- then you need to make a @'ThreadsEff' 'Fix'@ instance for it (if possible).
 newtype Fix m a where

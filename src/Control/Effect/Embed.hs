@@ -1,25 +1,27 @@
 {-# LANGUAGE DerivingVia #-}
 module Control.Effect.Embed
-  ( -- * Effect
+  ( -- * Effects
     Embed(..)
 
     -- * Actions
   , embed
 
     -- * Interpreters
-  , RunMC(RunMC)
   , runM
 
   , embedToEmbed
 
-  , EmbedToMonadBaseC
   , embedToMonadBase
 
-  , EmbedToMonadIOC
   , embedToMonadIO
 
     -- * Simple variants
   , embedToEmbedSimple
+
+    -- * Carriers
+  , RunMC(RunMC)
+  , EmbedToMonadBaseC
+  , EmbedToMonadIOC
   ) where
 
 import Control.Applicative
@@ -92,11 +94,11 @@ type EmbedToMonadIOC = InterpretC EmbedToMonadIOH (Embed IO)
 -- of one monad to the other.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'embedToEmbed' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'embedToEmbed' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
--- 'embedtoEmbedSimple', which doesn't have a higher-rank type.
+-- 'embedToEmbedSimple', which doesn't have a higher-rank type.
 embedToEmbed :: forall b b' m a
               . Eff (Embed b') m
              => (forall x. b x -> b' x)

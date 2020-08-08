@@ -1,6 +1,6 @@
 {-# LANGUAGE BlockArguments, DerivingVia #-}
 module Control.Effect.Writer
-  ( -- * Effect
+  ( -- * Effects
     Tell(..)
   , Listen(..)
   , Pass(..)
@@ -12,17 +12,13 @@ module Control.Effect.Writer
   , pass
   , censor
 
-  -- * Interpretations for Tell
-  , TellC
+  -- * Interpretations for 'Tell'
   , runTell
 
-  , TellLazyC
   , runTellLazy
 
-  , TellListC
   , runTellList
 
-  , TellListLazyC
   , runTellListLazy
 
   , tellToIO
@@ -34,7 +30,7 @@ module Control.Effect.Writer
   , tellToTell
   , tellIntoTell
 
-  -- * Simple variants of interpretations for Tell
+  -- * Simple variants of interpretations for 'Tell'
   , tellToIOSimple
   , runTellIORefSimple
   , runTellTVarSimple
@@ -42,31 +38,24 @@ module Control.Effect.Writer
   , tellToTellSimple
   , tellIntoTellSimple
 
-  -- * Interpretations for Tell + Listen
-  , ListenC
+  -- * Interpretations for 'Tell' + 'Listen'
   , runListen
 
-  , ListenLazyC
   , runListenLazy
 
-  , ListenTVarC
   , listenToIO
   , runListenTVar
 
   , listenIntoEndoListen
 
-  -- * Interpretations for Writer (Tell + Listen + Pass)
-  , WriterC
+  -- * Interpretations for 'Writer' ('Tell' + 'Listen' + 'Pass')
   , runWriter
 
-  , WriterLazyC
   , runWriterLazy
 
-  , WriterTVarC
   , writerToIO
   , runWriterTVar
 
-  , WriterToBracketC
   , writerToBracket
   , writerToBracketTVar
 
@@ -82,6 +71,22 @@ module Control.Effect.Writer
     -- * Threading utilities
   , threadListenViaClass
   , threadPassViaClass
+
+    -- * Carriers
+  , TellC
+  , TellLazyC
+  , TellListC
+  , TellListLazyC
+  , TellIntoEndoTellC
+  , ListenC
+  , ListenLazyC
+  , ListenTVarC
+  , ListenIntoEndoListenC
+  , WriterC
+  , WriterLazyC
+  , WriterTVarC
+  , WriterToBracketC
+  , WriterIntoEndoWriterC
   ) where
 
 import Data.Bifunctor
@@ -203,8 +208,9 @@ runTellListLazy =
 -- impose any primitive effects, meaning 'runTell' doesn't restrict what
 -- interpreters are run before it.
 --
--- @'Derivs' (TellC s m) = 'Tell' s ': 'Derivs' m@
--- @'Prims'  (TellC s m) = 'Prims' m@
+-- @'Derivs' ('TellC' s m) = 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('TellC' s m) = 'Prims' m@
 --
 -- This produces the final accumulation @s@ strictly. See 'runTellLazy' for a
 -- lazy variant of this.
@@ -228,8 +234,9 @@ runTell (TellC m) = do
 -- a larger variety of interpreters may be run before 'runListen' compared to
 -- 'runWriter'.
 --
--- @'Derivs' (ListenC s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
--- @'Prims'  (ListenC s m) = 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('ListenC' s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('ListenC' s m) = 'Listen' s ': 'Prims' m@
 --
 -- This produces the final accumulation strictly. See 'runListenLazy' for a
 -- lazy variant of this.
@@ -253,8 +260,9 @@ runListen (ListenC m) = do
 -- 'Control.Effect.Cont.runCont' can't be used before 'runWriter'.
 -- If you don't need 'pass', consider using 'runTell' or 'runListen' instead.
 --
--- @'Derivs' (WriterC s m) = 'Pass' s ': 'Listen' s ': 'Tell' s ': 'Derivs' m@
--- @'Prims'  (WriterC s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('WriterC' s m) = 'Pass' s ': 'Listen' s ': 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('WriterC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
 --
 -- This produces the final accumulation strictly. See 'runWriterLazy' for a
 -- lazy variant of this.
@@ -274,12 +282,13 @@ runWriter (WriterC m) = do
 -- | Run a @'Tell' s@ effect, where @s@ is a 'Monoid', by accumulating all the
 -- uses of 'tell' lazily.
 --
--- @'Derivs' (TellLazyC s m) = 'Tell' s ': 'Derivs' m@
--- @'Prims'  (TellLazyC s m) = 'Prims' m@
+-- @'Derivs' ('TellLazyC' s m) = 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('TellLazyC' s m) = 'Prims' m@
 --
 -- This is a variant of 'runTell'. that produces the final accumulation
--- lazily. **Use this only if you need**
--- **the laziness, as this would otherwise incur an unneccesary space leak.**
+-- lazily. __Use this only if you need__
+-- __the laziness, as this would otherwise incur an unneccesary space leak.__
 runTellLazy :: forall s m a p
          . ( Monoid s
            , Carrier m
@@ -293,12 +302,13 @@ runTellLazy (TellLazyC m) = swap <$> LW.runWriterT m
 -- | Run connected @'Listen' s@ and @'Tell' s@ effects,
 -- where @s@ is a 'Monoid', by accumulating all the uses of 'tell' lazily.
 --
--- @'Derivs' (ListenLazyC s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
--- @'Prims'  (ListenLazyC s m) = 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('ListenLazyC' s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('ListenLazyC' s m) = 'Listen' s ': 'Prims' m@
 --
 -- This is a variant of 'runListen' that produces the
--- final accumulation lazily. **Use this only if you need**
--- **the laziness, as this would otherwise incur an unneccesary space leak.**
+-- final accumulation lazily. __Use this only if you need__
+-- __the laziness, as this would otherwise incur an unneccesary space leak.__
 runListenLazy :: forall s m a p
            . ( Monoid s
              , Carrier m
@@ -313,12 +323,13 @@ runListenLazy (ListenLazyC m) = swap <$> LW.runWriterT m
 -- -- i.e. @'Writer' s@ -- where @s@ is a 'Monoid',
 -- by accumulating all the uses of 'tell' lazily.
 --
--- @'Derivs' (ListenLazyC s m) = 'Pass' s ': 'Listen' s ': 'Tell' s ': 'Derivs' m@
--- @'Prims'  (ListenLazyC s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('ListenLazyC' s m) = 'Pass' s ': 'Listen' s ': 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('ListenLazyC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
 --
 -- This is a variant of 'runListen' that produces the
--- final accumulation lazily. **Use this only if you need**
--- **the laziness, as this would otherwise incur an unneccesary space leak.**
+-- final accumulation lazily. __Use this only if you need__
+-- __the laziness, as this would otherwise incur an unneccesary space leak.__
 runWriterLazy :: forall s m a p
                . ( Monoid s
                  , Carrier m
@@ -383,14 +394,13 @@ type TellIntoEndoTellC s =
 -- by 'fromEndoWriter', like this:
 --
 -- @
---   'run'
--- $ ...
--- $ 'fromEndoWriter'
--- $ 'runTell'
--- $ 'tellIntoEndoTell' \@String -- The 'Monoid' must be specified
--- $ ...
+--    'run'
+--  $ ...
+--  $ 'fromEndoWriter'
+--  $ 'runTell'
+--  $ 'tellIntoEndoTell' \@String -- The 'Monoid' must be specified
+--  $ ...
 -- @
---
 tellIntoEndoTell :: ( Monoid s
                     , HeadEff (Tell (Endo s)) m
                     )
@@ -418,12 +428,12 @@ type ListenIntoEndoListenC s = CompositionC
 -- followed by 'fromEndoWriter', like this:
 --
 -- @
---   'run'
--- $ ...
--- $ 'fromEndoWriter'
--- $ 'runListen'
--- $ 'listenIntoEndoListen' \@String -- The 'Monoid' must be specified
--- $ ...
+--    'run'
+--  $ ...
+--  $ 'fromEndoWriter'
+--  $ 'runListen'
+--  $ 'listenIntoEndoListen' \@String -- The 'Monoid' must be specified
+--  $ ...
 -- @
 --
 listenIntoEndoListen :: ( Monoid s
@@ -446,10 +456,10 @@ type WriterIntoEndoWriterC s = CompositionC
    , InterpretC WriterToEndoWriterH (Tell s)
    ]
 
--- | Rewrite connected @'Pass' s@, '@'Listen' s@ and @'Tell' s@ effects
+-- | Rewrite connected @'Pass' s@, @'Listen' s@ and @'Tell' s@ effects
 -- -- i.e. @'Writer' s@ -- into connected @'Pass' ('Endo' s)@,
--- @'Listen' ('Endo' s)@ and @'Tell' (Endo s)@ effects
--- -- i.e. @'Writer' (Endo s)@.
+-- @'Listen' ('Endo' s)@ and @'Tell' (Endo s)@ effects on top of the effect
+-- stack -- i.e. @'Writer' (Endo s)@.
 --
 -- This effectively right-associates all uses of 'tell', which
 -- asymptotically improves performance if the time complexity of '<>' for the
@@ -461,14 +471,13 @@ type WriterIntoEndoWriterC s = CompositionC
 -- followed by 'fromEndoWriter', like this:
 --
 -- @
---   'run'
--- $ ...
--- $ 'fromEndoWriter'
--- $ 'runWriter'
--- $ 'writerIntoEndoWriter' \@String -- The 'Monoid' must be specified
--- $ ...
+--    'run'
+--  $ ...
+--  $ 'fromEndoWriter'
+--  $ 'runWriter'
+--  $ 'writerIntoEndoWriter' \@String -- The 'Monoid' must be specified
+--  $ ...
 -- @
---
 writerIntoEndoWriter :: ( Monoid s
                         , HeadEffs
                            '[Pass (Endo s), Listen (Endo s), Tell (Endo s)]
@@ -484,7 +493,19 @@ writerIntoEndoWriter =
   .# runComposition
 {-# INLINE writerIntoEndoWriter #-}
 
-
+-- | Transform a 'Tell' effect into another 'Tell' effect by providing a function
+-- to transform the type told.
+--
+-- This is useful to transform a @'Tell' s@ effect where @s@ isn't a 'Monoid'
+-- into a @'Tell' t@ effect where @@ _is_ a 'Monoid', and thus can be
+-- interpreted using the various 'Monoid'al 'Tell' interpreters.
+--
+-- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
+-- __This makes 'tellToTell' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
+--
+-- If performance is secondary, consider using the slower
+-- 'tellToTellSimple', which doesn't have a higher-rank type.
 tellToTell :: forall s t m a
             . Eff (Tell t) m
            => (s -> t)
@@ -494,6 +515,15 @@ tellToTell f = interpret $ \case
   Tell s -> tell (f s)
 {-# INLINE tellToTell #-}
 
+-- | Transform a 'Tell' effect into another 'Tell' effect by providing a function
+-- to transform the type told.
+--
+-- This is useful to transform a @'Tell' s@ where @s@ isn't a 'Monoid' into a
+-- @'Tell' t@ effect where @@ _is_ a 'Monoid', and thus can be interpreted using
+-- the various 'Monoid'al 'Tell' interpreters.
+--
+-- This is a less performant version of 'tellToTell' that doesn't have
+-- a higher-rank type, making it much easier to use partially applied.
 tellToTellSimple :: forall s t m a p
                   . ( Eff (Tell t) m
                     , Threaders '[ReaderThreads] m p
@@ -505,6 +535,19 @@ tellToTellSimple f = interpretSimple $ \case
   Tell s -> tell (f s)
 {-# INLINE tellToTellSimple #-}
 
+-- | Rewrite a 'Tell' effect into another 'Tell' effect on top of the effect
+-- stack by providing a function to transform the type told.
+--
+-- This is useful to rewrite a @'Tell' s@ effect where @s@ isn't a 'Monoid'
+-- into a @'Tell' t@ effect where @@ _is_ a 'Monoid', and thus can be
+-- interpreted using the various 'Monoid'al 'Tell' interpreters.
+--
+-- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
+-- __This makes 'tellToTell' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
+--
+-- If performance is secondary, consider using the slower
+-- 'tellIntoTellSimple', which doesn't have a higher-rank type.
 tellIntoTell :: forall s t m a
               . HeadEff (Tell t) m
              => (s -> t)
@@ -514,6 +557,22 @@ tellIntoTell f = reinterpret $ \case
   Tell s -> tell (f s)
 {-# INLINE tellIntoTell #-}
 
+-- | Rewrite a 'Tell' effect into another 'Tell' effect on top of the effect
+-- stack by providing a function to transform the type told.
+--
+-- This is useful to rewrite a @'Tell' s@ effect where @s@ isn't a 'Monoid'
+-- into a @'Tell' t@ effect where @@ _is_ a 'Monoid', and thus can be
+-- interpreted using the various 'Monoid'al 'Tell' interpreters.
+--
+-- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
+-- __This makes 'tellToTell' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
+--
+-- If performance is secondary, consider using the slower
+-- 'tellIntoTellSimple', which doesn't have a higher-rank type.
+--
+-- This is a less performant version of 'tellIntoTell' that doesn't have
+-- a higher-rank type, making it much easier to use partially applied.
 tellIntoTellSimple :: forall s t m a p
                     . ( HeadEff (Tell t) m
                       , Threaders '[ReaderThreads] m p
@@ -620,8 +679,9 @@ instance ( Monoid s
 -- operations in 'IO', relying on the provided protection of 'Bracket' for
 -- the implementation.
 --
--- @'Derivs' (WriterToBracketC s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
--- @'Prims' (WriterToBracketC s m) = 'Prims' m@
+-- @'Derivs' ('WriterToBracketC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('WriterToBracketC' s m) = 'Prims' m@
 --
 -- Note that unlike 'writerToIO', this does not have a higher-rank type.
 writerToBracket :: forall s m a p
@@ -643,8 +703,9 @@ writerToBracket m = do
 -- operations in 'IO' over a 'TVar', relying on the provided protection
 -- of 'Bracket' for the implementation.
 --
--- @'Derivs' (WriterToBracketC s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
--- @'Prims' (WriterToBracketC s m) = 'Prims' m@
+-- @'Derivs' ('WriterToBracketC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('WriterToBracketC' s m) = 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 writerToBracketTVar :: forall s m a p
@@ -712,8 +773,8 @@ instance ( Monoid s
 -- 'tell' through atomic operations in 'IO'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'tellToIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'tellToIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'tellToIOSimple', which doesn't have a higher-rank type.
@@ -734,8 +795,8 @@ tellToIO m = do
 -- 'tell' through using atomic operations in 'IO' over the provided 'IORef'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runTellIORef' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runTellIORef' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'runTellIORefSimple', which doesn't have a higher-rank type.
@@ -754,8 +815,8 @@ runTellIORef ref = interpret $ \case
 -- 'tell' through using atomic operations in 'IO' over the provided 'TVar'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runTellTVar' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runTellTVar' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'runTellTVarSimple', which doesn't have a higher-rank type.
@@ -830,8 +891,9 @@ runTellTVarSimple tvar = interpretSimple $ \case
 -- | Run connected @'Listen' s@ and @'Tell' s@ effects by accumulating uses of
 -- 'tell' through using atomic operations in 'IO'.
 --
--- @'Derivs' (ListenTVarC s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
--- @'Prims' (ListenTVarC s m) = 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims' ('ListenTVarC' s m) = 'Listen' s ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 listenToIO :: forall s m a p
@@ -852,8 +914,9 @@ listenToIO m = do
 -- | Run connected @'Listen' s@ and @'Tell' s@ effects by accumulating uses of
 -- 'tell' through using atomic operations in 'IO' over the provided 'TVar'.
 --
--- @'Derivs' (ListenTVarC s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
--- @'Prims' (ListenTVarC s m) = 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('ListenTVarC' s m) = 'Listen' s ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runListenTVar :: forall s m a p
@@ -880,8 +943,9 @@ runListenTVar tvar =
 -- -- i.e. @'Writer' s@ -- by accumulating uses of 'tell' through using atomic
 -- operations in 'IO'.
 --
--- @'Derivs' (WriterTVarC s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
--- @'Prims' (WriterTVarC s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims'  ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 writerToIO :: forall s m a p
@@ -903,8 +967,9 @@ writerToIO m = do
 -- -- i.e. @'Writer' s@ -- by accumulating uses of 'tell' through using atomic
 -- operations in 'IO' over a 'TVar'.
 --
--- @'Derivs' (WriterTVarC s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
--- @'Prims' (WriterTVarC s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
+--
+-- @'Prims' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runWriterTVar :: forall s m a p

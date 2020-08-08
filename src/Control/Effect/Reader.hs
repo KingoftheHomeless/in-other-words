@@ -15,16 +15,18 @@ module Control.Effect.Reader
 
   , askToAsk
 
-  , ReaderC
   , runReader
 
-    -- Simple variants
+    -- * Simple variants
   , runAskConstSimple
   , runAskActionSimple
   , askToAskSimple
 
     -- * Threading constraints
   , ReaderThreads
+
+    -- * Carriers
+  , ReaderC
   ) where
 
 import Control.Effect
@@ -51,7 +53,7 @@ local f m = send (Local f m)
 --
 -- @'Derivs' ('ReaderC' i m) = 'Local' i ': 'Ask' i ': 'Derivs' m@
 --
--- @'Derivs' ('ReaderC' i m) = 'Control.Effect.Type.ReaderPrim.ReaderPrim' i ': 'Derivs' m@
+-- @'Control.Effect.Carrier.Prims'  ('ReaderC' i m) = 'Control.Effect.Type.ReaderPrim.ReaderPrim' i ': 'Control.Effect.Carrier.Prims' m@
 runReader :: forall i m a p
            . ( Carrier m
              , Threaders '[ReaderThreads] m p
@@ -66,8 +68,8 @@ runReader i m = runReaderT (unReaderC m) i
 -- at each use of 'ask'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runAskConst' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runAskConst' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'runAskConstSimple',
 -- which doesn't have a higher-rank type.
@@ -83,8 +85,8 @@ runAskConst i = interpret $ \case
 -- at each use of 'ask'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runAskAction' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runAskAction' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'runAskActionSimple',
 -- which doesn't have a higher-rank type.
@@ -101,8 +103,8 @@ runAskAction m = interpret $ \case
 -- providing a function to convert @j@ to @i@.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'askToAsk' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'askToAsk' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'askToAskSimple',
 -- which doesn't have a higher-rank type.
