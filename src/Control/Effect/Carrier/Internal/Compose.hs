@@ -135,6 +135,6 @@ runComposition :: CompositionC ts m a
 -- user.
 -- This seems like too much of a hassle, so unsafeCoerce is used instead.
 --
--- TODO: Investigate if the use of unsafeCoerce messes up optimizations.
+-- TODO(KingoftheHomeless): Investigate if the use of unsafeCoerce messes up optimizations.
 runComposition = unsafeCoerce
 {-# INLINE runComposition #-}

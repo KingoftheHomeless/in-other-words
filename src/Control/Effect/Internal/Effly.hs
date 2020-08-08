@@ -30,7 +30,7 @@ import Control.Effect.Internal.Utils
 -- interpreter handlers, or within application code.
 newtype Effly m a = Effly { runEffly :: m a }
   deriving ( Functor, Applicative, Monad
-           -- , MonadThrow, MonadCatch, MonadMask -- Should we keep these?
+           -- , MonadThrow, MonadCatch, MonadMask -- TODO: Should we keep these?
            , MonadBase b, MonadBaseControl b
            , Carrier
            )

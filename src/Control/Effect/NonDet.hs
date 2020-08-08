@@ -39,12 +39,13 @@ import Control.Monad
 
 import Control.Effect
 import Control.Effect.Internal.NonDet
+import Control.Effect.Internal.Utils
 
 import Control.Effect.Type.Split
 
 -- | Introduce new branches stemming from the current one using a list of values.
 fromList :: Eff NonDet m => [a] -> m a
-fromList = send . FromList
+fromList = send .# FromList
 
 -- | Introduce two new branches stemming from the current one.
 choose :: Eff NonDet m => m a -> m a -> m a

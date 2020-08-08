@@ -8,7 +8,7 @@ module Control.Effect.Internal.Derive
   , IdentityT
   ) where
 
--- TODO: Provide a TH macro to do the derivation too.
+-- TODO(KingoftheHomeless?): Make a TH macro which may be used to newtype-derive as many of these classes as possible.
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
