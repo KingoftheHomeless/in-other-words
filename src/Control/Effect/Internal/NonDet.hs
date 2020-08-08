@@ -15,7 +15,7 @@ import Control.Effect.Internal.Utils
 import qualified Control.Monad.Trans.List.Church as L
 
 -- | An effect for nondeterministic computations
-data NonDet m a where
+newtype NonDet m a where
   FromList :: [a] -> NonDet m a
 
 -- | An effect for culling nondeterministic computations.
@@ -34,13 +34,13 @@ data Cut m a where
 type Logic = Bundle '[NonDet, Cull, Cut, Split]
 
 
--- 'NonDetThreads' accepts the following primitive effects:
+-- | 'NonDetThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Regional.Regional' s@
--- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
--- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Writer.Pass' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type NonDetThreads = Threads L.ListT
 
 newtype LogicC m a = LogicC { unLogicC :: L.ListT m a }
@@ -85,8 +85,8 @@ instance ( Carrier m
     powerAlg (
       coerce (algPrims @(NonDetC m))
     ) $ \case
-        Regional DoCull m -> coerceTrans (L.cull @m) m
-        Regional DoCall m -> coerceTrans (L.call @m) m
+        Regionally DoCull m -> coerceTrans (L.cull @m) m
+        Regionally DoCall m -> coerceTrans (L.call @m) m
   {-# INLINE algPrims #-}
 
   reformulate n alg =
@@ -95,9 +95,9 @@ instance ( Carrier m
       coerceReform (reformulate @(NonDetC m)) n (weakenAlg alg)
     ) $ \case
       Cutfail -> n (CullCutC L.cutfail)
-      Call m  -> (alg . inj) $ Regional DoCall m
+      Call m  -> (alg . inj) $ Regionally DoCall m
     ) $ \case
-      Cull m  -> (alg . inj) $ Regional DoCull m
+      Cull m  -> (alg . inj) $ Regionally DoCull m
   {-# INLINE reformulate #-}
 
 newtype NonDetC m a = NonDetC { unNonDetC :: L.ListT m a }

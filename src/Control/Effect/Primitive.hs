@@ -1,6 +1,9 @@
 module Control.Effect.Primitive
-  (-- Interpretation of primitive effects
-    EffPrimHandler
+  ( -- * Carrier class
+    Carrier(..)
+
+    -- * Interpretation of primitive effects
+  , EffPrimHandler
   , PrimHandler(..)
   , InterpretPrimC
   , interpretPrimViaHandler
@@ -16,5 +19,6 @@ module Control.Effect.Primitive
   , ThreadsEff(..)
   ) where
 
+import Control.Effect.Internal
 import Control.Effect.Internal.Union
 import Control.Effect.Carrier.Internal.Interpret

@@ -1,24 +1,28 @@
 {-# LANGUAGE DerivingVia, MagicHash #-}
 module Control.Effect.BaseControl
-  ( -- * Effect
+  ( -- * Effects
     BaseControl
 
-  , MonadBaseControl(..)
-  , control
-
     -- * Actions
-  , GainBaseControlC(..)
   , gainBaseControl
 
    -- * Interpretations
-  , BaseControlC
   , runBaseControl
 
-  , BaseControlToFinalC
   , baseControlToFinal
 
    -- * Threading utilities
   , threadBaseControlViaClass
+
+    -- * MonadBaseControl
+  , MonadBaseControl(..)
+  , control
+
+    -- * Carriers
+  , GainBaseControlC(..)
+
+  , BaseControlC
+  , BaseControlToFinalC
   ) where
 
 import Data.Coerce
@@ -75,12 +79,12 @@ instance (Monad m, MonadBaseControl b z, Coercible z m)
 -- import System.IO (FilePath, IOMode, Handle)
 -- import qualified System.IO as SysIO
 --
---  data WithFile m a where
---    WithFile :: FilePath -> IOMode -> (Handle -> m a) -> WithFile m a
+-- data WithFile m a where
+--   WithFile :: FilePath -> IOMode -> (Handle -> m a) -> WithFile m a
 --
--- runWithFile :: Eff (BaseControl IO) m => SimpleInterpreterFor WithFile m
--- runWithFile = interpretSimple $ \case
---   WithFile fp mode c -> gainBaseControl $ control $ \lower ->
+-- runWithFile :: 'Eff' ('BaseControl' IO) m => 'SimpleInterpreterFor' WithFile m
+-- runWithFile = 'interpretSimple' $ \case
+--   WithFile fp mode c -> 'gainBaseControl' $ 'control' $ \lower ->
 --     SysIO.withFile fp mode (lower . lift . c)
 -- @
 --
@@ -100,6 +104,7 @@ gainBaseControl main = join $ send $
 -- | Run a @'BaseControl' m@ effect, where the base @m@ is the current monad.
 --
 -- @'Derivs' ('BaseControlC' m) = 'BaseControl' m ': 'Derivs' m@
+--
 -- @'Prims'  ('BaseControlC' m) = 'BaseControl' m ': 'Prims' m@
 runBaseControl :: Carrier m => BaseControlC m a -> m a
 runBaseControl = unBaseControlC
@@ -112,12 +117,13 @@ instance ( MonadBaseControl b m
          , Carrier m
          )
       => PrimHandler BaseControlToFinalH (BaseControl b) m where
-  effPrimHandler (GainBaseControl main) = return $ main (proxy# @_ @m)
+  effPrimHandler (GainBaseControl main) = return $ main (proxy# :: Proxy# m)
   {-# INLINE effPrimHandler #-}
 
 -- | Run a @'BaseControl' b@ effect, where the base @b@ is the final base monad.
 --
 -- @'Derivs' ('BaseControlToFinalC' b m) = 'BaseControl' b ': 'Derivs' m@
+--
 -- @'Prims'  ('BaseControlToFinalC' b m) = 'BaseControl' b ': 'Prims' m@
 baseControlToFinal :: (MonadBaseControl b m, Carrier m) => BaseControlToFinalC b m a -> m a
 baseControlToFinal = interpretPrimViaHandler

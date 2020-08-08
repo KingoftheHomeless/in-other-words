@@ -1,21 +1,23 @@
 {-# LANGUAGE DerivingVia #-}
 module Control.Effect.Unlift
- ( -- * Effect
+ ( -- * Effects
    Unlift(..)
 
    -- * Actions
  , unlift
 
-   -- * Carriers and interpreters
+   -- * Interpretations
  , MonadBaseControlPure
- , UnliftToFinalC
  , unliftToFinal
 
- , UnliftC
  , runUnlift
 
    -- * Threading utilities
  , threadUnliftViaClass
+
+    -- * Carriers
+ , UnliftToFinalC
+ , UnliftC
  ) where
 
 import Control.Effect
@@ -32,6 +34,7 @@ unlift main = send (Unlift main)
 -- current monad.
 --
 -- @'Derivs' ('UnliftC' m) = 'Unlift' m ': 'Derivs' m@
+--
 -- @'Prims'  ('UnliftC' m) = 'Unlift' m ': 'Prims' m@
 runUnlift :: Carrier m
           => UnliftC m a
@@ -54,6 +57,7 @@ type UnliftToFinalC b = InterpretPrimC UnliftToFinalH (Unlift b)
 -- final base monad of @m@
 --
 -- @'Derivs' ('UnliftToFinalC' b m) = 'Unlift' b ': 'Derivs' m@
+--
 -- @'Prims'  ('UnliftToFinalC' b m) = 'Unlift' b ': 'Prims' m@
 unliftToFinal :: ( MonadBaseControlPure b m
                  , Carrier m

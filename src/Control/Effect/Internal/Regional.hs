@@ -16,13 +16,13 @@ newtype HoistCall b = HoistCall (forall x. b x -> b x)
 
 -- | A useful specialization of 'Regional' where the
 -- constant type is @'HoistCall' b@. From this,
--- you can derive 'hoist'.
+-- you can derive 'Control.Effect.Regional.hoist'.
 type Hoist (b :: * -> *) = Regional (HoistCall b)
 
 data HoistH
 
 instance Carrier m => PrimHandler HoistH (Hoist m) m where
-  effPrimHandler (Regional (HoistCall b) m) = b m
+  effPrimHandler (Regionally (HoistCall b) m) = b m
   {-# INLINE effPrimHandler #-}
 
 data HoistToFinalH
@@ -44,5 +44,5 @@ instance ( Carrier m
          , MonadBaseControl b m
          )
       => PrimHandler HoistToFinalH (Hoist b) m where
-  effPrimHandler (Regional (HoistCall b) m) = control $ \lower -> b (lower m)
+  effPrimHandler (Regionally (HoistCall b) m) = control $ \lower -> b (lower m)
   {-# INLINE effPrimHandler #-}

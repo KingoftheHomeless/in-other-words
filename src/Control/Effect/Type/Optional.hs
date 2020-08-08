@@ -24,8 +24,10 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- already have 'ThreadsEff' instances defined for them, so you don't have to
 -- define any for your own effect.
 --
--- The helper primitive effects offered in this library are - in ascending
--- levels of power - 'Regional', 'Optional', 'BaseControl' and 'Unlift'.
+-- The helper primitive effects offered in this library are -- in order of
+-- ascending power -- 'Control.Effect.Regional.Regional',
+-- 'Control.Effect.Optional.Optional', 'Control.Effect.BaseControl.BaseControl'
+-- and 'Control.Effect.Unlift.Unlift'.
 --
 -- The typical use-case of 'Regional' is to lift a natural transformation
 -- of a base monad equipped with the power to recover from an exception.
@@ -37,14 +39,14 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- own interpreter for 'Optional' (treating it as a primitive effect).
 -- Note that when used as a primitive effect, @s@ is expected to be a functor.
 --
--- **'Optional' is typically used as a primitive effect.**
+-- __'Optional' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @Functor s => 'ThreadsEff' ('Optional' s)@ instance for that monad
 -- transformer (if possible). 'Control.Effect.Optional.threadOptionalViaBaseControl'
 -- can help you with that.
 data Optional s m a where
-  Optional :: s a -> m a -> Optional s m a
+  Optionally :: s a -> m a -> Optional s m a
 
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Regional' s) t@ instance,
 -- given that @t@ threads @'Optional' f@ for any functor @f@.
@@ -52,42 +54,42 @@ threadRegionalViaOptional :: ( ThreadsEff (Optional (Const s)) t
                              , Monad m)
                           => (forall x. Regional s m x -> m x)
                           -> Regional s (t m) a -> t m a
-threadRegionalViaOptional alg (Regional s m) =
+threadRegionalViaOptional alg (Regionally s m) =
   threadEff
-    (\(Optional (Const s') m') -> alg (Regional s' m'))
-    (Optional (Const s) m)
+    (\(Optionally (Const s') m') -> alg (Regionally s' m'))
+    (Optionally (Const s) m)
 {-# INLINE threadRegionalViaOptional #-}
 
 instance Functor s => ThreadsEff (Optional s) (ExceptT e) where
-  threadEff alg (Optional sa m) = mapExceptT (alg . Optional (fmap Right sa)) m
+  threadEff alg (Optionally sa m) = mapExceptT (alg . Optionally (fmap Right sa)) m
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Optional s) (ReaderT i) where
-  threadEff alg (Optional sa m) = mapReaderT (alg . Optional sa) m
+  threadEff alg (Optionally sa m) = mapReaderT (alg . Optionally sa) m
   {-# INLINE threadEff #-}
 
 instance Functor s => ThreadsEff (Optional s) (SSt.StateT s') where
-  threadEff alg (Optional sa m) = SSt.StateT $ \s ->
-    alg $ Optional (fmap (, s) sa) (SSt.runStateT m s)
+  threadEff alg (Optionally sa m) = SSt.StateT $ \s ->
+    alg $ Optionally (fmap (, s) sa) (SSt.runStateT m s)
   {-# INLINE threadEff #-}
 
 instance Functor s => ThreadsEff (Optional s) (LSt.StateT s') where
-  threadEff alg (Optional sa m) = LSt.StateT $ \s ->
-    alg $ Optional (fmap (, s) sa) (LSt.runStateT m s)
+  threadEff alg (Optionally sa m) = LSt.StateT $ \s ->
+    alg $ Optionally (fmap (, s) sa) (LSt.runStateT m s)
   {-# INLINE threadEff #-}
 
 instance (Functor s, Monoid w) => ThreadsEff (Optional s) (LWr.WriterT w) where
-  threadEff alg (Optional sa m) =
-    LWr.mapWriterT (alg . Optional (fmap (, mempty) sa)) m
+  threadEff alg (Optionally sa m) =
+    LWr.mapWriterT (alg . Optionally (fmap (, mempty) sa)) m
   {-# INLINE threadEff #-}
 
 instance (Functor s, Monoid w) => ThreadsEff (Optional s) (SWr.WriterT w) where
-  threadEff alg (Optional sa m) =
-    SWr.mapWriterT (alg . Optional (fmap (, mempty) sa)) m
+  threadEff alg (Optionally sa m) =
+    SWr.mapWriterT (alg . Optionally (fmap (, mempty) sa)) m
   {-# INLINE threadEff #-}
 
 instance (Functor s, Monoid w)
       => ThreadsEff (Optional s) (CPSWr.WriterT w) where
-  threadEff alg (Optional sa m) =
-    CPSWr.mapWriterT (alg . Optional (fmap (, mempty) sa)) m
+  threadEff alg (Optionally sa m) =
+    CPSWr.mapWriterT (alg . Optionally (fmap (, mempty) sa)) m
   {-# INLINE threadEff #-}

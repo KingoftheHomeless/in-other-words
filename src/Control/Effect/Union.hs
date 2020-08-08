@@ -1,18 +1,15 @@
 {-# LANGUAGE DerivingVia #-}
 module Control.Effect.Union
-  ( -- * Effect
+  ( -- * Effects
     Union(..)
   , ElemOf(..)
 
     -- * Actions
-  , UnionizeC(UnionizeC)
   , unionize
 
-  , UnionizeHeadC
   , unionizeHead
 
     -- * Interpretations
-  , UnionC
   , runUnion
 
     -- * Utilities
@@ -23,6 +20,11 @@ module Control.Effect.Union
   , absurdU
   , absurdMember
   , membership
+
+    -- * Carriers
+  , UnionizeC
+  , UnionizeHeadC
+  , UnionC
   ) where
 
 import Data.Coerce
@@ -82,8 +84,9 @@ instance ( KnownList l
 -- | Run an @'Union' b@ effect by placing the effects of @b@ on top of the
 -- effect stack.
 --
--- Transforms @(Union b ': 'Derivs' m, 'Prims' m)@
--- to @(b ++ 'Derivs' m, 'Prims' m)
+-- @'Derivs' ('UnionC' b m) = Union b ': 'StripPrefix' b ('Derivs' m)@
+--
+-- @'Prims'  ('UnionC' b m) = 'Prims' m@
 runUnion :: forall b m a
           . ( HeadEffs b m
             , KnownList b

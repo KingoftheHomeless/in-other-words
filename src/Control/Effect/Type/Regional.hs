@@ -19,8 +19,10 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- already have 'ThreadsEff' instances defined for them; so you don't have to
 -- define any for your own effect.
 --
--- The helper primitive effects offered in this library are - in ascending
--- levels of power - 'Regional', 'Optional', 'BaseControl' and 'Unlift'.
+-- The helper primitive effects offered in this library are -- in order of
+-- ascending power -- 'Control.Effect.Regional.Regional',
+-- 'Control.Effect.Optional.Optional', 'Control.Effect.BaseControl.BaseControl'
+-- and 'Control.Effect.Unlift.Unlift'.
 --
 -- The typical use-case of 'Regional' is to lift a natural transformation
 -- of a base monad.
@@ -31,39 +33,39 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- when not using 'Control.Effect.Regional.Hoist', you're expected to define
 -- your own interpreter for 'Regional' (treating it as a primitive effect).
 --
--- **'Regional' is typically used as a primitive effect.**
+-- __'Regional' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff' ('Regional' s)@ instance for that monad transformer
 -- (if possible). 'Control.Effect.Regional.threadRegionalViaOptional'
 -- can help you with that.
 data Regional s m a where
-  Regional :: s -> m a -> Regional s m a
+  Regionally :: s -> m a -> Regional s m a
 
 instance ThreadsEff (Regional s) (ExceptT e) where
-  threadEff alg (Regional s m) = mapExceptT (alg . Regional s) m
+  threadEff alg (Regionally s m) = mapExceptT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (ReaderT i) where
-  threadEff alg (Regional s m) = mapReaderT (alg . Regional s) m
+  threadEff alg (Regionally s m) = mapReaderT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (SSt.StateT i) where
-  threadEff alg (Regional s m) = SSt.mapStateT (alg . Regional s) m
+  threadEff alg (Regionally s m) = SSt.mapStateT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (LSt.StateT i) where
-  threadEff alg (Regional s m) = LSt.mapStateT (alg . Regional s) m
+  threadEff alg (Regionally s m) = LSt.mapStateT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (LWr.WriterT w) where
-  threadEff alg (Regional s m) = LWr.mapWriterT (alg . Regional s) m
+  threadEff alg (Regionally s m) = LWr.mapWriterT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (SWr.WriterT w) where
-  threadEff alg (Regional s m) = SWr.mapWriterT (alg . Regional s) m
+  threadEff alg (Regionally s m) = SWr.mapWriterT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
 instance Monoid w => ThreadsEff (Regional s) (CPSWr.WriterT w) where
-  threadEff alg (Regional s m) = CPSWr.mapWriterT (alg . Regional s) m
+  threadEff alg (Regionally s m) = CPSWr.mapWriterT (alg . Regionally s) m
   {-# INLINE threadEff #-}

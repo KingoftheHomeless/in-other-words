@@ -24,16 +24,16 @@ newtype ListT m a = ListT {
   }
 
 instance ThreadsEff (Regional s) ListT where
-  threadEff alg (Regional s m) = ListT $ \bind ->
-    unListT m (bind . alg . Regional s)
+  threadEff alg (Regionally s m) = ListT $ \bind ->
+    unListT m (bind . alg . Regionally s)
   {-# INLINE threadEff #-}
 
 instance Functor s => ThreadsEff (Optional s) ListT where
-  threadEff alg (Optional s m) = ListT $ \bind c b ->
+  threadEff alg (Optionally s m) = ListT $ \bind c b ->
     unListT m (\mx cn ->
       (`bind` id) $ alg $
         fmap (`c` b) s
-      `Optional`
+      `Optionally`
         fmap cn mx
       ) c b
   {-# INLINE threadEff #-}

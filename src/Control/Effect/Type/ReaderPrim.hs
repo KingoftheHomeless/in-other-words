@@ -31,7 +31,7 @@ import Control.Effect.Internal.Union
 -- 'Control.Effect.Reader.local' if they also have access to
 -- 'Control.Effect.Reader.ask'.
 --
--- **'ReaderPrim' is only used as a primitive effect.**
+-- __'ReaderPrim' is only used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff' ('ReaderPrim' i)@ instance for that monad transformer
@@ -79,7 +79,7 @@ threadReaderPrimViaRegional :: forall i t m a
                         -> ReaderPrim i (t m) a -> t m a
 threadReaderPrimViaRegional alg ReaderPrimAsk = lift (alg ReaderPrimAsk)
 threadReaderPrimViaRegional alg (ReaderPrimLocal f m) =
-  threadEff (\(Regional _ m') -> alg $ (ReaderPrimLocal f m')) (Regional () m)
+  threadEff (\(Regionally _ m') -> alg $ (ReaderPrimLocal f m')) (Regionally () m)
 {-# INLINE threadReaderPrimViaRegional #-}
 
 #define THREAD_READER(monadT)                                 \

@@ -9,9 +9,8 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Identity
 import Control.Monad.Fix
 import Control.Effect.Internal
+import Control.Effect.Internal.Derive
 import Control.Effect.Internal.Utils
-import Control.Monad.Base
-import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.Trans.Control
 
 import Unsafe.Coerce

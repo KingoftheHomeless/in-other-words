@@ -1,11 +1,10 @@
 {-# LANGUAGE DerivingVia #-}
 module Control.Effect.Exceptional
-  ( -- * Effect
+  ( -- * Effects
     Exceptional
   , SafeError
 
     -- * Actions
-  , ExceptionallyC
   , catching
   , trying
   , throwing
@@ -14,33 +13,42 @@ module Control.Effect.Exceptional
   , trySafe
 
     -- * Interpretations
-  , ExceptionalC
   , runExceptional
 
   , runExceptionalJust
 
-  , SafeErrorToErrorC
   , safeErrorToError
 
-  , SafeErrorC
   , runSafeError
 
-  , SafeErrorToIOC'
-  , SafeErrorToIOC
   , safeErrorToIO
 
-  , SafeErrorToErrorIOC'
-  , SafeErrorToErrorIOC
   , safeErrorToErrorIO
 
     -- * Simple variants of interpretations
   , runExceptionalJustSimple
 
-  , SafeErrorToIOSimpleC
   , safeErrorToIOSimple
 
-  , SafeErrorToErrorIOSimpleC
   , safeErrorToErrorIOSimple
+
+    -- * Threading constraints
+  , ErrorThreads
+
+    -- * MonadCatch
+  , MonadCatch
+
+    -- * Carriers
+  , ExceptionallyC
+  , ExceptionalC
+  , SafeErrorToErrorC
+  , SafeErrorC
+  , SafeErrorToIOC'
+  , SafeErrorToIOC
+  , SafeErrorToErrorIOC'
+  , SafeErrorToErrorIOC
+  , SafeErrorToIOSimpleC
+  , SafeErrorToErrorIOSimpleC
   ) where
 
 import Data.Coerce
@@ -70,7 +78,7 @@ import Control.Effect.Carrier.Internal.Compose
 --
 -- The main combinator of 'Exceptional' is 'catching'.
 --
--- **This could be unsafe in the presence of 'Control.Effect.Conc.Conc'**.
+-- __This could be unsafe in the presence of 'Control.Effect.Conc.Conc'__.
 -- If you use 'catching' on a computation that:
 --
 -- * Spawns an asynchronous computation
@@ -272,8 +280,8 @@ runExceptional = interpretViaHandler
 -- other exceptions not arising from uses of @eff@, or fail to catch
 --
 -- The type of this interpreter is higher-rank, as it makes use of
--- 'InterpretReifiedC'. **This makes 'runExceptionalJust' difficult to**
--- **use partially applied; for example, you can't compose it using @'.'@.**
+-- 'InterpretReifiedC'. __This makes 'runExceptionalJust' difficult to__
+-- __use partially applied; for example, you can't compose it using @'.'@.__
 -- You may prefer the simpler, but less performant, 'runExceptionalJustSimple'.
 runExceptionalJust :: forall eff smallExc bigExc m a
                     . ( Member eff (Derivs m)
@@ -335,7 +343,7 @@ type SafeErrorC exc = CompositionC
 --
 -- @'Derivs' ('SafeErrorC' e m) = 'SafeError' e ': 'Prims' m@
 --
--- @'Prims' ('SafeErrorC' e m) = 'Optional' ((->) e) ': 'Prims' m@
+-- @'Prims' ('SafeErrorC' e m) = 'Control.Effect.Optional.Optional' ((->) e) ': 'Prims' m@
 runSafeError :: forall e m a p
               . ( Carrier m
                 , Threaders '[ErrorThreads] m p
@@ -381,11 +389,11 @@ type SafeErrorToIOC e m a =
 --
 -- @'Derivs' ('SafeErrorToIOC' e m) = 'SafeError' e ': 'Derivs' m@
 --
--- @'Prims' ('SafeErrorToIOC' e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
+-- @'Prims' ('SafeErrorToIOC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Prims' m@
 --
 -- This has a higher-rank type, as it makes use of 'SafeErrorToIOC'.
--- **This makes 'safeErrorToIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'safeErrorToIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'safeErrorToIOSimple', which doesn't have a higher-rank type.
@@ -419,8 +427,8 @@ type SafeErrorToErrorIOC e m a =
 -- and @'Embed' IO@.
 --
 -- This has a higher-rank type, as it makes use of 'SafeErrorToErrorIOC'.
--- **This makes 'safeErrorToErrorIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'safeErrorToErrorIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'safeErrorToErrorIOSimple', which doesn't have a higher-rank type.
@@ -447,7 +455,7 @@ type SafeErrorToIOSimpleC exc = CompositionC
 --
 -- @'Derivs' ('SafeErrorToIOSimpleC' e m) = 'SafeError' e ': 'Derivs' m@
 --
--- @'Prims' ('SafeErrorToIOSimpleC' e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
+-- @'Prims' ('SafeErrorToIOSimpleC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Prims' m@
 --
 -- This is a less performant version of 'safeErrorToIO' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.

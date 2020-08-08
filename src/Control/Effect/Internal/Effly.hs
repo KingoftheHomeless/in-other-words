@@ -23,7 +23,7 @@ import Control.Effect.Type.Fix
 import Control.Effect.Internal
 import Control.Effect.Internal.Utils
 
--- | A newtype wrapper with instances based around the effects of 'm'
+-- | A newtype wrapper with instances based around the effects of @m@
 -- when possible; 'Effly' as in "Effectfully."
 --
 -- This is often useful for making use of these instances inside of

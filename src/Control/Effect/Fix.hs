@@ -1,14 +1,16 @@
 module Control.Effect.Fix
-  ( -- * Effect
+  ( -- * Effects
     Fix(..)
   , module Control.Monad.Fix
 
     -- * Interpretations
-  , FixToFinalC
   , fixToFinal
 
     -- * Threading utilities
   , threadFixViaClass
+
+    -- * Carriers
+  , FixToFinalC
   ) where
 
 import Control.Monad.Fix
@@ -30,8 +32,8 @@ type FixToFinalC = InterpretPrimC FixToFinalH Fix
 -- all carriers transforming it are 'MonadFix'.
 --
 -- @'Derivs' (FixToFinalC m) = 'Fix' ': 'Derivs' m@
--- @'Prims'  (FixToFinalC m) = 'Fix' ': 'Prims' m@
 --
+-- @'Prims'  (FixToFinalC m) = 'Fix' ': 'Prims' m@
 fixToFinal :: ( Carrier m
               , MonadFix m
               )

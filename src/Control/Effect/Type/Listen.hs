@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Type.Listen where
 
@@ -17,7 +18,7 @@ import Control.Effect.Internal.Union
 -- | An effect for hearing what a computation
 -- has to 'Control.Effect.Writer.tell'.
 --
--- **'Listen' is typically used as a primitive effect.**
+-- __'Listen' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
 -- a @'Monoid' s => 'ThreadsEff' ('Listen' s)@ instance for that monad
@@ -41,10 +42,10 @@ instance ( Reifies s (ReifiedEffAlgebra (Listen w) m)
       fmap (\(s, a) -> (a, s)) $ coerceAlg alg (Listen m)
   {-# INLINE listen #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Pass' w) t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Listen' w) t@ instance,
 -- given that @t@ lifts @'MonadWriter' w@.
 --
--- **BEWARE**: 'threadListenViaClass' is only safe if the implementation of
+-- __BEWARE__: 'threadListenViaClass' is only safe if the implementation of
 -- 'listen' for @t m@ only makes use of 'listen' for @m@, and no other methods
 -- of 'MonadWriter'.
 threadListenViaClass :: forall w t m a

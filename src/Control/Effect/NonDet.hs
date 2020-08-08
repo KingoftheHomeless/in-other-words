@@ -20,17 +20,19 @@ module Control.Effect.NonDet
   , split
 
     -- * Interpretations
-  , NonDetC
   , runNonDet
 
-  , CullCutC
   , runCullCut
 
-  , LogicC
   , runLogic
 
     -- * Threading constraints
   , NonDetThreads
+
+    -- * Carriers
+  , NonDetC
+  , CullCutC
+  , LogicC
   ) where
 
 import Control.Monad

@@ -21,7 +21,7 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 
 -- | An effect for exception-safe acquisition and release of resources.
 --
--- **'Bracket' is typically used as a primitive effect**.
+-- __'Bracket' is typically used as a primitive effect__.
 -- If you define your own novel, non-trivial 'Control.Effect.Carrier',
 -- then you need to make a @'ThreadsEff' 'Bracket'@ instance for it (if possible).
 data Bracket m a where
@@ -51,9 +51,9 @@ instance ( Reifies s (ReifiedEffAlgebra Bracket m)
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' 'Bracket' t@ instance,
 -- given that @t@ lifts @'MonadMask'@.
 --
--- **BEWARE**: 'threadBracketViaClass' is only safe if the implementation of
--- 'generalBracket' for @t m@ only makes use of 'generalBracket' for @m@, and no
--- other methods of 'MonadThrow', 'MonadCatch', or 'MonadMask'.
+-- __BEWARE__: 'threadBracketViaClass' is only safe if the implementation of
+-- 'C.generalBracket' for @t m@ only makes use of 'C.generalBracket' for @m@,
+-- and no other methods of 'MonadThrow', 'MonadCatch', or 'MonadMask'.
 threadBracketViaClass :: forall t m a
                        . Monad m
                       => ( RepresentationalT t

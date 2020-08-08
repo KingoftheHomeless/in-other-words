@@ -11,11 +11,10 @@ import Control.Monad.Catch
 import Control.Monad.Fix
 
 import Control.Effect.Internal
+import Control.Effect.Internal.Derive
 import Control.Effect.Internal.Union
 import Control.Effect.Internal.Utils
 import Control.Effect.Internal.KnownList
-import Control.Monad.Base
-import Control.Monad.Trans.Control
 import Control.Monad.Trans.Identity
 
 newtype IntroC (top :: [Effect])
@@ -61,7 +60,7 @@ instance ( Carrier m
   {-# INLINE algDerivs #-}
 
 
-type IntroTopC = IntroC '[] 
+type IntroTopC = IntroC '[]
 type IntroUnderC e = IntroC '[e]
 
 -- | A constraint that the effect stack of @m@ -- @'Control.Effect.Derivs' m@ --

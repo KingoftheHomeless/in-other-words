@@ -1,20 +1,22 @@
 module Control.Effect.Cont
-  ( -- * Effect
+  ( -- * Effects
     Cont(..)
 
     -- * Actions
   , callCC
 
     -- * Interpretations
-  , ContC
   , runCont
 
-  , ContFastC
   , runContFast
 
     -- * Threading constraints
   , ContThreads
   , ContFastThreads
+
+    -- * Carriers
+  , ContC
+  , ContFastC
   ) where
 
 import Control.Effect
@@ -35,7 +37,7 @@ import Control.Monad.Trans.Free.Church.Alternate
 -- on the interpreter. In general, you cannot expect to interact with the
 -- computation in any meaningful way: for example, you should not assume that
 -- you will be able to catch an exception thrown at some point in the future of
--- the computation by using `catch` on the computation.
+-- the computation by using 'Control.Effect.Error.catch' on the computation.
 callCC :: Eff Cont m
        => ((forall b. a -> m b) -> m a) -> m a
 callCC main = send (CallCC main)

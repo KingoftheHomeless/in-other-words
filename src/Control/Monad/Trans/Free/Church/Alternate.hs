@@ -107,15 +107,15 @@ instance Monoid w => ThreadsEff (Listen w) (FreeT f) where
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (Regional s) (FreeT f) where
-  threadEff alg (Regional s m) = FreeT $ \bind handler c ->
-    unFreeT m (bind . alg . Regional s) handler c
+  threadEff alg (Regionally s m) = FreeT $ \bind handler c ->
+    unFreeT m (bind . alg . Regionally s) handler c
   {-# INLINE threadEff #-}
 
 instance Functor s => ThreadsEff (Optional s) (FreeT f) where
-  threadEff alg (Optional sa main) = FreeT $ \bind handler c ->
+  threadEff alg (Optionally sa main) = FreeT $ \bind handler c ->
     unFreeT main
             (\m cn ->
-               (`bind` id) $ alg $ Optional (fmap c sa) (fmap cn m)
+               (`bind` id) $ alg $ Optionally (fmap c sa) (fmap cn m)
             )
             handler
             c

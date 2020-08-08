@@ -17,13 +17,14 @@ newtype HoistOptionCall b a = HoistOptionCall (forall x. (a -> x) -> b x -> b x)
   deriving (Functor)
 
 -- | A useful specialization of 'Optional' where the functor is
--- @'HoistOptionCall' b@. From this, you can derive 'hoistOption'.
+-- @'HoistOptionCall' b@. From this, you can derive
+-- 'Control.Effect.Optional.hoistOption'.
 type HoistOption (b :: * -> *) = Optional (HoistOptionCall b)
 
 data HoistOptionH
 
 instance Carrier m => PrimHandler HoistOptionH (HoistOption m) m where
-  effPrimHandler (Optional (HoistOptionCall b) m) = b id m
+  effPrimHandler (Optionally (HoistOptionCall b) m) = b id m
   {-# INLINE effPrimHandler #-}
 
 newtype HoistOptionC m a = HoistOptionC {

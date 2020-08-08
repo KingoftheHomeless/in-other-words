@@ -25,7 +25,6 @@ module Control.Effect
   , embed
 
     -- * Effect Interpretation
-    -- #interpretation tools#
   , InterpretSimpleC
   , interpretSimple
   , SimpleInterpreterFor

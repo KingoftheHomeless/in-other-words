@@ -9,11 +9,17 @@ module Control.Effect.ErrorIO
   , catchIO
 
     -- * Interpretations
-  , ErrorIOToIOC
   , errorIOToIO
 
-  , ErrorIOToErrorC
   , errorIOToError
+
+    -- * MonadCatch
+  , C.MonadCatch
+
+
+    -- * Carriers
+  , ErrorIOToIOC
+  , ErrorIOToErrorC
   ) where
 
 import Control.Monad
@@ -52,7 +58,7 @@ instance ( C.MonadThrow m
   effHandler = \case
     ThrowIO x   -> liftBase $ C.throwM x
     CatchIO m h -> join $
-      optional
+      optionally
         (\x -> case X.fromException x of
             Just e -> h e
             Nothing -> liftBase $ C.throwM x
@@ -65,7 +71,7 @@ instance ( C.MonadCatch m
          )
       => PrimHandler ErrorIOFinalH (Optional ((->) SomeException)) m where
   effPrimHandler = \case
-    Optional h m -> m `C.catch` (return . h)
+    Optionally h m -> m `C.catch` (return . h)
   {-# INLINE effPrimHandler #-}
 
 
@@ -100,7 +106,8 @@ errorIOToError = interpretViaHandler
 -- | Run an @'ErrorIO'@ effect by making use of 'IO' exceptions.
 --
 -- @'Derivs' (ErrorIOToIOC e m) = 'ErrorIO' ': 'Derivs' m@
--- @'Prims' (ErrorIOToIOC e m) = 'Optional' ((->) SomeException) ': 'Prims' m@
+--
+-- @'Control.Effect.Carrier.Prims' (ErrorIOToIOC e m) = 'Control.Effect.Optional.Optional' ((->) 'SomeException') ': 'Control.Effect.Carrier.Prims' m@
 errorIOToIO :: (Carrier m, C.MonadCatch m)
             => ErrorIOToIOC m a
             -> m a

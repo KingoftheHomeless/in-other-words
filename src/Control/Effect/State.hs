@@ -13,12 +13,10 @@ module Control.Effect.State
   , modify'
 
     -- * Interpretations
-  , StateC
   , runState
   , evalState
   , execState
 
-  , StateLazyC
   , runStateLazy
   , evalStateLazy
   , execStateLazy
@@ -33,6 +31,10 @@ module Control.Effect.State
     -- * Threading constraints
   , StateThreads
   , StateLazyThreads
+
+    -- * Carriers
+  , StateC
+  , StateLazyC
   ) where
 
 import Data.IORef
@@ -83,6 +85,15 @@ modify' f = do
   s <- get
   put $! f s
 
+-- | Runs a @'State' s@ effect by transforming it into non-atomic
+-- operations over an 'IORef'.
+--
+-- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
+-- __This makes 'runStateIORef' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
+--
+-- If performance is secondary, consider using the slower
+-- 'runStateIORefSimple', which doesn't have a higher-rank type.
 runStateIORef :: forall s m a
                . Eff (Embed IO) m
               => IORef s
@@ -93,6 +104,15 @@ runStateIORef ref = interpret $ \case
   Put s -> embed $ writeIORef ref s
 {-# INLINE runStateIORef #-}
 
+-- | Runs a @'State' s@ effect by transforming it into non-atomic
+-- operations in IO.
+--
+-- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
+-- __This makes 'stateToIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
+--
+-- If performance is secondary, consider using the slower
+-- 'stateToIOSimple', which doesn't have a higher-rank type.
 stateToIO :: forall s m a
            . Eff (Embed IO) m
           => s
@@ -105,6 +125,11 @@ stateToIO s main = do
   return (s', a)
 {-# INLINE stateToIO #-}
 
+-- | Runs a @'State' s@ effect by transforming it into non-atomic
+-- operations over an 'IORef'.
+--
+-- This is a less performant version of 'runStateIORef' that doesn't have
+-- a higher-rank type, making it much easier to use partially applied.
 runStateIORefSimple :: forall s m a p
                      . ( Eff (Embed IO) m
                        , Threaders '[ReaderThreads] m p
@@ -117,6 +142,11 @@ runStateIORefSimple ref = interpretSimple $ \case
   Put s -> embed $ writeIORef ref s
 {-# INLINE runStateIORefSimple #-}
 
+-- | Runs a @'State' s@ effect by transforming it into non-atomic
+-- operations in IO.
+--
+-- This is a less performant version of 'stateToIO' that doesn't have
+-- a higher-rank type, making it much easier to use partially applied.
 stateToIOSimple :: forall s m a p
                  . ( Eff (Embed IO) m
                    , Threaders '[ReaderThreads] m p
@@ -131,6 +161,11 @@ stateToIOSimple s main = do
   return (s', a)
 {-# INLINE stateToIOSimple #-}
 
+-- | Runs a @'State' s@ effect purely.
+--
+-- @'Derivs' ('StateC' s m) = 'State' s ': 'Derivs' m@
+--
+-- @'Control.Effect.Carrier.Prims'  ('StateC' e m) = 'Control.Effect.Carrier.Prims' m@
 runState :: forall s m a p
           . ( Carrier m
             , Threaders '[StateThreads] m p
@@ -143,6 +178,8 @@ runState sInit m = do
   return (sEnd, a)
 {-# INLINE runState #-}
 
+-- | Runs a @'State' s@ effect purely, discarding
+-- the end state.
 evalState :: forall s m a p
            . ( Carrier m
              , Threaders '[StateThreads] m p
@@ -155,6 +192,8 @@ evalState sInit m = do
   return a
 {-# INLINE evalState #-}
 
+-- | Runs a @'State' s@ effect purely, discarding
+-- the end result.
 execState :: forall s m a p
            . ( Carrier m
              , Threaders '[StateThreads] m p
@@ -167,6 +206,11 @@ execState sInit m = do
   return sEnd
 {-# INLINE execState #-}
 
+-- | Runs a @'State' s@ effect purely and lazily.
+--
+-- @'Derivs' ('StateLazyC' s m) = 'State' s ': 'Derivs' m@
+--
+-- @'Control.Effect.Carrier.Prims'  ('StateLazyC' e m) = 'Control.Effect.Carrier.Prims' m@
 runStateLazy :: forall s m a p
               . ( Carrier m
                 , Threaders '[StateLazyThreads] m p
@@ -177,6 +221,8 @@ runStateLazy :: forall s m a p
 runStateLazy sInit m = swap <$> LSt.runStateT (unStateLazyC m) sInit
 {-# INLINE runStateLazy #-}
 
+-- | Runs a @'State' s@ effect purely and lazily,
+-- discarding the final state.
 evalStateLazy :: forall s m a p
                . ( Carrier m
                  , Threaders '[StateLazyThreads] m p
@@ -187,6 +233,8 @@ evalStateLazy :: forall s m a p
 evalStateLazy sInit m = fst <$> LSt.runStateT (unStateLazyC m) sInit
 {-# INLINE evalStateLazy #-}
 
+-- | Runs a @'State' s@ effect purely and lazily,
+-- discarding the end result.
 execStateLazy :: forall s m a p
                . ( Carrier m
                  , Threaders '[StateLazyThreads] m p

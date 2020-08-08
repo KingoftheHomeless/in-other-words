@@ -1,35 +1,37 @@
 {-# LANGUAGE BlockArguments, DerivingVia #-}
 module Control.Effect.Fail
-  ( -- * Effect
+  ( -- * Effects
     Fail(..)
 
     -- * Interpretations
-  , FailC
   , runFail
-
-  , InterpretFailC(..)
-  , InterpretFailReifiedC
 
   , failToThrow
 
-  , FailToNonDetC
   , failToNonDet
 
-  , FailToAltC
   , failToAlt
 
     -- * Simple variants of interpretations
-  , InterpretFailSimpleC(..)
   , failToThrowSimple
 
     -- * Threading constraints
   , ErrorThreads
+
+    -- * Carriers
+  , FailC
+  , InterpretFailC(..)
+  , InterpretFailReifiedC
+  , FailToNonDetC
+  , FailToAltC
+  , InterpretFailSimpleC(..)
   ) where
 
 import Data.Coerce
 
 import Control.Applicative
 import Control.Monad
+import qualified Control.Monad.Fail as Fail
 
 import Control.Effect
 import Control.Effect.Error
@@ -75,9 +77,13 @@ deriving via Effly (InterpretFailC h m)
 -- | Transform a 'Fail' effect to a 'Throw' effect by providing a function
 -- to transform a pattern match failure into an exception.
 --
+-- You can use this in application code to locally get access to a 'MonadFail'
+-- instance (since 'InterpretFailReifiedC' has a 'MonadFail' instance based
+-- on the 'Fail' effect this interprets).
+--
 -- This has a higher-rank type, as it makes use of 'InterpretFailReifiedC'.
--- **This makes 'failToThrow' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'failToThrow' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'failToThrowSimple',
 -- which doesn't have a higher-rank type.
@@ -110,6 +116,10 @@ type FailToNonDetC = InterpretFailC FailToAltH
 
 -- | Transform a 'Fail' effect to an 'Alt' effect by having a
 -- pattern match failure be 'empty'.
+--
+-- You can use this in application code to locally get access to a 'MonadFail'
+-- instance (since 'FailToAltC' has a 'MonadFail' instance based
+-- on the 'Fail' effect this interprets).
 failToAlt :: Eff Alt m
           => FailToAltC m a
           -> m a
@@ -118,6 +128,10 @@ failToAlt = interpretViaHandler .# unInterpretFailC
 
 -- | Transform a 'Fail' effect to a 'NonDet' effect by having a
 -- pattern match failure be 'lose'.
+--
+-- You can use this in application code to locally get access to a 'MonadFail'
+-- instance (since 'FailToNonDetC' has a 'MonadFail' instance based
+-- on the 'Fail' effect this interprets).
 failToNonDet :: Eff Alt m
              => FailToNonDetC m a
              -> m a
@@ -138,6 +152,9 @@ instance Eff (Throw String) m
 
 -- | Run a 'Fail' effect purely, by returning @Left failureMessage@
 -- upon a pattern match failure.
+--
+-- 'FailC' has an 'Alternative' instance based on the 'Alt'
+-- effect it interprets.
 runFail :: forall m a p
          . ( Threaders '[ErrorThreads] m p
            , Carrier m
@@ -167,12 +184,16 @@ deriving newtype instance
   => Carrier (InterpretFailSimpleC m)
 
 instance (Monad m, Carrier (InterpretSimpleC Fail m))
-       => MonadFail (InterpretFailSimpleC m) where
+       => Fail.MonadFail (InterpretFailSimpleC m) where
   fail = send .# Fail
   {-# INLINE fail #-}
 
 -- | Transform a 'Fail' effect to a 'Throw' effect by providing a function
 -- to transform a pattern match failure into an exception.
+--
+-- You can use this in application code to locally get access to a 'MonadFail'
+-- instance (since 'InterpretFailSimpleC' has a 'MonadFail' instance based
+-- on the 'Fail' effect this interprets).
 --
 -- This is a less performant version of 'failToThrow' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.

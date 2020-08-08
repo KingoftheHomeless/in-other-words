@@ -22,8 +22,23 @@ dependencies:
   - stm >= 2.5 && < 2.6
 
 library:
-  ghc-options: -Wall -Wextra
+  ghc-options: -Wall
   source-dirs: src
+
+tests:
+  in-other-words-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O0
+    build-tools:
+    - hspec-discover >= 2.0
+    dependencies:
+    - in-other-words
+    - hspec >= 2.6.0 && < 3
 
 default-extensions:
   - BangPatterns

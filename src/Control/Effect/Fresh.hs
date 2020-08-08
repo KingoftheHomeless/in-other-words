@@ -1,18 +1,16 @@
 module Control.Effect.Fresh
-  ( -- * Effect
+  ( -- * Effects
     Fresh(..)
 
     -- * Actions
   , fresh
 
     -- * Interpretations
-  , FreshToIOC
   , freshToIO
 
   , runFreshEnumIO
 
     -- * Unsafe interpretations
-  , FreshEnumC
   , runFreshEnum
 
     -- * Simple variants of interpretations
@@ -20,6 +18,10 @@ module Control.Effect.Fresh
 
     -- * Threading constraints
   , StateThreads
+
+    -- * Carriers
+  , FreshToIOC
+  , FreshEnumC
   ) where
 
 import Data.Unique
@@ -72,8 +74,8 @@ freshToIO = interpretViaHandler
 -- This is a safe variant of 'runFreshEnum'.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
--- **This makes 'runFreshEnumIO' very difficult to use partially applied.**
--- **In particular, it can't be composed using @'.'@.**
+-- __This makes 'runFreshEnumIO' very difficult to use partially applied.__
+-- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower
 -- 'runFreshEnumIOSimple', which doesn't have a higher-rank type.
