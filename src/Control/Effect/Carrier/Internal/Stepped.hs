@@ -55,7 +55,7 @@ data Steps e m a where
 -- into steps, where each step is seperated by the use of actions of @e@.
 steps :: forall e m a p
        . ( Carrier m
-         , Threaders '[FreeThreads] m p
+         , Threaders '[SteppedThreads] m p
          )
       => SteppedC e m a -> m (Steps e m a)
 steps =

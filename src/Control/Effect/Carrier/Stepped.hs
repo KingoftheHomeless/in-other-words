@@ -1,5 +1,6 @@
 module Control.Effect.Carrier.Stepped
   ( SteppedC
+  , Steps(..)
   , steps
   , unsteps
   , liftSteps

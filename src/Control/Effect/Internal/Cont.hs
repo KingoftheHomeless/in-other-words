@@ -88,15 +88,15 @@ instance ( Carrier m
 
 -- | 'ContThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Regional.Regional' s@
--- * @'Control.Effect.Optional.Optional' s@ (when @s@ is a functor)
--- * @'Control.Effect.Writer.Listen' s@ (when @s@ is a 'Monoid')
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type ContThreads = FreeThreads
 
 -- | 'ContFastThreads' accepts the following primitive effects:
 --
--- * @'Control.Effect.Type.ReaderPrim.ReaderPrim' i@
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 class    ( forall s. Threads (C.ContT s) p
          ) => ContFastThreads p
 instance ( forall s. Threads (C.ContT s) p
