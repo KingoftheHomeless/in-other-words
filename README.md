@@ -57,7 +57,9 @@ effects they may represent.
 whose approach doesn't allow for sensible implementations of effects for
 continuations, coroutines, or nondeterminism.
 * `eff` is limited to what's implementable with delimited continuations, which
-excludes actions such as `pass` from `MonadWriter`.
+excludes actions such as [`pass`](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Writer-Class.html#v:pass)
+from `MonadWriter`, [and also has semantic issues with all of its
+higher-order effects for the time being.](https://github.com/hasura/eff/issues/12)
 
 `in-other-words` also places restrictions on what effects may be represented
 -- but in comparison to the libraries mentioned above, these restrictions are
