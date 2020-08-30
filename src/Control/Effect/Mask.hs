@@ -1,7 +1,7 @@
 module Control.Effect.Mask
   ( -- * Effects
     Mask(..)
-  , MaskMode
+  , MaskMode(..)
 
     -- * Actions
   , mask

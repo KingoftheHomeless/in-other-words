@@ -1,18 +1,19 @@
 module Control.Effect.Newtype
   ( -- * Wrapping
-    WrapC
-  , wrapWith
+    wrapWith
 
     -- * Unwrapping
   , EffNewtype(..)
   , WrapperOf
 
-  , UnwrapC
   , unwrap
 
-  , UnwrapTopC
   , unwrapTop
 
+    -- * Carriers
+  , WrapC
+  , UnwrapC
+  , UnwrapTopC
   ) where
 
 import Control.Effect.Internal.Newtype

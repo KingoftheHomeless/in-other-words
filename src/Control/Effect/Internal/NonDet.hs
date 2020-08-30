@@ -151,9 +151,11 @@ runNonDet = L.runListT .# unNonDetC
 -- This is like 'runNonDet' with the 'Alternative' specialized to 'Maybe',
 -- but once a valid result is found, it won't run all other branches.
 --
--- This is the equivalent of  @'runCullCut' \@Maybe . 'cull'@
--- or @'runLogic' \@Maybe . 'cull'@, but doesn't impose any primitive effects,
--- meaning 'runNonDet' doesn't restrict what interpreters are run before it.
+-- This is the equivalent of
+-- @'runCullCut' \@Maybe . 'Control.Effect.NonDet.cull'@
+-- or @'runLogic' \@Maybe . 'Control.Effect.NonDet.cull'@, but doesn't impose
+-- any primitive effects, meaning 'runNonDet' doesn't restrict what interpreters
+-- are run before it.
 --
 -- @'Derivs' ('NonDetC' m) = 'NonDet' ': 'Derivs' m@
 --

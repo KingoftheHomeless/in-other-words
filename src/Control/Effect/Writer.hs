@@ -684,7 +684,7 @@ instance ( Monoid s
 --
 -- @'Derivs' ('WriterToBracketC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterToBracketC' s m) = 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('WriterToBracketC' s m) = 'Control.Effect.Type.ReaderPrim.ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'writerToIO', this does not have a higher-rank type.
 writerToBracket :: forall s m a p
