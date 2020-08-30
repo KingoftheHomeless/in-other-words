@@ -17,17 +17,17 @@ import qualified Control.Monad.Trans.Writer.CPS    as CPSWr
 -- __'Split' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff' 'Split'@ instance for that monad transformer
--- (if possible).
+-- a @'ThreadsEff'@ instance for that monad transformer
+-- to lift 'Split' (if possible).
 data Split m a where
   Split :: (Maybe (a, m a) -> b) -> m a -> Split m b
 
-instance ThreadsEff Split (ReaderT s) where
+instance ThreadsEff (ReaderT s) Split where
   threadEff alg (Split c m) = ReaderT $ \s ->
     alg $ Split (c . (fmap . fmap) lift) (runReaderT m s)
   {-# INLINE threadEff #-}
 
-instance ThreadsEff Split (LSt.StateT s) where
+instance ThreadsEff (LSt.StateT s) Split where
   threadEff alg (Split c m) = LSt.StateT $ \s ->
     alg $
       Split
@@ -40,7 +40,7 @@ instance ThreadsEff Split (LSt.StateT s) where
         (LSt.runStateT m s)
   {-# INLINE threadEff #-}
 
-instance ThreadsEff Split (SSt.StateT s) where
+instance ThreadsEff (SSt.StateT s) Split where
   threadEff alg (Split c m) = SSt.StateT $ \s ->
     alg $
       Split
@@ -53,7 +53,7 @@ instance ThreadsEff Split (SSt.StateT s) where
         (SSt.runStateT m s)
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff Split (LWr.WriterT s) where
+instance Monoid s => ThreadsEff (LWr.WriterT s) Split where
   threadEff alg (Split c m) = LWr.WriterT $
     alg $
       Split
@@ -66,7 +66,7 @@ instance Monoid s => ThreadsEff Split (LWr.WriterT s) where
         (LWr.runWriterT m)
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff Split (SWr.WriterT s) where
+instance Monoid s => ThreadsEff (SWr.WriterT s) Split where
   threadEff alg (Split c m) = SWr.WriterT $
     alg $
       Split
@@ -79,7 +79,7 @@ instance Monoid s => ThreadsEff Split (SWr.WriterT s) where
         (SWr.runWriterT m)
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff Split (CPSWr.WriterT s) where
+instance Monoid s => ThreadsEff (CPSWr.WriterT s) Split where
   threadEff alg (Split c m) = CPSWr.writerT $
     alg $
       Split

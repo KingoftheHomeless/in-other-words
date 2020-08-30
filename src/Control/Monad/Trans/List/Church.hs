@@ -23,12 +23,12 @@ newtype ListT m a = ListT {
             -> r
   }
 
-instance ThreadsEff (Regional s) ListT where
+instance ThreadsEff ListT (Regional s) where
   threadEff alg (Regionally s m) = ListT $ \bind ->
     unListT m (bind . alg . Regionally s)
   {-# INLINE threadEff #-}
 
-instance Functor s => ThreadsEff (Optional s) ListT where
+instance Functor s => ThreadsEff ListT (Optional s) where
   threadEff alg (Optionally s m) = ListT $ \bind c b ->
     unListT m (\mx cn ->
       (`bind` id) $ alg $
@@ -38,7 +38,7 @@ instance Functor s => ThreadsEff (Optional s) ListT where
       ) c b
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff (Listen s) ListT where
+instance Monoid s => ThreadsEff ListT (Listen s) where
   threadEff alg (Listen main) = ListT $ \bind c b t ->
     unListT
       main
@@ -54,7 +54,7 @@ instance Monoid s => ThreadsEff (Listen s) ListT where
       mempty
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Pass s) ListT where
+instance ThreadsEff ListT (Pass s) where
   threadEff alg (Pass main) =
     let
       go' m = m >>= \case
@@ -71,7 +71,7 @@ instance ThreadsEff (Pass s) ListT where
       fromLayeredListT (go (toLayeredListT main))
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (ReaderPrim i) ListT where
+instance ThreadsEff ListT (ReaderPrim i) where
   threadEff = threadReaderPrimViaRegional
   {-# INLINE threadEff #-}
 

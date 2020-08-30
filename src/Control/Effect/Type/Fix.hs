@@ -23,8 +23,10 @@ import Control.Effect.Internal.Union
 -- use recursive do notation inside of effect handlers.
 --
 -- __Fix is typically used as a primitive effect__.
--- If you define your own novel, non-trivial 'Control.Effect.Carrier',
--- then you need to make a @'ThreadsEff' 'Fix'@ instance for it (if possible).
+-- If you define a 'Control.Effect.Carrier' that relies on a novel
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'ThreadsEff' t 'Fix'@ instance (if possible).
+-- 'threadFixViaClass' can help you with that.
 newtype Fix m a where
   Fix :: (a -> m a) -> Fix m a
 
@@ -36,6 +38,8 @@ instance ( Reifies s (ReifiedEffAlgebra Fix m)
   {-# INLINE mfix #-}
 
 
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t 'Fix'@ instance,
+-- given that @t@ lifts 'MonadFix'.
 threadFixViaClass :: Monad m
                   => ( RepresentationalT t
                      , forall b. MonadFix b => MonadFix (t b)
@@ -47,12 +51,12 @@ threadFixViaClass alg (Fix f) = reify (ReifiedEffAlgebra alg) $ \(_ :: pr s) ->
 {-# INLINE threadFixViaClass #-}
 
 #define THREADFIX(monadT)              \
-instance ThreadsEff Fix (monadT) where \
+instance ThreadsEff (monadT) Fix where \
   threadEff = threadFixViaClass;       \
   {-# INLINE threadEff #-}
 
 #define THREADFIX_CTX(ctx, monadT)            \
-instance ctx => ThreadsEff Fix (monadT) where \
+instance ctx => ThreadsEff (monadT) Fix where \
   threadEff = threadFixViaClass;              \
   {-# INLINE threadEff #-}
 

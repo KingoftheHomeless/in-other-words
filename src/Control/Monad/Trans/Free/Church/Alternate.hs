@@ -94,7 +94,7 @@ instance MonadCatch m => MonadCatch (FreeT f m) where
             c
   {-# INLINE catch #-}
 
-instance Monoid w => ThreadsEff (Listen w) (FreeT f) where
+instance Monoid w => ThreadsEff (FreeT f) (Listen w) where
   threadEff alg (Listen main) = FreeT $ \bind handler c ->
     unFreeT main
             (\m cn acc ->
@@ -106,12 +106,12 @@ instance Monoid w => ThreadsEff (Listen w) (FreeT f) where
             mempty
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Regional s) (FreeT f) where
+instance ThreadsEff (FreeT f) (Regional s) where
   threadEff alg (Regionally s m) = FreeT $ \bind handler c ->
     unFreeT m (bind . alg . Regionally s) handler c
   {-# INLINE threadEff #-}
 
-instance Functor s => ThreadsEff (Optional s) (FreeT f) where
+instance Functor s => ThreadsEff (FreeT f) (Optional s) where
   threadEff alg (Optionally sa main) = FreeT $ \bind handler c ->
     unFreeT main
             (\m cn ->
@@ -121,6 +121,6 @@ instance Functor s => ThreadsEff (Optional s) (FreeT f) where
             c
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (ReaderPrim i) (FreeT f) where
+instance ThreadsEff (FreeT f) (ReaderPrim i) where
   threadEff = threadReaderPrimViaRegional
   {-# INLINE threadEff #-}

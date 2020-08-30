@@ -149,7 +149,7 @@ type Reformulation r p m
   -> Algebra p z
   -> Algebra r z
 
-class RepresentationalEff e => ThreadsEff e t where
+class RepresentationalEff e => ThreadsEff t e where
   threadEff :: Monad m
             => (forall x. e m x -> m x)
             -> e (t m) a
@@ -164,7 +164,7 @@ instance Threads t '[] where
   thread _ = absurdU
   {-# INLINE thread #-}
 
-instance (ThreadsEff e t, Threads t p) => Threads t (e ': p) where
+instance (ThreadsEff t e, Threads t p) => Threads t (e ': p) where
   thread alg = powerAlg (thread (weakenAlg alg)) (threadEff (alg . Union Here))
   {-# INLINE thread #-}
 

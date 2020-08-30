@@ -22,8 +22,10 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- | An effect for exception-safe acquisition and release of resources.
 --
 -- __'Bracket' is typically used as a primitive effect__.
--- If you define your own novel, non-trivial 'Control.Effect.Carrier',
--- then you need to make a @'ThreadsEff' 'Bracket'@ instance for it (if possible).
+-- If you define a 'Control.Effect.Carrier' that relies on a novel
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'ThreadsEff' t 'Bracket'@ instance (if possible).
+-- 'threadBracketViaClass' can help you with that.
 data Bracket m a where
   GeneralBracket :: m a
                  -> (a -> ExitCase b -> m c)
@@ -48,7 +50,7 @@ instance ( Reifies s (ReifiedEffAlgebra Bracket m)
     ReifiedEffAlgebra alg -> coerceAlg alg (GeneralBracket acquire release use)
   {-# INLINE generalBracket #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' 'Bracket' t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t 'Bracket'@ instance,
 -- given that @t@ lifts @'MonadMask'@.
 --
 -- __BEWARE__: 'threadBracketViaClass' is only safe if the implementation of
@@ -72,12 +74,12 @@ threadBracketViaClass alg (GeneralBracket acquire release use) =
 
 
 #define THREAD_BRACKET(monadT)             \
-instance ThreadsEff Bracket (monadT) where \
+instance ThreadsEff (monadT) Bracket where \
   threadEff = threadBracketViaClass;       \
   {-# INLINE threadEff #-}
 
 #define THREAD_BRACKET_CTX(ctx, monadT)             \
-instance (ctx) => ThreadsEff Bracket (monadT) where \
+instance (ctx) => ThreadsEff (monadT) Bracket where \
   threadEff = threadBracketViaClass;                \
   {-# INLINE threadEff #-}
 
@@ -89,7 +91,7 @@ THREAD_BRACKET(SSt.StateT s)
 THREAD_BRACKET_CTX(Monoid s, LWr.WriterT s)
 THREAD_BRACKET_CTX(Monoid s, SWr.WriterT s)
 
-instance Monoid s => ThreadsEff Bracket (CPSWr.WriterT s) where
+instance Monoid s => ThreadsEff (CPSWr.WriterT s) Bracket where
   threadEff alg (GeneralBracket acq rel use) = CPSWr.writerT $
       fmap (\( (b,sUse), (c,sEnd) ) -> ((b, c), sUse <> sEnd))
     . alg $

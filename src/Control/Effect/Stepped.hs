@@ -1,4 +1,4 @@
-module Control.Effect.Carrier.Stepped
+module Control.Effect.Stepped
   ( SteppedC
   , Steps(..)
   , steps

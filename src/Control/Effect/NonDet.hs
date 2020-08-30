@@ -21,6 +21,7 @@ module Control.Effect.NonDet
 
     -- * Interpretations
   , runNonDet
+  , runNonDet1
 
   , runCullCut
 

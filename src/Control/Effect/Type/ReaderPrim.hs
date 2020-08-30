@@ -33,9 +33,9 @@ import Control.Effect.Internal.Union
 --
 -- __'ReaderPrim' is only used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff' ('ReaderPrim' i)@ instance for that monad transformer
--- (if possible). 'threadReaderPrimViaClass' and 'threadReaderPrimViaRegional'
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'ThreadsEff' t ('ReaderPrim' i)@ instance (if possible).
+-- 'threadReaderPrimViaClass' and 'threadReaderPrimViaRegional'
 -- can help you with that.
 data ReaderPrim i m a where
   ReaderPrimAsk   :: ReaderPrim i m i
@@ -52,7 +52,7 @@ instance ( Reifies s (ReifiedEffAlgebra (ReaderPrim i) m)
     ReifiedEffAlgebra alg -> coerceAlg alg (ReaderPrimLocal f m)
   {-# INLINE local #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('ReaderPrim' i) t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ReaderPrim' i)@ instance,
 -- given that @t@ lifts @'MonadReader' i@.
 threadReaderPrimViaClass :: forall i t m a
                       . Monad m
@@ -68,12 +68,12 @@ threadReaderPrimViaClass alg e = reify (ReifiedEffAlgebra alg) $ \(_ :: pr s) ->
     ReaderPrimLocal f m -> unViaAlgT (RC.local f (viaAlgT @s @(ReaderPrim i) m))
 {-# INLINE threadReaderPrimViaClass #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('ReaderPrim' i) t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ReaderPrim' i)@ instance,
 -- given that @t@ threads @'Regional' s@ for any @s@.
 threadReaderPrimViaRegional :: forall i t m a
                          . ( Monad m
                            , MonadTrans t
-                           , ThreadsEff (Regional ()) t
+                           , ThreadsEff t (Regional ())
                            )
                         => (forall x. ReaderPrim i m x -> m x)
                         -> ReaderPrim i (t m) a -> t m a
@@ -83,22 +83,22 @@ threadReaderPrimViaRegional alg (ReaderPrimLocal f m) =
 {-# INLINE threadReaderPrimViaRegional #-}
 
 #define THREAD_READER(monadT)                                 \
-instance ThreadsEff (ReaderPrim threadedInput) (monadT) where \
+instance ThreadsEff (monadT) (ReaderPrim threadedInput) where \
   threadEff = threadReaderPrimViaClass;                       \
   {-# INLINE threadEff #-}
 
 #define THREAD_READER_CTX(ctx, monadT)                               \
-instance ctx => ThreadsEff (ReaderPrim threadedInput) (monadT) where \
+instance ctx => ThreadsEff (monadT) (ReaderPrim threadedInput) where \
   threadEff = threadReaderPrimViaClass;                              \
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (ReaderPrim i) (ReaderT i') where
+instance ThreadsEff (ReaderT i') (ReaderPrim i) where
   threadEff alg = \case
     ReaderPrimAsk -> lift (alg ReaderPrimAsk)
     ReaderPrimLocal f m -> R.mapReaderT (alg . ReaderPrimLocal f) m
   {-# INLINE threadEff #-}
 
-instance Monoid w => ThreadsEff (ReaderPrim i) (CPSWr.WriterT w) where
+instance Monoid w => ThreadsEff (CPSWr.WriterT w) (ReaderPrim i) where
   threadEff alg = \case
     ReaderPrimAsk -> lift (alg ReaderPrimAsk)
     ReaderPrimLocal f m -> CPSWr.mapWriterT (alg . ReaderPrimLocal f) m

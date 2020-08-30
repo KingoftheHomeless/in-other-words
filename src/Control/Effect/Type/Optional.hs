@@ -41,16 +41,16 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 --
 -- __'Optional' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @Functor s => 'ThreadsEff' ('Optional' s)@ instance for that monad
--- transformer (if possible). 'Control.Effect.Optional.threadOptionalViaBaseControl'
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @Functor s => 'ThreadsEff' t ('Optional' s)@ instance (if possible).
+-- 'Control.Effect.Optional.threadOptionalViaBaseControl'
 -- can help you with that.
 data Optional s m a where
   Optionally :: s a -> m a -> Optional s m a
 
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Regional' s) t@ instance,
 -- given that @t@ threads @'Optional' f@ for any functor @f@.
-threadRegionalViaOptional :: ( ThreadsEff (Optional (Const s)) t
+threadRegionalViaOptional :: ( ThreadsEff t (Optional (Const s))
                              , Monad m)
                           => (forall x. Regional s m x -> m x)
                           -> Regional s (t m) a -> t m a
@@ -60,36 +60,36 @@ threadRegionalViaOptional alg (Regionally s m) =
     (Optionally (Const s) m)
 {-# INLINE threadRegionalViaOptional #-}
 
-instance Functor s => ThreadsEff (Optional s) (ExceptT e) where
+instance Functor s => ThreadsEff (ExceptT e) (Optional s) where
   threadEff alg (Optionally sa m) = mapExceptT (alg . Optionally (fmap Right sa)) m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Optional s) (ReaderT i) where
+instance ThreadsEff (ReaderT i) (Optional s) where
   threadEff alg (Optionally sa m) = mapReaderT (alg . Optionally sa) m
   {-# INLINE threadEff #-}
 
-instance Functor s => ThreadsEff (Optional s) (SSt.StateT s') where
+instance Functor s => ThreadsEff (SSt.StateT s') (Optional s) where
   threadEff alg (Optionally sa m) = SSt.StateT $ \s ->
     alg $ Optionally (fmap (, s) sa) (SSt.runStateT m s)
   {-# INLINE threadEff #-}
 
-instance Functor s => ThreadsEff (Optional s) (LSt.StateT s') where
+instance Functor s => ThreadsEff (LSt.StateT s') (Optional s) where
   threadEff alg (Optionally sa m) = LSt.StateT $ \s ->
     alg $ Optionally (fmap (, s) sa) (LSt.runStateT m s)
   {-# INLINE threadEff #-}
 
-instance (Functor s, Monoid w) => ThreadsEff (Optional s) (LWr.WriterT w) where
+instance (Functor s, Monoid w) => ThreadsEff (LWr.WriterT w) (Optional s) where
   threadEff alg (Optionally sa m) =
     LWr.mapWriterT (alg . Optionally (fmap (, mempty) sa)) m
   {-# INLINE threadEff #-}
 
-instance (Functor s, Monoid w) => ThreadsEff (Optional s) (SWr.WriterT w) where
+instance (Functor s, Monoid w) => ThreadsEff (SWr.WriterT w) (Optional s) where
   threadEff alg (Optionally sa m) =
     SWr.mapWriterT (alg . Optionally (fmap (, mempty) sa)) m
   {-# INLINE threadEff #-}
 
 instance (Functor s, Monoid w)
-      => ThreadsEff (Optional s) (CPSWr.WriterT w) where
+      => ThreadsEff (CPSWr.WriterT w) (Optional s) where
   threadEff alg (Optionally sa m) =
     CPSWr.mapWriterT (alg . Optionally (fmap (, mempty) sa)) m
   {-# INLINE threadEff #-}

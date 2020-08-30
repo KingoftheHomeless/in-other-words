@@ -74,9 +74,9 @@ runReader i m = runReaderT (unReaderC m) i
 -- If performance is secondary, consider using the slower 'runAskConstSimple',
 -- which doesn't have a higher-rank type.
 runAskConst :: Carrier m
-              => i
-              -> InterpretReifiedC (Ask i) m a
-              -> m a
+            => i
+            -> InterpretReifiedC (Ask i) m a
+            -> m a
 runAskConst i = interpret $ \case
   Ask -> return i
 {-# INLINE runAskConst #-}
@@ -109,10 +109,10 @@ runAskAction m = interpret $ \case
 -- If performance is secondary, consider using the slower 'askToAskSimple',
 -- which doesn't have a higher-rank type.
 askToAsk :: forall i j m a
-              . Eff (Ask j) m
-             => (j -> i)
-             -> InterpretReifiedC (Ask i) m a
-             -> m a
+          . Eff (Ask j) m
+         => (j -> i)
+         -> InterpretReifiedC (Ask i) m a
+         -> m a
 askToAsk f = interpret $ \case
   Ask -> asks f
 {-# INLINE askToAsk #-}
@@ -123,12 +123,12 @@ askToAsk f = interpret $ \case
 -- This is a less performant version of 'runAskConst' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.
 runAskConstSimple :: forall i m a p
-                     . ( Carrier m
-                       , Threaders '[ReaderThreads] m p
-                       )
-                    => i
-                    -> InterpretSimpleC (Ask i) m a
-                    -> m a
+                   . ( Carrier m
+                     , Threaders '[ReaderThreads] m p
+                     )
+                  => i
+                  -> InterpretSimpleC (Ask i) m a
+                  -> m a
 runAskConstSimple i = interpretSimple $ \case
   Ask -> return i
 {-# INLINE runAskConstSimple #-}
@@ -139,12 +139,12 @@ runAskConstSimple i = interpretSimple $ \case
 -- This is a less performant version of 'runAskAction' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.
 runAskActionSimple :: forall i m a p
-                      . ( Carrier m
-                        , Threaders '[ReaderThreads] m p
-                        )
-                     => m i
-                     -> InterpretSimpleC (Ask i) m a
-                     -> m a
+                    . ( Carrier m
+                      , Threaders '[ReaderThreads] m p
+                      )
+                   => m i
+                   -> InterpretSimpleC (Ask i) m a
+                   -> m a
 runAskActionSimple mi = interpretSimple $ \case
   Ask -> liftBase mi
 {-# INLINE runAskActionSimple #-}
@@ -155,12 +155,12 @@ runAskActionSimple mi = interpretSimple $ \case
 -- This is a less performant version of 'askToAsk' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.
 askToAskSimple :: forall i j m a p
-                    . ( Eff (Ask j) m
-                      , Threaders '[ReaderThreads] m p
-                      )
-                   => (j -> i)
-                   -> InterpretSimpleC (Ask i) m a
-                   -> m a
+                . ( Eff (Ask j) m
+                  , Threaders '[ReaderThreads] m p
+                  )
+               => (j -> i)
+               -> InterpretSimpleC (Ask i) m a
+               -> m a
 askToAskSimple f = interpretSimple $ \case
   Ask -> asks f
 {-# INLINE askToAskSimple #-}

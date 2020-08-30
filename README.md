@@ -25,9 +25,12 @@
 [`polysemy`](https://github.com/polysemy-research/polysemy),
 and [`eff`](https://github.com/hasura/eff). It represents effects through data types,
 making it simple to define, use, and interpret them.
-`in-other-words`' hallmark feature is the novel approach it takes to support
-higher-order effects, making it significantly more powerful - and sometimes
-easier to use - than other effect libraries of its kind.
+
+The goal of `in-other-words` is to be as expressive and general of an
+effect system as possible while solving the *O(n<sup>2</sup>)* instances
+problem. Its hallmark feature is the novel approach it takes to support
+higher-order effects, making it significantly more powerful -- and sometimes
+easier to use -- than other effect libraries of its kind.
 
 If you're experienced with the mechanisms behind `freer-simple`,
 `fused-effects`, and `polysemy`, and would like to learn more about what makes
@@ -36,7 +39,7 @@ If you're experienced with the mechanisms behind `freer-simple`,
 
 Unfortunately, in its current state `in-other-words` is rather inaccessible.
 Ample documentation and guides are provided for the library, but inexperienced
-users are still likely to run into "gotchas" and confusing error
+users are still likely to run into gotchas and confusing error
 messages. As such, if you're a beginner to effect systems,
 `freer-simple` or `polysemy` would serve as better starting points.
 
@@ -46,7 +49,7 @@ messages. As such, if you're a beginner to effect systems,
 Unlike `fused-effects` and `polysemy` -- which both have intimidating
 boilerplate associated with the interpretation of higher-order effects
 --`in-other-words` makes it just as easy to interpret higher-order effects as
-first-order effects. [Here's](#higher-order) an example.
+first-order effects. Go [here](#higher-order) for an example.
 
 ### No cumbersome restrictions to effects
 Every effect-system previously mentioned has serious restrictions in what
@@ -57,12 +60,13 @@ effects they may represent.
 whose approach doesn't allow for sensible implementations of effects for
 continuations, coroutines, or nondeterminism.
 * `eff` is limited to what's implementable with delimited continuations, which
-excludes actions such as [`pass`](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Writer-Class.html#v:pass)
-from `MonadWriter`.
+excludes actions such as
+[`pass`](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Writer-Class.html#v:pass)
+from `MonadWriter`, and `async`/`await` style concurrency.
 
 `in-other-words` also places restrictions on what effects may be represented
 -- but in comparison to the libraries mentioned above, these restrictions are
-very, very minor. <sup id="a1">[1](#f1)</sup> This is because `in-other-words`
+very minor. <sup id="a1">[1](#f1)</sup> This is because `in-other-words`
 does not attempt to make every possible effect play nicely together with
 every other effect: instead, just like `mtl`, some effects can't be used
 together with other effects (depending on how they're interpreted), and
@@ -84,7 +88,7 @@ The following extensions are needed for basic usage of the library:
   - TypeFamilies
 ```
 
-More advanced features of the library could require enabling more extensions.
+Some features of the library could require enabling more extensions.
 
 
 ## Examples of Simple Usage
@@ -118,17 +122,18 @@ teletypeToIO = interpretSimple $ \case
 challenge :: Eff Teletype m => m ()
 challenge = do
   writeTTY "What is 3 + 4?"
-  readMaybe @Int <$> readTTY >>= \case
+  readTTY >>= \str -> case readMaybe @Int str of
     Just 7  -> writeTTY "Correct!"
     _       -> writeTTY "Nope." >> challenge
 
+-- Interpret a `Teletype` effect in terms of `Ask` and `Tell` effects
 runTeletype :: Effs '[Ask String, Tell String] m
             => SimpleInterpreterFor Teletype m
 runTeletype = interpretSimple $ \case
   ReadTTY -> ask
   WriteTTY msg -> tell msg
 
--- Runs a challenge with the provided inputs
+-- Runs a challenge with the provided inputs purely.
 runChallengePure :: [String] -> Either String [String]
 runChallengePure testInputs =
     -- Extract the final result, now that all effects have been interpreted.
@@ -233,7 +238,7 @@ if I can generalize the problem enough, then I'll expand the wiki to cover the
 issue.
 
 ## Performance
-`in-other-words` wasn't designed with performance in mind; however, unlike
+`in-other-words` was not designed with performance as a main goal; however, unlike
 the free-monad based solutions of `freer-simple` and `polysemy`, the underlying
 mechanisms of `in-other-words` are class-based, just like `fused-effects`. This
 suggests that if optimized, `in-other-words` could compete with `mtl`.

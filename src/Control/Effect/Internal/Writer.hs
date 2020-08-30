@@ -58,7 +58,7 @@ instance (Monoid s, MonadMask m) => MonadMask (TellC s m) where
 
   generalBracket acquire release use =
     coerceAlg
-      (threadEff @_ @(WriterT s) @m
+      (threadEff @(WriterT s) @_ @m
         (\(GeneralBracket a r u) -> C.generalBracket a r u)
       )
       (GeneralBracket acquire release use)

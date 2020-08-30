@@ -39,7 +39,7 @@ instance ( Threads (FreeT (FOEff e)) (Prims m)
   type Derivs (SteppedC e m) = e ': Derivs m
   type Prims  (SteppedC e m) = Prims m
 
-  algPrims = coerceAlg (thread @(FreeT (FOEff e)) (algPrims @m))
+  algPrims = coerce (thread @(FreeT (FOEff e)) (algPrims @m))
   {-# INLINE algPrims #-}
 
   reformulate n alg = powerAlg' (reformulate (n . lift) alg) (n . sendStepped)

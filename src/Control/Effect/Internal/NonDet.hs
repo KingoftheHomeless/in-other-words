@@ -145,6 +145,33 @@ runNonDet :: forall f m a p
 runNonDet = L.runListT .# unNonDetC
 {-# INLINE runNonDet #-}
 
+
+-- | Runs a 'NonDet' effect, but stop once the first valid result is found.
+--
+-- This is like 'runNonDet' with the 'Alternative' specialized to 'Maybe',
+-- but once a valid result is found, it won't run all other branches.
+--
+-- This is the equivalent of  @'runCullCut' \@Maybe . 'cull'@
+-- or @'runLogic' \@Maybe . 'cull'@, but doesn't impose any primitive effects,
+-- meaning 'runNonDet' doesn't restrict what interpreters are run before it.
+--
+-- @'Derivs' ('NonDetC' m) = 'NonDet' ': 'Derivs' m@
+--
+-- @'Prims'  ('NonDetC' m) = 'Prims' m@
+runNonDet1 :: forall m a p
+            . ( Carrier m
+              , Threaders '[NonDetThreads] m p
+              )
+           => NonDetC m a
+           -> m (Maybe a)
+runNonDet1 m =
+  L.unListT (unNonDetC m)
+            (>>=)
+            (\a _ -> pure (Just a))
+            (pure Nothing)
+            (pure Nothing)
+{-# INLINE runNonDet1 #-}
+
 -- | Runs connected 'NonDet', 'Cull', and 'Cut' effects.
 --
 -- Unlike 'runLogic', this doesn't provide the full power of 'Split'.

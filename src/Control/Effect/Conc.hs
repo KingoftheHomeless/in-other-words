@@ -3,7 +3,7 @@
 module Control.Effect.Conc
   ( -- * Effects
     Conc
-  , A.Async
+  , Async
 
     -- * Interpretations
   , concToIO
@@ -103,14 +103,11 @@ unliftConc main = wrapWith Conc $ unlift (\lower -> main (lower .# lift))
 {-# INLINE unliftConc #-}
 
 type ConcToIOC = CompositionC
- '[ UnwrapC Conc
+ '[ UnwrapTopC Conc
   , UnliftToFinalC IO
   ]
 
-type ConcToUnliftIOC = CompositionC
- '[ UnwrapC Conc
-  , SubsumeC (Unlift IO)
-  ]
+type ConcToUnliftIOC = UnwrapC Conc
 
 -- | Run a 'Conc' effect if all effects in the effect stack are
 -- eventually reduced to operations on 'IO'.
@@ -121,7 +118,7 @@ concToIO :: ( Carrier m
           -> m a
 concToIO =
      unliftToFinal
-  .# unwrap
+  .# unwrapTop
   .# runComposition
 {-# INLINE concToIO #-}
 
@@ -129,7 +126,7 @@ concToIO =
 concToUnliftIO :: Eff (Unlift IO) m
                => ConcToUnliftIOC m a
                -> m a
-concToUnliftIO = subsume .# unwrap .# runComposition
+concToUnliftIO = unwrap
 {-# INLINE concToUnliftIO #-}
 
 async :: Eff Conc m => m a -> m (Async a)

@@ -66,8 +66,8 @@ unliftT main = liftWith $ \lower ->
 -- __'Unlift' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff' ('Unlift' b)@ instance for that monad transformer
--- (if possible). 'threadUnliftViaClass' can help you with that.
+-- a @'ThreadsEff'@ instance for that monad transformer to lift
+-- @'Unlift' b@ (if possible). 'threadUnliftViaClass' can help you with that.
 data Unlift b m a where
   Unlift :: ((forall x. m x -> b x) -> b a) -> Unlift b m a
 
@@ -81,7 +81,7 @@ threadUnliftViaClass alg (Unlift main) = unliftT $ \lowerT ->
   alg $ Unlift $ \lowerM -> main (lowerM . lowerT)
 {-# INLINE threadUnliftViaClass #-}
 
-instance ThreadsEff (Unlift b) (ReaderT i) where
+instance ThreadsEff (ReaderT i) (Unlift b) where
   threadEff alg (Unlift main) = ReaderT $ \s ->
     alg $ Unlift $ \lower -> main (lower . (`runReaderT` s))
   {-# INLINE threadEff #-}

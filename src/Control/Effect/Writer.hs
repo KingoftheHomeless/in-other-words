@@ -684,7 +684,7 @@ instance ( Monoid s
 --
 -- @'Derivs' ('WriterToBracketC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterToBracketC' s m) = 'Prims' m@
+-- @'Prims'  ('WriterToBracketC' s m) = 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'writerToIO', this does not have a higher-rank type.
 writerToBracket :: forall s m a p
@@ -708,7 +708,7 @@ writerToBracket m = do
 --
 -- @'Derivs' ('WriterToBracketC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterToBracketC' s m) = 'Prims' m@
+-- @'Prims'  ('WriterToBracketC' s m) = 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 writerToBracketTVar :: forall s m a p
@@ -896,7 +896,7 @@ runTellTVarSimple tvar = interpretSimple $ \case
 --
 -- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims' ('ListenTVarC' s m) = 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('ListenTVarC' s m) = 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 listenToIO :: forall s m a p
@@ -919,7 +919,7 @@ listenToIO m = do
 --
 -- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenTVarC' s m) = 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('ListenTVarC' s m) = 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runListenTVar :: forall s m a p
@@ -948,7 +948,7 @@ runListenTVar tvar =
 --
 -- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 writerToIO :: forall s m a p
@@ -972,7 +972,7 @@ writerToIO m = do
 --
 -- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runWriterTVar :: forall s m a p

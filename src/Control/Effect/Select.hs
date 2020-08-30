@@ -30,10 +30,11 @@ import Control.Effect.Internal.Select
 -- When you find a satisfactory @a@, you may return the associated @r@.
 --
 -- The way higher-order actions interact with the continuation depends
--- on the interpreter. In general, you cannot expect to interact with the
--- continuation in any meaningful way: for example, you should not assume that
--- you will be able to catch an exception thrown at some point in the future of
--- the computation by using 'Control.Effect.Error.catch' on the continuation.
+-- on the interpretation of 'Select'. In general, you cannot expect to interact
+-- with the continuation in any meaningful way: for example, you should not
+-- assume that you will be able to catch an exception thrown at some point in
+-- the future of the computation by using 'Control.Effect.Error.catch' on the
+-- continuation.
 select :: Eff (Select s) m
        => (forall r. (a -> m (s, r)) -> m r) -> m a
 select main = send (Select main)

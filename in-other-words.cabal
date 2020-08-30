@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 747ac0a380b8dbce61f759d32615729df5e27ac9c37db3dc3087fc385f5d30ca
+-- hash: 10ac57e594df22365122311fa6a1b56ffafb2e58920ff6dd4dfddafbfcb3a0c8
 
 name:           in-other-words
 version:        0.1.0.0
@@ -32,7 +32,6 @@ library
       Control.Effect.Carrier.Internal.Interpret
       Control.Effect.Carrier.Internal.Intro
       Control.Effect.Carrier.Internal.Stepped
-      Control.Effect.Carrier.Stepped
       Control.Effect.Conc
       Control.Effect.Cont
       Control.Effect.Debug
@@ -74,6 +73,7 @@ library
       Control.Effect.Regional
       Control.Effect.Select
       Control.Effect.State
+      Control.Effect.Stepped
       Control.Effect.Trace
       Control.Effect.Type.Alt
       Control.Effect.Type.Bracket

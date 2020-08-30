@@ -159,8 +159,8 @@ class ( RepresentationalEff e
 type EffHandler e m =
      forall z x
    . ( Carrier z
-     , Prims z ~ Prims m
      , Derivs z ~ Derivs m
+     , Prims z ~ Prims m
      , MonadBase m z
      )
   => e (Effly z) x -> Effly z x
@@ -254,6 +254,7 @@ newtype ReifiedPrimHandler (e :: Effect) m = ReifiedPrimHandler {
 coerceHandler :: (RepresentationalEff e, Coercible m n)
               => (e m a -> m a) -> e n a -> n a
 coerceHandler = coerce
+{-# INLINE coerceHandler #-}
 
 instance PrimHandler h e m => Carrier (InterpretPrimC h e m) where
   type Derivs (InterpretPrimC h e m) = e ': Derivs m
@@ -351,7 +352,7 @@ instance MonadTrans (InterpretPrimSimpleC e) where
   {-# INLINE lift #-}
 
 instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
-         , ThreadsEff e (ReaderT (ReifiedPrimHandler e m))
+         , ThreadsEff (ReaderT (ReifiedPrimHandler e m)) e
          , RepresentationalEff e
          , Carrier m
          )
@@ -363,7 +364,7 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
     powerAlg
       (coerce (thread @(ReaderT (ReifiedPrimHandler e m)) (algPrims @m)))
       $ \e -> InterpretPrimSimpleC $ ReaderT $ \rh@(ReifiedPrimHandler h) ->
-        runReaderT (threadEff @_ @(ReaderT (ReifiedPrimHandler e m)) h (coerce e)) rh
+        runReaderT (threadEff @(ReaderT (ReifiedPrimHandler e m)) h (coerce e)) rh
   {-# INLINE algPrims #-}
 
   reformulate = addPrim (liftReform reformulate)
@@ -499,8 +500,8 @@ addDeriv :: ( RepresentationalEff e
             )
          => (  forall z x
              . ( Carrier z
-               , Prims z ~ p
                , Derivs z ~ r
+               , Prims z ~ p
                , MonadBase m z
                )
             => e (Effly z) x -> Effly z x

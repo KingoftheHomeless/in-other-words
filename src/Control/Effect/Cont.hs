@@ -31,13 +31,14 @@ import Control.Monad.Trans.Free.Church.Alternate
 -- the /continuation/ of the program at the point that 'callCC' was invoked.
 -- If the continuation is executed, then control will immediately abort
 -- and jump to the point 'callCC' was invoked, which will then return
--- argument provided to the computation.
+-- argument provided to the continuation.
 --
 -- The way higher-order actions interact with the continuation depends
--- on the interpreter. In general, you cannot expect to interact with the
--- computation in any meaningful way: for example, you should not assume that
--- you will be able to catch an exception thrown at some point in the future of
--- the computation by using 'Control.Effect.Error.catch' on the computation.
+-- on the interpretation of 'Cont'. In general, you cannot expect to interact
+-- with the continuation in any meaningful way: for example, you should not
+-- assume that you will be able to catch an exception thrown at some point in
+-- the future of the computation by using 'Control.Effect.Error.catch' on the
+-- continuation.
 callCC :: Eff Cont m
        => ((forall b. a -> m b) -> m a) -> m a
 callCC main = send (CallCC main)

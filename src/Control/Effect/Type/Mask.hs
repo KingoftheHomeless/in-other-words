@@ -24,9 +24,9 @@ data MaskMode
 --
 -- __'Mask' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff' 'Mask'@ instance for that monad transformer
--- (if possible). 'threadMaskViaClass' can help you with that.
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'ThreadsEff' t 'Mask'@ instance (if possible).
+-- 'threadMaskViaClass' can help you with that.
 data Mask m a where
   Mask :: MaskMode
        -> ((forall x. m x -> m x) -> m a)
@@ -55,7 +55,7 @@ instance ( Reifies s (ReifiedEffAlgebra Mask m)
   generalBracket = error "threadMaskViaClass: Transformers threading Mask \
                          \are not allowed to use generalBracket."
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' 'Mask t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t 'Mask'@ instance,
 -- given that @t@ lifts @'MonadMask'@.
 --
 -- __BEWARE__: 'threadMaskViaClass' is only safe if the implementation of
@@ -80,12 +80,12 @@ threadMaskViaClass alg (Mask mode main) =
 {-# INLINE threadMaskViaClass #-}
 
 #define THREAD_MASK(monadT)             \
-instance ThreadsEff Mask (monadT) where \
+instance ThreadsEff (monadT) Mask where \
   threadEff = threadMaskViaClass;       \
   {-# INLINE threadEff #-}
 
 #define THREAD_MASK_CTX(ctx, monadT)             \
-instance (ctx) => ThreadsEff Mask (monadT) where \
+instance (ctx) => ThreadsEff (monadT) Mask where \
   threadEff = threadMaskViaClass;                \
   {-# INLINE threadEff #-}
 
@@ -96,7 +96,7 @@ THREAD_MASK(SSt.StateT s)
 THREAD_MASK_CTX(Monoid s, LWr.WriterT s)
 THREAD_MASK_CTX(Monoid s, SWr.WriterT s)
 
-instance Monoid s => ThreadsEff Mask (CPSWr.WriterT s) where
+instance Monoid s => ThreadsEff (CPSWr.WriterT s) Mask where
   threadEff alg (Mask mode main) = CPSWr.writerT $ alg $ Mask mode $ \restore ->
     CPSWr.runWriterT (main (CPSWr.mapWriterT restore))
   {-# INLINE threadEff #-}

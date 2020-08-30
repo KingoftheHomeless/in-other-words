@@ -35,37 +35,37 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 --
 -- __'Regional' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff' ('Regional' s)@ instance for that monad transformer
--- (if possible). 'Control.Effect.Regional.threadRegionalViaOptional'
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'ThreadsEff' t ('Regional' s)@ instance (if possible).
+-- 'Control.Effect.Regional.threadRegionalViaOptional'
 -- can help you with that.
 data Regional s m a where
   Regionally :: s -> m a -> Regional s m a
 
-instance ThreadsEff (Regional s) (ExceptT e) where
+instance ThreadsEff (ExceptT e) (Regional s) where
   threadEff alg (Regionally s m) = mapExceptT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Regional s) (ReaderT i) where
+instance ThreadsEff (ReaderT i) (Regional s) where
   threadEff alg (Regionally s m) = mapReaderT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Regional s) (SSt.StateT i) where
+instance ThreadsEff (SSt.StateT i) (Regional s) where
   threadEff alg (Regionally s m) = SSt.mapStateT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Regional s) (LSt.StateT i) where
+instance ThreadsEff (LSt.StateT i) (Regional s) where
   threadEff alg (Regionally s m) = LSt.mapStateT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Regional s) (LWr.WriterT w) where
+instance ThreadsEff (LWr.WriterT w) (Regional s) where
   threadEff alg (Regionally s m) = LWr.mapWriterT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Regional s) (SWr.WriterT w) where
+instance ThreadsEff (SWr.WriterT w) (Regional s) where
   threadEff alg (Regionally s m) = SWr.mapWriterT (alg . Regionally s) m
   {-# INLINE threadEff #-}
 
-instance Monoid w => ThreadsEff (Regional s) (CPSWr.WriterT w) where
+instance Monoid w => ThreadsEff (CPSWr.WriterT w) (Regional s) where
   threadEff alg (Regionally s m) = CPSWr.mapWriterT (alg . Regionally s) m
   {-# INLINE threadEff #-}

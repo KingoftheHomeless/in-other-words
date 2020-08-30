@@ -19,8 +19,8 @@ import Control.Effect.Internal.Union
 --
 -- __'Pass' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'Monoid' s => 'ThreadsEff' ('Pass' s)@ instance for that monad transformer
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'Monoid' s => 'ThreadsEff' t ('Pass' s)@ instance
 -- (if possible). 'threadPassViaClass' can help you with that.
 newtype Pass s m a where
   Pass :: m (s -> s, a) -> Pass s m a
@@ -64,7 +64,7 @@ threadPassViaClass alg (Pass m) =
 
 #define THREAD_PASS(monadT)                              \
 instance Monoid threadedMonoid                           \
-      => ThreadsEff (Pass threadedMonoid) (monadT) where \
+      => ThreadsEff (monadT) (Pass threadedMonoid) where \
   threadEff = threadPassViaClass;                        \
   {-# INLINE threadEff #-}
 
@@ -73,7 +73,7 @@ THREAD_PASS(ExceptT e)
 THREAD_PASS(LSt.StateT s)
 THREAD_PASS(SSt.StateT s)
 
-instance ThreadsEff (Pass w) (LWr.WriterT s) where
+instance ThreadsEff (LWr.WriterT s) (Pass w) where
   threadEff alg (Pass m) =
       LWr.WriterT
     $ alg
@@ -82,7 +82,7 @@ instance ThreadsEff (Pass w) (LWr.WriterT s) where
     $ LWr.runWriterT m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Pass w) (SWr.WriterT s) where
+instance ThreadsEff (SWr.WriterT s) (Pass w) where
   threadEff alg (Pass m) =
       SWr.WriterT
     $ alg
@@ -91,7 +91,7 @@ instance ThreadsEff (Pass w) (SWr.WriterT s) where
     $ SWr.runWriterT m
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff (Pass w) (CPSWr.WriterT s) where
+instance Monoid s => ThreadsEff (CPSWr.WriterT s) (Pass w) where
   threadEff alg (Pass m) =
       CPSWr.writerT
     $ alg

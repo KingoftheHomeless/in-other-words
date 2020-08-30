@@ -37,9 +37,9 @@ import Control.Monad.Trans.Writer.CPS as CPSWr
 --
 -- __'BaseControl' is typically used as a primitive effect__.
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff' ('BaseControl' b)@ instance for that monad transformer
--- (if possible). 'threadBaseControlViaClass' can help you with that.
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'ThreadsEff' t ('BaseControl' b)@ instance (if possible).
+-- 'threadBaseControlViaClass' can help you with that.
 newtype BaseControl b m a where
   GainBaseControl :: (  forall z
                       . (MonadBaseControl b z, Coercible z m)
@@ -48,7 +48,7 @@ newtype BaseControl b m a where
                      )
                   -> BaseControl b m a
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('BaseControl' b) t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('BaseControl' b)@ instance,
 -- given that @t@ lifts @'MonadBaseControl' b@ for any @b@.
 threadBaseControlViaClass :: forall b t m a
                            . ( MonadTrans t
@@ -66,13 +66,13 @@ threadBaseControlViaClass alg (GainBaseControl main) =
   lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) -> main (proxy# :: Proxy# (t z))
 {-# INLINE threadBaseControlViaClass #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Optional' s) t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('Optional' s)@ instance,
 -- given that @t@ threads @'BaseControl' b@ for any @b@.
 threadOptionalViaBaseControl :: forall s t m a
                               . ( Functor s
                                 , Monad m
                                 , Monad (t m)
-                                , ThreadsEff (BaseControl m) t
+                                , ThreadsEff t (BaseControl m)
                                 )
                              => (forall x. Optional s m x -> m x)
                              -> Optional s (t m) a -> t m a
@@ -89,12 +89,12 @@ threadOptionalViaBaseControl alg (Optionally sa m) =
 
 
 #define THREAD_BASE_CONTROL(monadT)                \
-instance ThreadsEff (BaseControl b) (monadT) where \
+instance ThreadsEff (monadT) (BaseControl b) where \
   threadEff = threadBaseControlViaClass;           \
   {-# INLINE threadEff #-}
 
 #define THREAD_BASE_CONTROL_CTX(ctx, monadT)              \
-instance ctx => ThreadsEff (BaseControl b) (monadT) where \
+instance ctx => ThreadsEff (monadT) (BaseControl b) where \
   threadEff = threadBaseControlViaClass;                  \
   {-# INLINE threadEff #-}
 
@@ -107,7 +107,7 @@ THREAD_BASE_CONTROL_CTX(Monoid w, SWr.WriterT w)
 
 -- monad-control still doesn't have a MonadBaseControl instance for CPS
 -- WriterT, so we use a work-around to make this instance.
-instance Monoid w => ThreadsEff (BaseControl b) (CPSWr.WriterT w) where
+instance Monoid w => ThreadsEff (CPSWr.WriterT w) (BaseControl b) where
   threadEff alg (GainBaseControl main) =
     lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) ->
       main (proxy# :: Proxy# (WriterCPS w z))

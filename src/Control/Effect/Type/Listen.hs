@@ -20,9 +20,9 @@ import Control.Effect.Internal.Union
 --
 -- __'Listen' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'Monoid' s => 'ThreadsEff' ('Listen' s)@ instance for that monad
--- transformer (if possible). 'threadListenViaClass' can help you with that.
+-- non-trivial monad transformer @t@, then you need to make a
+-- a @'Monoid' s => 'ThreadsEff' t ('Listen' s)@ instance (if possible).
+-- 'threadListenViaClass' can help you with that.
 data Listen s m a where
   Listen :: m a -> Listen s m (s, a)
 
@@ -42,7 +42,7 @@ instance ( Reifies s (ReifiedEffAlgebra (Listen w) m)
       fmap (\(s, a) -> (a, s)) $ coerceAlg alg (Listen m)
   {-# INLINE listen #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Listen' w) t@ instance,
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('Listen' w)@ instance,
 -- given that @t@ lifts @'MonadWriter' w@.
 --
 -- __BEWARE__: 'threadListenViaClass' is only safe if the implementation of
@@ -65,7 +65,7 @@ threadListenViaClass alg (Listen m) =
 
 #define THREAD_LISTEN(monadT)                              \
 instance Monoid threadedMonoid                             \
-      => ThreadsEff (Listen threadedMonoid) (monadT) where \
+      => ThreadsEff (monadT) (Listen threadedMonoid) where \
   threadEff = threadListenViaClass;                        \
   {-# INLINE threadEff #-}
 
@@ -74,7 +74,7 @@ THREAD_LISTEN(ExceptT e)
 THREAD_LISTEN(LSt.StateT s)
 THREAD_LISTEN(SSt.StateT s)
 
-instance ThreadsEff (Listen w) (LWr.WriterT s) where
+instance ThreadsEff (LWr.WriterT s) (Listen w) where
   threadEff alg (Listen m) =
       LWr.WriterT
     $ fmap (\(s, (a, w)) -> ((s, a), w))
@@ -83,7 +83,7 @@ instance ThreadsEff (Listen w) (LWr.WriterT s) where
     $ LWr.runWriterT m
   {-# INLINE threadEff #-}
 
-instance ThreadsEff (Listen w) (SWr.WriterT s) where
+instance ThreadsEff (SWr.WriterT s) (Listen w) where
   threadEff alg (Listen m) =
       SWr.WriterT
     $ fmap (\(s, (a, w)) -> ((s, a), w))
@@ -92,7 +92,7 @@ instance ThreadsEff (Listen w) (SWr.WriterT s) where
     $ SWr.runWriterT m
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff (Listen w) (CPSWr.WriterT s) where
+instance Monoid s => ThreadsEff (CPSWr.WriterT s) (Listen w) where
   threadEff alg (Listen m) =
       CPSWr.writerT
     $ fmap (\(s, (a, w)) -> ((s, a), w))
