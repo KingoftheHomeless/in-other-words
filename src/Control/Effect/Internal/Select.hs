@@ -54,13 +54,13 @@ instance ( Carrier m
   type Prims  (SelectC s t u m) = Prims m
 
   algPrims = coerce (thread @(FreeT (SelectBase s t u)) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Select main -> n getCont >>= \case
       Left c  -> main (n . attempt . c) >>= n . commit
       Right a -> return a
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 -- | Run a @'Select' s@ effect by providing an evaluator
 -- for the final result of type @a@.
@@ -105,7 +105,7 @@ instance ( Carrier m
   type Prims  (SelectFastC s r m) = Prims m
 
   algPrims = coerce (thread @(C.ContT (s, r)) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Select main ->
@@ -114,7 +114,7 @@ instance ( Carrier m
           end <- main (n . lift . fmap (\(s,r) -> (s, pure (s, r))) . c)
           n $ SelectFastC $ C.ContT $ \_ -> end
         Right a -> return a
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 -- | Run a @'Select' s@ effect by providing an evaluator
 -- for the final result of type @a@.

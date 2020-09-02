@@ -87,7 +87,7 @@ instance ( Carrier m
     ) $ \case
         Regionally DoCull m -> coerceTrans (L.cull @m) m
         Regionally DoCall m -> coerceTrans (L.call @m) m
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg =
     powerAlg (
@@ -98,7 +98,7 @@ instance ( Carrier m
       Call m  -> (alg . inj) $ Regionally DoCall m
     ) $ \case
       Cull m  -> (alg . inj) $ Regionally DoCull m
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 newtype NonDetC m a = NonDetC { unNonDetC :: L.ListT m a }
   deriving ( Functor, Applicative, Monad
@@ -114,14 +114,14 @@ instance ( Carrier m
   type Prims  (NonDetC m) = Prims m
 
   algPrims = coerce (thread @L.ListT (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg =
     powerAlg
       (liftReform reformulate n alg)
       $ \case
         FromList l -> n $ NonDetC $ L.ListT $ \_ c b _ -> foldr c b l
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 -- | Runs a 'NonDet' effect.

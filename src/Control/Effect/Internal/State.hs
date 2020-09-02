@@ -31,12 +31,12 @@ instance ( Carrier m
   type Prims  (StateC s m) = Prims m
 
   algPrims = coerce (thread @(SSt.StateT s) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Put s -> n $ StateC $ SSt.put s
     Get   -> n (StateC SSt.get)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 newtype StateLazyC s m a = StateLazyC { unStateLazyC :: LSt.StateT s m a }
   deriving ( Functor, Applicative, Monad
@@ -55,12 +55,12 @@ instance ( Carrier m
   type Prims  (StateLazyC s m) = Prims m
 
   algPrims = coerce (thread @(LSt.StateT s) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Put s -> n $ StateLazyC $ LSt.put s
     Get   -> n (StateLazyC LSt.get)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 -- | 'StateLazyThreads' accepts the following primitive effects:
 --

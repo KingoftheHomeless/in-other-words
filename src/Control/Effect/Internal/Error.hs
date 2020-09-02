@@ -42,11 +42,11 @@ instance ( Carrier m
   type Prims  (ThrowC e m) = Prims m
 
   algPrims = coerce (thread @(ExceptT e) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Throw e -> n (ThrowC (throwE e))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 instance ( Carrier m
@@ -58,14 +58,14 @@ instance ( Carrier m
 
   algPrims = powerAlg (coerce (algPrims @(ThrowC e m))) $ \case
     Optionally h m -> ErrorC (unErrorC m `catchE` (return . h))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg =
     powerAlg (
       coerceReform (reformulate @(ThrowC e m)) n (weakenAlg alg)
     ) $ \case
       Catch m h -> join $ (alg . inj) $ Optionally h (fmap pure m)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 -- | 'ErrorThreads' accepts the following primitive effects:

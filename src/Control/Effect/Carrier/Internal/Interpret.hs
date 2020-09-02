@@ -214,7 +214,7 @@ instance ( Carrier m
   type Prims (InterpretC h e m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate !n !alg = powerAlg (reformulate (n .# InterpretC) alg) $
     let
@@ -223,11 +223,11 @@ instance ( Carrier m
       reify handlerState $ \(_ :: p s) ->
         \e -> unHandlerC @s @(CarrierReform m) @_ @_ @m $ runEffly $
           effHandler @h @e @m (coerce e)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs = powerAlg (coerce (algDerivs @m)) $ \e ->
     InterpretC $ unItself $ runEffly $ effHandler @h @e (coerce e)
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 newtype InterpretC (h :: *) (e :: Effect) (m :: * -> *) a = InterpretC {
       unInterpretC :: m a
@@ -264,16 +264,16 @@ instance PrimHandler h e m => Carrier (InterpretPrimC h e m) where
     powerAlg
       (coerce (algPrims @m))
       (coerceHandler (effPrimHandler @h @e @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate = addPrim (coerceReform (reformulate @m))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs =
     powerAlg
       (coerce (algDerivs @m))
       (coerceHandler (effPrimHandler @h @e @m))
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 data ViaReifiedH (s :: *)
 
@@ -325,7 +325,7 @@ instance ( Threads (ReaderT (ReifiedHandler e m)) (Prims m)
   type Prims  (InterpretSimpleC e m) = Prims m
 
   algPrims = coerceAlg (thread @(ReaderT (ReifiedHandler e m)) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \e -> do
     ReifiedHandler handler <- n (InterpretSimpleC ask)
@@ -333,7 +333,7 @@ instance ( Threads (ReaderT (ReifiedHandler e m)) (Prims m)
     reify handlerState $ \(_ :: p s) ->
       unHandlerC @s @(CarrierReform m) @_ @_ @m $ runEffly $
         handler (coerce e)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 newtype InterpretPrimSimpleC (e :: Effect) (m :: * -> *) a =
     InterpretPrimSimpleC {
@@ -365,10 +365,10 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
       (coerce (thread @(ReaderT (ReifiedPrimHandler e m)) (algPrims @m)))
       $ \e -> InterpretPrimSimpleC $ ReaderT $ \rh@(ReifiedPrimHandler h) ->
         runReaderT (threadEff @(ReaderT (ReifiedPrimHandler e m)) h (coerce e)) rh
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate = addPrim (liftReform reformulate)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 -- | Interpret an effect in terms of other effects, without needing to
 -- define an explicit 'Handler' instance. This is an alternative to

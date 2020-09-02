@@ -45,15 +45,15 @@ instance ( Member e' (Derivs m)
   type Prims  (WrapC e e' m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg' (reformulate (n .# WrapC) alg) $
     \(e :: e z x) -> reformulate n alg (Union membership (coerce e :: e' z x))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs = powerAlg' (coerce (algDerivs @m)) $
     \(e :: e z x) -> algDerivs (Union membership (coerce e :: e' z x))
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 wrap :: ( Member e (Derivs m)
         , Carrier m
@@ -107,15 +107,15 @@ instance ( Carrier m
   type Prims  (UnwrapC e m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg' (reformulate (n .# UnwrapC) alg) $
     \e -> reformulate (n .# UnwrapC) alg (Union membership (unwrapped e))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs = powerAlg' (coerce (algDerivs @m)) $
     \e -> coerceAlg (algDerivs @m) (Union membership (unwrapped e))
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 newtype UnwrapTopC (e :: Effect)
                 m
@@ -137,15 +137,15 @@ instance ( IntroConsistent '[] '[UnwrappedEff e] m
   type Prims  (UnwrapTopC e m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg' (weakenAlg (reformulate (n .# UnwrapTopC) alg)) $
     \e -> reformulate (n .# UnwrapTopC) alg (Union Here (unwrapped e))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs = powerAlg' (weakenAlg (coerce (algDerivs @m))) $
     \e -> coerceAlg (algDerivs @m) (Union Here (unwrapped e))
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 
 
@@ -177,6 +177,7 @@ class EffNewtype (e :: Effect) where
   unwrapped :: e z x -> UnwrappedEff e z x
   default unwrapped :: Coercible e (UnwrappedEff e) => e z x -> UnwrappedEff e z x
   unwrapped = coerce
+  {-# INLINE unwrapped #-}
 
 -- | Useful for deriving instances of 'EffNewtype'.
 --

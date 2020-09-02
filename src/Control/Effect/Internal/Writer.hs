@@ -40,21 +40,21 @@ newtype TellC s m a = TellC {
 
 instance MonadThrow m => MonadThrow (TellC s m) where
   throwM = lift . C.throwM
-  {-# INLINE throwM #-}
+  {-# INLINEABLE throwM #-}
 
 instance (Monoid s, MonadCatch m) => MonadCatch (TellC s m) where
   catch (TellC m) h = TellC $ writerT $
     runWriterT m `C.catch` (runWriterT . unTellC #. h)
-  {-# INLINE catch #-}
+  {-# INLINEABLE catch #-}
 
 instance (Monoid s, MonadMask m) => MonadMask (TellC s m) where
   mask main = TellC $ writerT $ C.mask $ \restore ->
     runWriterT (unTellC (main (TellC #. W.mapWriterT restore .# unTellC)))
-  {-# INLINE mask #-}
+  {-# INLINEABLE mask #-}
 
   uninterruptibleMask main = TellC $ writerT $ C.uninterruptibleMask $ \restore ->
     runWriterT (unTellC (main (TellC #. W.mapWriterT restore .# unTellC)))
-  {-# INLINE uninterruptibleMask #-}
+  {-# INLINEABLE uninterruptibleMask #-}
 
   generalBracket acquire release use =
     coerceAlg
@@ -62,11 +62,11 @@ instance (Monoid s, MonadMask m) => MonadMask (TellC s m) where
         (\(GeneralBracket a r u) -> C.generalBracket a r u)
       )
       (GeneralBracket acquire release use)
-  {-# INLINE generalBracket #-}
+  {-# INLINEABLE generalBracket #-}
 
 instance MonadBase b m => MonadBase b (TellC s m) where
   liftBase = lift . liftBase
-  {-# INLINE liftBase #-}
+  {-# INLINEABLE liftBase #-}
 
 instance ( MonadBaseControl b m
          , Monoid s
@@ -75,19 +75,19 @@ instance ( MonadBaseControl b m
   type StM (TellC s m) a = StM m (a, s)
 
   liftBaseWith = defaultLiftBaseWith
-  {-# INLINE liftBaseWith #-}
+  {-# INLINEABLE liftBaseWith #-}
 
   restoreM = defaultRestoreM
-  {-# INLINE restoreM #-}
+  {-# INLINEABLE restoreM #-}
 
 instance Monoid s => MonadTransControl (TellC s) where
   type StT (TellC s) a = (a, s)
 
   liftWith main = lift (main (runWriterT .# unTellC))
-  {-# INLINE liftWith #-}
+  {-# INLINEABLE liftWith #-}
 
   restoreT = TellC #. writerT
-  {-# INLINE restoreT #-}
+  {-# INLINEABLE restoreT #-}
 
 instance ( Carrier m
          , Monoid s
@@ -98,11 +98,11 @@ instance ( Carrier m
   type Prims  (TellC s m) = Prims m
 
   algPrims = coerceAlg (thread @(WriterT s) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Tell s -> n (TellC (W.tell s))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 newtype ListenC s m a = ListenC {
@@ -132,10 +132,10 @@ instance ( Carrier m
         Listen (ListenC m) -> ListenC $ do
           (a, s) <- W.listen m
           return (s, a)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate = addPrim (coerceReform (reformulate @(TellC s m)))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 newtype WriterC s m a = WriterC {
@@ -165,10 +165,10 @@ instance ( Carrier m
         Pass (WriterC m) -> WriterC $ W.pass $ do
           (f, a) <- m
           return (a, f)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate = addPrim (coerceReform (reformulate @(ListenC s m)))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 newtype TellLazyC s m a = TellLazyC {
@@ -191,11 +191,11 @@ instance ( Monoid s
   type Prims  (TellLazyC s m) = Prims m
 
   algPrims = coerce (thread @(LW.WriterT s) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Tell s -> n $ TellLazyC $ LW.tell s
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 newtype ListenLazyC s m a = ListenLazyC {
     unListenLazyC :: LW.WriterT s m a
@@ -221,10 +221,10 @@ instance ( Monoid s
       coerce (algPrims @(TellLazyC s m))
     ) $ \case
       Listen (ListenLazyC m) -> ListenLazyC $ swap <$> LW.listen m
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate = addPrim (coerceReform (reformulate @(TellLazyC s m)))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 newtype WriterLazyC s m a = WriterLazyC {
     _unWriterLazyC :: LW.WriterT s m a
@@ -250,10 +250,10 @@ instance ( Monoid s
       coerce (algPrims @(ListenLazyC s m))
     ) $ \case
       Pass (WriterLazyC m) -> WriterLazyC $ LW.pass (swap <$> m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate = addPrim (coerceReform (reformulate @(ListenLazyC s m)))
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 -- | 'WriterThreads' accepts the following primitive effects:
 --

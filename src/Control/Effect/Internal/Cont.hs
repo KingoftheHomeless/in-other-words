@@ -47,13 +47,13 @@ instance ( Carrier m
   type Prims  (ContC s m) = Prims m
 
   algPrims = coerce (thread @(FreeT (ContBase s)) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     CallCC main -> n getCont >>= \case
       Left c  -> main (n . exit . c)
       Right a -> return a
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 
 newtype ContFastC s m a = ContFastC { unContFastC :: C.ContT s m a }
@@ -77,14 +77,14 @@ instance ( Carrier m
   type Prims  (ContFastC s m) = Prims m
 
   algPrims = coerce (thread @(C.ContT s) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     CallCC main ->
       n (ContFastC $ C.ContT $ \c -> c (Left (c . Right))) >>= \case
         Left c  -> main (\a -> n $ ContFastC $ C.ContT $ \_ -> c a)
         Right a -> return a
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 -- | 'ContThreads' accepts the following primitive effects:
 --

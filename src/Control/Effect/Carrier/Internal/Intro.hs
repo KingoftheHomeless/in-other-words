@@ -41,7 +41,7 @@ instance ( Carrier m
   type Prims  (IntroC top new m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg =
     weakenAlgMid
@@ -49,7 +49,7 @@ instance ( Carrier m
       (singList @top)
       (singList @new)
       (reformulate (n .# IntroC) alg)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs =
     weakenAlgMid
@@ -57,7 +57,7 @@ instance ( Carrier m
       (singList @top)
       (singList @new)
       (coerce (algDerivs @m))
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 
 type IntroTopC = IntroC '[]

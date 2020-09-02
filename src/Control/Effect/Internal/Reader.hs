@@ -46,7 +46,7 @@ instance ( Threads (ReaderT i) (Prims m)
   algPrims = powerAlg (coerce (thread @(ReaderT i) (algPrims @m))) $ \case
     ReaderPrimAsk -> ReaderC R.ask
     ReaderPrimLocal f (ReaderC m) -> ReaderC (R.local f m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg =
     powerAlg (
@@ -56,4 +56,4 @@ instance ( Threads (ReaderT i) (Prims m)
       Ask -> n (ReaderC R.ask)
     ) $ \case
       Local f m -> (alg . inj) $ ReaderPrimLocal f m
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}

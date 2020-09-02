@@ -40,10 +40,10 @@ instance ( Threads (FreeT (FOEff e)) (Prims m)
   type Prims  (SteppedC e m) = Prims m
 
   algPrims = coerce (thread @(FreeT (FOEff e)) (algPrims @m))
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg' (reformulate (n . lift) alg) (n . sendStepped)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
 deriving instance Functor m => Functor (Steps e m)
 

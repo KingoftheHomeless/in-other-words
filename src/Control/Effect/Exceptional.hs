@@ -139,7 +139,7 @@ instance Eff (Exceptional eff exc) m
   type Prims  (ExceptionallyC eff exc m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate n alg =
     powerAlg' (
@@ -151,7 +151,7 @@ instance Eff (Exceptional eff exc) m
     ) $ \e ->
       reformulate (n .# lift) alg $ inj $
         Exceptional @eff @exc (Union Here e)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs =
     powerAlg' (
@@ -161,7 +161,7 @@ instance Eff (Exceptional eff exc) m
       coerceAlg (algDerivs @m) $ inj $ Exceptional @eff @exc (Union (There Here) e)
     ) $ \e ->
       coerceAlg (algDerivs @m) $ inj $ Exceptional @eff @exc (Union Here e)
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 -- | Gain access to @eff@ and @'Catch' exc@ within a region,
 -- but only if you're ready to handle any unhandld exception @e :: exc@

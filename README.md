@@ -66,7 +66,7 @@ from `MonadWriter`, and `async`/`await` style concurrency.
 
 `in-other-words` also places restrictions on what effects may be represented
 -- but in comparison to the libraries mentioned above, these restrictions are
-very minor. <sup id="a1">[1](#f1)</sup> This is because `in-other-words`
+very minor.<sup id="a1">[1](#f1)</sup> This is because `in-other-words`
 does not attempt to make every possible effect play nicely together with
 every other effect: instead, just like `mtl`, some effects can't be used
 together with other effects (depending on how they're interpreted), and
@@ -238,23 +238,23 @@ if I can generalize the problem enough, then I'll expand the wiki to cover the
 issue.
 
 ## Performance
-`in-other-words` was not designed with performance as a main goal; however, unlike
-the free-monad based solutions of `freer-simple` and `polysemy`, the underlying
-mechanisms of `in-other-words` are class-based, just like `fused-effects`. This
-suggests that if optimized, `in-other-words` could compete with `mtl`.
-Benchmarking, profiling, and optimizations are currently considered future goals
-of the library.
+In the microbenchmarks offered by [`effects-zoo`](https://github.com/ocharles/effect-zoo/),
+`in-other-words` performs comparably to `mtl` and `fused-effects`;
+at worst up to 2x slower than `fused-effects`. 
+Keep in mind, however, that these *are* only microbenchmarks, and may not
+predict performance in the wild with perfect accuracy.
+[The benchmark results are available here.](https://github.com/KingoftheHomeless/in-other-words/wiki/Benchmarks)
 
+`in-other-words` is, like `mtl` and `fused-effects`, limited
+by how effectively the compiler is able to optimize away the underlying abstractions.
 [As noted by Alexis King](https://github.com/ghc-proposals/ghc-proposals/pull/313#issuecomment-590143835),
-the incredible performance of `mtl` is more or less a myth that is only achievable
-under unrealistic conditions. Even if optimized, `in-other-words` would fall prey
-to the same problems.
+the ideal situations under which these libraries are truly zero-cost are unrealistic
+in practice. Although this does adversely affect `in-other-words`, the underlying 
+dispatch cost of effects is low enough to make it largely negligable for most purposes
+-- particularly IO-bound applications.
 
-Thus, a goal in the far future is to investigate if it's possible to take
-inspiration from `in-other-words`' approach in order to develop an effect system
-with similar power, but relying on [delimited continuation primops](https://github.com/lexi-lambda/ghc-proposals/blob/delimited-continuation-primops/proposals/0000-delimited-continuation-primops.md)
-together with other IO operations for performance, with the eventual goal to
-support more effects than `eff` (currently) does.
+Further benchmarking, profiling, and optimizations are currently
+considered future goals of the library.
 
 ***
 <b id="f1">[1](#a1)</b> Every effect is required to be *representational* in the carrier monad.

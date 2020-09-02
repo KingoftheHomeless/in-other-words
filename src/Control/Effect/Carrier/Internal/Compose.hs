@@ -33,7 +33,7 @@ instance ( MonadTrans t
          )
       => MonadTrans (ComposeT t u) where
   lift m = ComposeT (lift (lift m))
-  {-# INLINE lift #-}
+  {-# INLINEABLE lift #-}
 
 instance ( MonadTransControl t
          , MonadTransControl u
@@ -46,10 +46,10 @@ instance ( MonadTransControl t
     liftWith $ \lowerT ->
     liftWith $ \lowerU ->
     main (lowerU . lowerT .# getComposeT)
-  {-# INLINE liftWith #-}
+  {-# INLINEABLE liftWith #-}
 
   restoreT m = ComposeT (restoreT (restoreT m))
-  {-# INLINE restoreT #-}
+  {-# INLINEABLE restoreT #-}
 
 -- | Composition of a list of carrier transformers.
 --

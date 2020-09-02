@@ -2,7 +2,7 @@ name:                in-other-words
 version:             0.1.0.0
 synopsis:            A higher-order effect system where the sky's the limit
 description:
-  An effect system that seeks to be as expressive as possible, making use of
+  A very expressive effect system that makes use of
   a novel approach that places very few restrictions on what effects may
   be represented.
 homepage:            https://github.com/KingoftheHomeless/in-other-words#readme
