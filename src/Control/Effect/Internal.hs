@@ -6,6 +6,7 @@ import Data.Coerce
 import Data.Kind (Constraint)
 
 import Data.Functor.Identity
+import Data.Monoid
 import Control.Monad.Trans
 import Control.Monad.Trans.Identity
 import Control.Effect.Internal.Membership
@@ -95,6 +96,9 @@ class Monad m => Carrier m where
   algDerivs :: Algebra' (Derivs m) m a
   algDerivs = reformulate id algPrims
   {-# INLINE algDerivs #-}
+
+deriving newtype instance Carrier m => Carrier (Alt m)
+deriving newtype instance Carrier m => Carrier (Ap m)
 
 -- | (Morally) a type synonym for
 -- @('Member' e ('Derivs' m), 'Carrier' m)@.
@@ -208,6 +212,7 @@ instance Carrier Identity where
   {-# INLINE algDerivs #-}
 
 deriving newtype instance Carrier m => Carrier (Itself m)
+
 
 newtype SubsumeC (e :: Effect) m a = SubsumeC {
     unSubsumeC :: m a
