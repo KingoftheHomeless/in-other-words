@@ -25,36 +25,22 @@ module Control.Effect
   , embed
 
     -- * Effect interpretation
-  , EffHandler
-
-    -- ** 'interpretSimple'
   , interpretSimple
   , SimpleInterpreterFor
-  , InterpretSimpleC
 
-    -- ** 'interpretViaHandler'
   , interpretViaHandler
   , Handler(..)
-  , MonadBase(..)
-  , InterpretC
 
-    -- ** 'interpret'
   , interpret
   , InterpreterFor
-  , ReifiesHandler
-  , ViaReifiedH
-  , InterpretReifiedC
+
+  , EffHandler
+  , MonadBase(..)
 
     -- * Effect reinterpretation
-    -- ** 'reinterpretSimple'
   , reinterpretSimple
-  , ReinterpretSimpleC
-    -- ** 'reinterpretViaHandler'
   , reinterpretViaHandler
-  , ReinterpretC
-    -- ** 'reinterpret'
   , reinterpret
-  , ReinterpretReifiedC
 
     -- * Lifting
   , MonadTrans(..)
@@ -71,11 +57,6 @@ module Control.Effect
   , introUnderMany
   , HeadEff
   , HeadEffs
-  , IntroConsistent
-  , KnownList
-  , IntroC
-  , IntroTopC
-  , IntroUnderC
 
     -- * Combining effect carriers
   , CompositionC
@@ -85,6 +66,21 @@ module Control.Effect
   , SubsumeC
   , subsume
   , Effly(..)
+
+    -- * Carriers and other misc. types
+  , InterpretSimpleC
+  , InterpretC
+  , InterpretReifiedC
+  , ReifiesHandler
+  , ViaReifiedH
+  , ReinterpretSimpleC
+  , ReinterpretC
+  , ReinterpretReifiedC
+  , IntroConsistent
+  , IntroC
+  , IntroTopC
+  , IntroUnderC
+  , KnownList
   ) where
 
 import Control.Effect.Internal

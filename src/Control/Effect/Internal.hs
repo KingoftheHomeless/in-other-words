@@ -19,8 +19,8 @@ import Control.Effect.Internal.Itself
 -- effects are implemented.
 --
 -- Each carrier is able to implement a number of /derived/ effects,
--- and /primitive/ effects. Typically, only the derived effects are relevant
--- for the end user.
+-- and /primitive/ effects. Users usually only interact with derived
+-- effects, as these determine the effects that users have access to.
 --
 -- The standard interpretation tools are typically powerful enough to
 -- let you avoid making instances of this class directly. If you need to make
@@ -36,8 +36,8 @@ class Monad m => Carrier m where
   -- purpose.
   --
   -- Although rarely relevant for users, @'Derivs' m@ can also contain effects
-  -- that aren't expressed in terms of other effects, as longs as the handler
-  -- for the effect can be lifted generically using 'lift'. Such effects don't
+  -- that aren't expressed in terms of other effects, as longs as the handlers
+  -- for those effects can be lifted generically using 'lift'. Such effects don't
   -- need to be part of @'Prims' m@, which is exclusively for primitive effects
   -- whose handlers need special treatment to be lifted.
   --

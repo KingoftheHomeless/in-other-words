@@ -1,22 +1,29 @@
 module Control.Effect.Primitive
-  ( -- * Carrier class
-    Carrier(..)
+  ( -- * Primitive effects
+    Carrier(Derivs, Prims)
 
     -- * Interpretation of primitive effects
   , EffPrimHandler
-  , PrimHandler(..)
-  , InterpretPrimC
-  , interpretPrimViaHandler
 
-  , InterpretPrimReifiedC
-  , ReifiesPrimHandler
+    -- ** 'interpretPrimSimple'
+  , interpretPrimSimple
+
+    -- ** 'interpretPrimViaHandler'
+  , interpretPrimViaHandler
+  , PrimHandler(..)
+
+    -- ** 'interpretPrim'
   , interpretPrim
 
-  , interpretPrimSimple
 
     -- * Threading primitive effects
   , Threads(..)
   , ThreadsEff(..)
+
+    -- * Carriers
+  , InterpretPrimSimpleC
+  , InterpretPrimC
+  , InterpretPrimReifiedC
   ) where
 
 import Control.Effect.Internal

@@ -45,7 +45,12 @@ instance Member e r => Member e (_e ': r) where
   {-# INLINE membership #-}
 
 instance TypeError (     'Text "Unhandled effect: " ':<>: 'ShowType e
-                   ':$$: 'Text "You need to add an interpreter for it."
+                   ':$$: 'Text "You need to either add or replace an \
+                               \interpreter in your interpretation stack \
+                               \so that the effect gets handled."
+                   ':$$: 'Text "To check what effects are currently \
+                               \handled by your interpretation stack, use \
+                               \`debugEffects' from `Control.Effect.Debug'."
                    )
                 => Member e '[] where
   membership = error "impossible"

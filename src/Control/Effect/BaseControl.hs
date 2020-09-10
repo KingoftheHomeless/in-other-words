@@ -85,11 +85,9 @@ withLowerToBase :: forall b m a
                  . Eff (BaseControl b) m
                 => (forall f. (forall x. m x -> b (f x)) -> b (f a))
                 -> m a
-withLowerToBase main =
-    gainBaseControl @b
-  $ control
-  $ \(lower :: forall x. z x -> b (StM z x)) ->
-    getStateful @z <$> main (fmap (Stateful @z) . lower .# lift)
+withLowerToBase main = join $ send $
+  GainBaseControl @b $ \(_ :: Proxy# z) -> coerceM $ control @_ @z $ \lower ->
+    getStateful @z @a <$> main (fmap (Stateful @z) . coerceTrans lower)
 {-# INLINE withLowerToBase #-}
 
 -- | Locally gain access to a @'MonadBaseControl' b@ instance

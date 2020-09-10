@@ -48,8 +48,8 @@ newtype BaseControl b m a where
                      )
                   -> BaseControl b m a
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('BaseControl' b)@ instance,
--- given that @t@ lifts @'MonadBaseControl' b@ for any @b@.
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('BaseControl' b)@
+-- instance, given that @t@ lifts @'MonadBaseControl' b@ for any @b@.
 threadBaseControlViaClass :: forall b t m a
                            . ( MonadTrans t
                              , Monad m
@@ -63,11 +63,12 @@ threadBaseControlViaClass :: forall b t m a
                           => (forall x. BaseControl b m x -> m x)
                           -> BaseControl b (t m) a -> t m a
 threadBaseControlViaClass alg (GainBaseControl main) =
-  lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) -> main (proxy# :: Proxy# (t z))
+  lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) ->
+    main (proxy# :: Proxy# (t z))
 {-# INLINE threadBaseControlViaClass #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('Optional' s)@ instance,
--- given that @t@ threads @'BaseControl' b@ for any @b@.
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('Optional' s)@
+-- instance, given that @t@ threads @'BaseControl' b@ for any @b@.
 threadOptionalViaBaseControl :: forall s t m a
                               . ( Functor s
                                 , Monad m
@@ -81,8 +82,7 @@ threadOptionalViaBaseControl alg (Optionally sa m) =
   $ threadEff (\(GainBaseControl main) -> return $ main (proxy# :: Proxy# (Itself m)))
   $ GainBaseControl @m $ \(_ :: Proxy# z) ->
       coerce $ join $ liftBaseWith @m @z @(z a) $ \lower -> do
-          coerce
-        $ alg
+          coerceAlg alg
         $ Optionally (fmap (pure @z) sa)
                      (fmap restoreM (coerce (lower @a) m))
 {-# INLINE threadOptionalViaBaseControl #-}
