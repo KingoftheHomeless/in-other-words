@@ -1,4 +1,3 @@
-{-# LANGUAGE RoleAnnotations #-}
 {-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Type.Split where
 

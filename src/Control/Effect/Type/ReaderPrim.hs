@@ -1,5 +1,13 @@
 {-# LANGUAGE CPP #-}
-module Control.Effect.Type.ReaderPrim where
+module Control.Effect.Type.ReaderPrim
+  ( -- * Effects
+    ReaderPrim(..)
+
+    -- * Threading utilities
+  , threadReaderPrim
+  , threadReaderPrimViaClass
+  , threadReaderPrimViaRegional
+ ) where
 
 import Control.Monad.Trans
 
@@ -24,10 +32,11 @@ import Control.Effect.Internal.Reflection
 import Control.Effect.Internal.Union
 
 -- | A primitive effect that may be used for
--- @'Control.Effect.Reader.Reader'@ interpreters.
+-- interpreters of connected 'Control.Effect.Reader.Ask' and
+-- 'Control.Effect.Reader.Local' effects.
 --
 -- This combines 'Control.Effect.Reader.Ask' and 'Control.Effect.Reader.Local',
--- which is relevant since certain monad transformers may only thread
+-- which is relevant since certain monad transformers may only lift
 -- 'Control.Effect.Reader.local' if they also have access to
 -- 'Control.Effect.Reader.ask'.
 --
@@ -52,24 +61,41 @@ instance ( Reifies s (ReifiedEffAlgebra (ReaderPrim i) m)
     ReifiedEffAlgebra alg -> coerceAlg alg (ReaderPrimLocal f m)
   {-# INLINE local #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ReaderPrim' i)@ instance,
--- given that @t@ lifts @'MonadReader' i@.
+-- | Construct a valid definition of 'threadEff' for a
+-- @'ThreadsEff' t ('ReaderPrim' w)@ instance
+-- only be specifying how 'ReaderPrimLocal' should be lifted.
+--
+-- This uses 'lift' to lift 'ReaderPrimAsk'.
+threadReaderPrim :: forall i t m a
+                  . (MonadTrans t, Monad m)
+                 => ( (forall x. ReaderPrim i m x -> m x)
+                    -> (i -> i) -> t m a -> t m a
+                    )
+                 -> (forall x. ReaderPrim i m x -> m x)
+                 -> ReaderPrim i (t m) a -> t m a
+threadReaderPrim h alg = \case
+  ReaderPrimAsk       -> lift (alg ReaderPrimAsk)
+  ReaderPrimLocal f m -> h alg f m
+{-# INLINE threadReaderPrim #-}
+
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ReaderPrim' i)@
+-- instance, given that @t@ lifts @'MonadReader' i@.
 threadReaderPrimViaClass :: forall i t m a
-                      . Monad m
-                     => ( RepresentationalT t
-                        , MonadTrans t
-                        , forall b. MonadReader i b => MonadReader i (t b)
-                        )
-                     => (forall x. ReaderPrim i m x -> m x)
-                     -> ReaderPrim i (t m) a -> t m a
+                          . Monad m
+                         => ( RepresentationalT t
+                            , MonadTrans t
+                            , forall b. MonadReader i b => MonadReader i (t b)
+                            )
+                         => (forall x. ReaderPrim i m x -> m x)
+                         -> ReaderPrim i (t m) a -> t m a
 threadReaderPrimViaClass alg e = reify (ReifiedEffAlgebra alg) $ \(_ :: pr s) ->
   case e of
     ReaderPrimAsk -> lift (alg ReaderPrimAsk)
     ReaderPrimLocal f m -> unViaAlgT (RC.local f (viaAlgT @s @(ReaderPrim i) m))
 {-# INLINE threadReaderPrimViaClass #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ReaderPrim' i)@ instance,
--- given that @t@ threads @'Regional' s@ for any @s@.
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ReaderPrim' i)@
+-- instance, given that @t@ threads @'Regional' s@ for any @s@.
 threadReaderPrimViaRegional :: forall i t m a
                          . ( Monad m
                            , MonadTrans t
@@ -93,15 +119,13 @@ instance ctx => ThreadsEff (monadT) (ReaderPrim threadedInput) where \
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (ReaderT i') (ReaderPrim i) where
-  threadEff alg = \case
-    ReaderPrimAsk -> lift (alg ReaderPrimAsk)
-    ReaderPrimLocal f m -> R.mapReaderT (alg . ReaderPrimLocal f) m
+  threadEff = threadReaderPrim $ \alg f m ->
+    R.mapReaderT (alg . ReaderPrimLocal f) m
   {-# INLINE threadEff #-}
 
 instance Monoid w => ThreadsEff (CPSWr.WriterT w) (ReaderPrim i) where
-  threadEff alg = \case
-    ReaderPrimAsk -> lift (alg ReaderPrimAsk)
-    ReaderPrimLocal f m -> CPSWr.mapWriterT (alg . ReaderPrimLocal f) m
+  threadEff = threadReaderPrim $ \alg f m ->
+    CPSWr.mapWriterT (alg . ReaderPrimLocal f) m
   {-# INLINE threadEff #-}
 
 -- TODO(KingoftheHomeless): Benchmark this vs hand-written instances.

@@ -73,8 +73,8 @@ instance ( Carrier m
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.BaseControl.BaseControl' @b@
--- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.WriterPrim.WriterPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 -- * 'Control.Effect.Mask.Mask'
 -- * 'Control.Effect.Bracket.Bracket'

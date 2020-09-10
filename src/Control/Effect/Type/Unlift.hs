@@ -1,5 +1,18 @@
 {-# OPTIONS_HADDOCK not-home #-}
-module Control.Effect.Type.Unlift where
+module Control.Effect.Type.Unlift
+ ( -- * Effects
+   Unlift(..)
+
+   -- Threading utilities
+ , threadUnliftViaClass
+
+   -- 'MonadBaseControlPure' and 'MonadTransControlPure'
+ , MonadBaseControlPure
+ , unliftBase
+
+ , MonadTransControlPure
+ , unliftT
+ ) where
 
 import Control.Effect.Internal.Union
 import Control.Monad.Trans.Control

@@ -16,6 +16,12 @@ module Control.Effect.Optional
     -- * Threading utilities
   , threadOptionalViaBaseControl
 
+    -- * Combinators for 'Algebra's
+    -- Intended to be used for custom 'Carrier' instances when
+    -- defining 'algPrims'.
+  , powerAlgHoistOption
+  , powerAlgHoistOptionFinal
+
     -- * Carriers
   , HoistOptionC
   , HoistOptionToFinalC
@@ -84,3 +90,22 @@ hoistOptionToFinal :: ( MonadBaseControl b m
                    -> m a
 hoistOptionToFinal = interpretPrimViaHandler
 {-# INLINE hoistOptionToFinal #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'HoistOption' m@ handler
+powerAlgHoistOption :: forall m p a
+                     . Algebra' p m a
+                    -> Algebra' (HoistOption m ': p) m a
+powerAlgHoistOption alg = powerAlg alg $ \case
+  Optionally (HoistOptionCall b) m -> b id m
+{-# INLINE powerAlgHoistOption #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'HoistOption' b@ handler, where
+-- @b@ is the final base monad.
+powerAlgHoistOptionFinal :: forall b m p a
+                          . MonadBaseControl b m
+                         => Algebra' p m a
+                         -> Algebra' (HoistOption b ': p) m a
+powerAlgHoistOptionFinal alg = powerAlg alg $ \case
+  Optionally (HoistOptionCall b) m -> join $ liftBaseWith $ \lower ->
+    b pure (restoreM <$> lower m)
+{-# INLINE powerAlgHoistOptionFinal #-}

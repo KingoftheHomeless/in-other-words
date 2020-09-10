@@ -1,6 +1,13 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_HADDOCK not-home #-}
-module Control.Effect.Type.Mask where
+module Control.Effect.Type.Mask
+ ( -- * Effects
+   Mask(..)
+ , MaskMode(..)
+
+   -- * Threading utilities
+ , threadMaskViaClass
+ ) where
 
 import Control.Effect.Internal.Union
 import Control.Effect.Internal.Reflection

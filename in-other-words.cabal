@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 09c3fdd9f88566afc1b15e5f40ade88069e311c54bd448b96ea990e2208d3e91
+-- hash: 4ff8cff23f22814c40ace3b0ea7b58b1a5fe0405b8acab37a788d492d5f547ce
 
 name:           in-other-words
 version:        0.1.0.0
@@ -84,15 +84,15 @@ library
       Control.Effect.Type.Fail
       Control.Effect.Type.Fix
       Control.Effect.Type.Internal.BaseControl
-      Control.Effect.Type.Listen
+      Control.Effect.Type.ListenPrim
       Control.Effect.Type.Mask
       Control.Effect.Type.Optional
-      Control.Effect.Type.Pass
       Control.Effect.Type.ReaderPrim
       Control.Effect.Type.Regional
       Control.Effect.Type.Split
       Control.Effect.Type.Throw
       Control.Effect.Type.Unlift
+      Control.Effect.Type.WriterPrim
       Control.Effect.Union
       Control.Effect.Unlift
       Control.Effect.Writer

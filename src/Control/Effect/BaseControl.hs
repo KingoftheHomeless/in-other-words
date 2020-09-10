@@ -4,19 +4,25 @@ module Control.Effect.BaseControl
     BaseControl
 
     -- * Actions
+  , withLowerToBase
   , gainBaseControl
 
    -- * Interpretations
   , runBaseControl
-
   , baseControlToFinal
-
-   -- * Threading utilities
-  , threadBaseControlViaClass
 
     -- * MonadBaseControl
   , MonadBaseControl(..)
   , control
+
+   -- * Threading utilities
+  , threadBaseControlViaClass
+
+    -- * Combinators for 'Algebra's
+    -- Intended to be used for custom 'Carrier' instances when
+    -- defining 'algPrims'.
+  , powerAlgBaseControl
+  , powerAlgBaseControlFinal
 
     -- * Carriers
   , GainBaseControlC(..)
@@ -33,6 +39,7 @@ import Control.Effect.Carrier
 
 import Control.Effect.Type.Internal.BaseControl
 import Control.Effect.Internal.BaseControl
+import Control.Effect.Internal.Itself
 
 import Control.Effect.Internal.Utils
 
@@ -67,6 +74,23 @@ instance (Monad m, MonadBaseControl b z, Coercible z m)
   restoreM =
     coerce (restoreM @_ @z @a) :: forall a. StM z a -> GainBaseControlC b z m a
   {-# INLINE restoreM #-}
+
+newtype Stateful m a = Stateful { getStateful :: StM m a }
+
+-- | Gain access to a function that allows for lowering @m@ to the
+-- base monad @b@.
+--
+-- This is less versatile, but easier to use than 'gainBaseControl'.
+withLowerToBase :: forall b m a
+                 . Eff (BaseControl b) m
+                => (forall f. (forall x. m x -> b (f x)) -> b (f a))
+                -> m a
+withLowerToBase main =
+    gainBaseControl @b
+  $ control
+  $ \(lower :: forall x. z x -> b (StM z x)) ->
+    getStateful @z <$> main (fmap (Stateful @z) . lower .# lift)
+{-# INLINE withLowerToBase #-}
 
 -- | Locally gain access to a @'MonadBaseControl' b@ instance
 -- within a region.
@@ -128,3 +152,23 @@ instance ( MonadBaseControl b m
 baseControlToFinal :: (MonadBaseControl b m, Carrier m) => BaseControlToFinalC b m a -> m a
 baseControlToFinal = interpretPrimViaHandler
 {-# INLINE baseControlToFinal #-}
+
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'BaseControl' m@ handler
+powerAlgBaseControl :: forall m p a
+                     . Monad m
+                    => Algebra' p m a
+                    -> Algebra' (BaseControl m ': p) m a
+powerAlgBaseControl alg = powerAlg alg $ \case
+  GainBaseControl main -> return $ main (proxy# :: Proxy# (Itself m))
+{-# INLINE powerAlgBaseControl #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'BaseControl' b@ handler,
+-- where @b@ is the final base monad.
+powerAlgBaseControlFinal :: forall b m p a
+                          . MonadBaseControl b m
+                         => Algebra' p m a
+                         -> Algebra' (BaseControl b ': p) m a
+powerAlgBaseControlFinal alg = powerAlg alg $ \case
+  GainBaseControl main -> return $ main (proxy# :: Proxy# m)
+{-# INLINE powerAlgBaseControlFinal #-}

@@ -1,6 +1,12 @@
 {-# LANGUAGE CPP, TupleSections #-}
 {-# OPTIONS_HADDOCK not-home #-}
-module Control.Effect.Type.Optional where
+module Control.Effect.Type.Optional
+ ( -- * Effects
+   Optional(..)
+
+   -- * Threading utilities
+ , threadRegionalViaOptional
+ ) where
 
 import Data.Functor.Const
 import Control.Effect.Internal.Union
@@ -15,7 +21,7 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 
 
 -- | A /helper primitive effect/ for manipulating a region, with the option
--- to execute it in full or in part.
+-- to execute it in full or in part. @s@ is expected to be a functor.
 --
 -- Helper primitive effects are effects that allow you to avoid interpreting one
 -- of your own effects as a primitive if the power needed from direct access to

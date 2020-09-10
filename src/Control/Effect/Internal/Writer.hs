@@ -10,8 +10,8 @@ import Control.Monad
 
 import Control.Effect
 import Control.Effect.Bracket
-import Control.Effect.Type.Listen
-import Control.Effect.Type.Pass
+import Control.Effect.Type.ListenPrim
+import Control.Effect.Type.WriterPrim
 
 import Control.Effect.Carrier
 
@@ -27,6 +27,16 @@ import Control.Effect.Internal.Utils
 -- | An effect for arbitrary output.
 data Tell s m a where
   Tell :: s -> Tell s m ()
+
+-- | An effect for hearing what a computation
+-- has to 'Control.Effect.Writer.tell'.
+data Listen s m a where
+  Listen :: m a -> Listen s m (s, a)
+
+-- | An effect for altering what a computation
+-- 'Control.Effect.Writer.tell's.
+data Pass s m a where
+  Pass :: m (s -> s, a) -> Pass s m a
 
 newtype TellC s m a = TellC {
     unTellC :: WriterT s m a
@@ -123,18 +133,23 @@ instance ( Carrier m
          )
       => Carrier (ListenC s m) where
   type Derivs (ListenC s m) = Listen s ': Tell s ': Derivs m
-  type Prims  (ListenC s m) = Listen s ': Prims m
+  type Prims  (ListenC s m) = ListenPrim s ': Prims m
 
   algPrims =
     powerAlg (
       coerce (algPrims @(TellC s m))
     ) $ \case
-        Listen (ListenC m) -> ListenC $ do
+        ListenPrimTell s -> ListenC $ W.tell s
+        ListenPrimListen (ListenC m) -> ListenC $ do
           (a, s) <- W.listen m
           return (s, a)
   {-# INLINEABLE algPrims #-}
 
-  reformulate = addPrim (coerceReform (reformulate @(TellC s m)))
+  reformulate n alg =
+    powerAlg (
+      coerceReform (reformulate @(TellC s m)) n (weakenAlg alg)
+    ) $ \case
+      Listen m -> (alg . inj) $ ListenPrimListen m
   {-# INLINEABLE reformulate #-}
 
 
@@ -156,18 +171,24 @@ instance ( Carrier m
          )
       => Carrier (WriterC s m) where
   type Derivs (WriterC s m) = Pass s ': Listen s ': Tell s ': Derivs m
-  type Prims  (WriterC s m) = Pass s ': Listen s ': Prims m
+  type Prims  (WriterC s m) = WriterPrim s ': Prims m
 
   algPrims =
-    powerAlg (
+    algListenPrimIntoWriterPrim (
       coerce (algPrims @(ListenC s m))
-    ) $ \case
-        Pass (WriterC m) -> WriterC $ W.pass $ do
-          (f, a) <- m
-          return (a, f)
+    ) $ \(WriterC m) -> WriterC $ W.pass $ do
+      (f, a) <- m
+      return (a, f)
   {-# INLINEABLE algPrims #-}
 
-  reformulate = addPrim (coerceReform (reformulate @(ListenC s m)))
+  reformulate n alg =
+    powerAlg (
+    powerAlg (
+      coerceReform (reformulate @(TellC s m)) n (weakenAlg alg)
+    ) $ \case
+      Listen m -> (alg . inj) $ WriterPrimListen m
+    ) $ \case
+      Pass m -> (alg . inj) $ WriterPrimPass m
   {-# INLINEABLE reformulate #-}
 
 
@@ -214,16 +235,23 @@ instance ( Monoid s
          )
       => Carrier (ListenLazyC s m) where
   type Derivs (ListenLazyC s m) = Listen s ': Tell s ': Derivs m
-  type Prims  (ListenLazyC s m) = Listen s ': Prims m
+  type Prims  (ListenLazyC s m) = ListenPrim s ': Prims m
 
   algPrims =
     powerAlg (
       coerce (algPrims @(TellLazyC s m))
     ) $ \case
-      Listen (ListenLazyC m) -> ListenLazyC $ swap <$> LW.listen m
+      ListenPrimTell w ->
+        ListenLazyC $ LW.tell w
+      ListenPrimListen (ListenLazyC m) ->
+        ListenLazyC $ swap <$> LW.listen m
   {-# INLINEABLE algPrims #-}
 
-  reformulate = addPrim (coerceReform (reformulate @(TellLazyC s m)))
+  reformulate n alg =
+    powerAlg (
+      coerceReform (reformulate @(TellLazyC s m)) n (weakenAlg alg)
+    ) $ \case
+      Listen m -> (alg . inj) $ ListenPrimListen m
   {-# INLINEABLE reformulate #-}
 
 newtype WriterLazyC s m a = WriterLazyC {
@@ -243,16 +271,22 @@ instance ( Monoid s
          )
       => Carrier (WriterLazyC s m) where
   type Derivs (WriterLazyC s m) = Pass s ': Listen s ': Tell s ': Derivs m
-  type Prims  (WriterLazyC s m) = Pass s ': Listen s ': Prims m
+  type Prims  (WriterLazyC s m) = WriterPrim s ': Prims m
 
   algPrims =
-    powerAlg (
+    algListenPrimIntoWriterPrim (
       coerce (algPrims @(ListenLazyC s m))
-    ) $ \case
-      Pass (WriterLazyC m) -> WriterLazyC $ LW.pass (swap <$> m)
+    ) $ \(WriterLazyC m) -> WriterLazyC $ LW.pass (swap <$> m)
   {-# INLINEABLE algPrims #-}
 
-  reformulate = addPrim (coerceReform (reformulate @(ListenLazyC s m)))
+  reformulate n alg =
+    powerAlg (
+    powerAlg (
+      coerceReform (reformulate @(TellLazyC s m)) n (weakenAlg alg)
+    ) $ \case
+      Listen m -> (alg . inj) $ WriterPrimListen m
+    ) $ \case
+      Pass m -> (alg . inj) $ WriterPrimPass m
   {-# INLINEABLE reformulate #-}
 
 -- | 'WriterThreads' accepts the following primitive effects:
@@ -260,8 +294,8 @@ instance ( Monoid s
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.BaseControl.BaseControl' @b@
--- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.WriterPrim.WriterPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 -- * 'Control.Effect.Mask.Mask'
 -- * 'Control.Effect.Bracket.Bracket'
@@ -277,8 +311,8 @@ instance ( forall s. Monoid s => Threads (WriterT s) p
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.BaseControl.BaseControl' @b@
--- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.WriterPrim.WriterPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 -- * 'Control.Effect.Mask.Mask'
 -- * 'Control.Effect.Bracket.Bracket'

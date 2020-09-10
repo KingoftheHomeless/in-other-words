@@ -173,7 +173,11 @@ inj :: Member e r => e m a -> Union r m a
 inj = Union membership
 {-# INLINE inj #-}
 
--- | 'ReaderThreads' accepts all the primitive effects
+-- | The most common threading constraint of the library, as it is emitted by
+-- @-Simple@ interpreters (interpreters that internally make use of
+-- 'Control.Effect.interpretSimple' or 'Control.Effect.reinterpretSimple').
+--
+-- 'ReaderThreads' accepts all the primitive effects
 -- (intended to be used as such) offered in this library.
 --
 -- Most notably, 'ReaderThreads' accepts @'Control.Effect.Unlift.Unlift' b@.
@@ -194,10 +198,13 @@ coerceAlg :: forall n m e a
 coerceAlg = coerce
 {-# INLINE coerceAlg #-}
 
--- | A pseudo-effect given special treatment by 'Control.Effect.Eff' and 'Control.Effect.Effs'.
+-- | A pseudo-effect given special treatment by 'Control.Effect.Eff'
+-- and 'Control.Effect.Effs'.
 --
--- An 'Control.Effect.Eff'/s constraint on @'Bundle' '[eff1, eff2, ... , effn]@ will expand it into
--- membership constraints for @eff1@ through @effn@. For example.
+-- An @'Control.Effect.Eff'/s@ constraint on
+-- @'Bundle' '[eff1, eff2, ... , effn]@
+-- will expand it into membership constraints for @eff1@ through @effn@.
+-- For example:
 --
 -- @
 -- 'Control.Effect.Error.Error' e = 'Bundle' '['Control.Effect.Error.Throw' e, 'Control.Effect.Error.Catch' e]
@@ -209,10 +216,11 @@ coerceAlg = coerce
 -- 'Control.Effect.Eff' ('Control.Effect.Error.Error' e) m = ('Control.Effect.Carrier' m, 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m), 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m))
 -- @
 --
--- 'Bundle' should /never/ be used in any other contexts but within 'Control.Effect.Eff' and 'Control.Effect.Effs'.
+-- 'Bundle' should /never/ be used in any other contexts but within
+-- 'Control.Effect.Eff' and 'Control.Effect.Effs', as it isn't an actual effect.
 --
--- Not to be confused with 'Control.Effect.Union.Union', which is a proper effect that combines multiple
--- effects into one.
+-- Not to be confused with 'Control.Effect.Union.Union', which is a proper
+-- effect that combines multiple effects into one.
 data Bundle :: [Effect] -> Effect
 
 type family Append l r where

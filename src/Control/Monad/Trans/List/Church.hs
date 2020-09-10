@@ -8,8 +8,8 @@ import qualified Control.Monad.Fail as Fail
 
 import Control.Effect.Carrier
 
-import Control.Effect.Type.Listen
-import Control.Effect.Type.Pass
+import Control.Effect.Type.ListenPrim
+import Control.Effect.Type.WriterPrim
 import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
 import Control.Effect.Type.ReaderPrim
@@ -18,7 +18,7 @@ newtype ListT m a = ListT {
   unListT :: forall r
              . (forall x. m x -> (x -> r) -> r)
             -> (a -> r -> r)
-            -> r -- empty
+            -> r -- lose
             -> r -- cutfail
             -> r
   }
@@ -38,11 +38,11 @@ instance Functor s => ThreadsEff ListT (Optional s) where
       ) c b
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff ListT (Listen s) where
-  threadEff alg (Listen main) = ListT $ \bind c b t ->
+instance Monoid s => ThreadsEff ListT (ListenPrim s) where
+  threadEff = threadListenPrim $ \alg main -> ListT $ \bind c b t ->
     unListT
       main
-      (\mx cn acc -> alg (Listen mx) `bind` \(s, a) ->
+      (\mx cn acc -> alg (ListenPrimListen mx) `bind` \(s, a) ->
           let
             !acc' = acc <> s
           in
@@ -54,8 +54,8 @@ instance Monoid s => ThreadsEff ListT (Listen s) where
       mempty
   {-# INLINE threadEff #-}
 
-instance ThreadsEff ListT (Pass s) where
-  threadEff alg (Pass main) =
+instance Monoid s => ThreadsEff ListT (WriterPrim s) where
+  threadEff = threadWriterPrim $ \alg main ->
     let
       go' m = m >>= \case
         Empty         -> return (id, Empty)
@@ -66,7 +66,7 @@ instance ThreadsEff ListT (Pass s) where
       go Empty = Empty
       go CutFail = CutFail
       go (Cons (_, a) r) = Cons a (go r)
-      go (Embed mx cn) = (`Embed` id) $ alg $ Pass $ go' (fmap cn mx)
+      go (Embed mx cn) = (`Embed` id) $ alg $ WriterPrimPass $ go' (fmap cn mx)
     in
       fromLayeredListT (go (toLayeredListT main))
   {-# INLINE threadEff #-}

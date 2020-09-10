@@ -23,6 +23,16 @@ sameMember Here Here = Just Refl
 sameMember (There pr) (There pr') = sameMember pr pr'
 sameMember _ _ = Nothing
 
+-- | A constraint that @e@ is part of the effect row @r@.
+--
+-- @r@ is typically @'Control.Effect.Derivs' m@ for some @m@.
+-- @Member e ('Control.Effect.Derivs' m)@ allows you to use
+-- actions of @e@ with @m@.
+--
+-- If @e@ occurs multiple times in @r@, then the first
+-- occurence will be used.
+--
+-- If possible, use @'Control.Effect.Eff'/s@ instead.
 class Member e r where
   membership :: ElemOf e r
 

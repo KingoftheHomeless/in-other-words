@@ -108,7 +108,7 @@ deriving newtype instance Carrier m => Carrier (Ap m)
 -- Unlike 'Member', 'Eff' gives 'Bundle' special treatment.
 -- As a side-effect, 'Eff' will get stuck if @e@ is a type variable.
 --
--- If you need access to some completetely polymorphic effect @e@,
+-- If you need access to some completely polymorphic effect @e@,
 -- use @('Member' e ('Derivs' m), 'Carrier' m)@ instead of @Eff e m@.
 type Eff e m = Effs '[e] m
 
@@ -149,29 +149,35 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 --
 -- This is used for /threading constraints/.
 --
--- Each interpreter that use an underlying
+-- Every interpreter that relies an underlying
 -- non-trivial monad transformer -- such as 'Control.Effect.State.runState',
 -- which uses 'Control.Monad.Trans.State.Strict.StateT' internally --
 -- must be able to
--- lift all primitive effect handlers of the transformed carrier so that
--- transformed monad can also handle the primitive effects.
+-- lift all primitive effect handlers of the monad it's transforming
+-- so that the resulting transformed monad can also handle the primitive effects.
 --
 -- The ability of a monad transformer to lift handlers of a particular
 -- primitive effect is called /threading/ that effect. /Threading constraints/
--- correspond to the requirement that the primitive effects of the transformed
--- monad can be thread by the monad transformer.
+-- correspond to the requirement that the primitive effects of the monad that's
+-- being transformed can be thread by the monad transformer.
 --
 -- For example, the 'Control.Effect.State.runState' places the threading
--- constraint @StateThreads@ on @'Prims' m@.
--- If you want to use interpreters that generate threading constraints
--- inside of application code (and for some reason can't use
--- [Split Interpretation](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics#abstract-effect-interpretation)),
--- then those constraints need to be propagated throughout the application.
+-- constraint 'Control.Effect.State.StateThreads' on @'Prims' m@, so that
+-- @'Control.Effect.State.StateC' s m@ can carry all primitive effects that
+-- @m@ does.
 --
--- 'Threaders' is used for this purpose. For example,
+-- 'Threaders' is used to handle threading constraints.
 -- @'Threaders' '['Control.Effect.State.StateThreads', 'Control.Effect.Error.ExceptThreads'] m p@
 -- allows you to use 'Control.Effect.State.runState' and
--- 'Control.Effect.Error.runError' with the carrier @m@ inside application code.
+-- 'Control.Effect.Error.runError' with the carrier @m@.
+--
+-- Sometimes, you may want to have a local effect which you interpret
+-- inside of application code; such as a local 'Control.Effect.State.State'
+-- or 'Control.Effect.Error.Error' effect. In such cases, /try to use/
+-- [/Split Interpretation/](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics#abstract-effect-interpretation) /instead of using interpreters with threading constraints/
+-- /inside of application code./ If you can't, then using 'Threaders'
+-- is necessary to propagate the threading constraints
+-- throughout the application.
 --
 -- The third argument @p@ should always be a polymorphic type variable, which
 -- you can simply provide and ignore.
@@ -180,7 +186,7 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 -- threading constraints often involve quantified constraints, which are fragile
 -- in combination with type families -- like 'Prims'.
 --
--- So @'Threaders' '['Control.Effect.State.StateThreads']' m p@
+-- So @'Threaders' '['Control.Effect.State.StateThreads'] m p@
 -- doesn't expand to @'Control.Effect.State.StateThreads' (Prims m)@, but rather,
 -- @(p ~ 'Prims' m, 'Control.Effect.State.StateThreads' p)@
 type Threaders cs m p = (p ~ Prims m, SatisfiesAll p cs)

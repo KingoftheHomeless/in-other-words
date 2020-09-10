@@ -29,4 +29,3 @@ newtype BaseControlC m a = BaseControlC {
 
 deriving via InterpretPrimC BaseControlH (BaseControl m) m
     instance Carrier m => Carrier (BaseControlC m)
-

@@ -16,6 +16,12 @@ module Control.Effect.Regional
     -- * Threading utilities
   , threadRegionalViaOptional
 
+    -- * Combinators for 'Algebra's
+    -- Intended to be used for custom 'Carrier' instances when
+    -- defining 'algPrims'.
+  , powerAlgHoist
+  , powerAlgHoistFinal
+
     -- * Carriers
   , HoistC
   , HoistToFinalC
@@ -27,6 +33,8 @@ import Control.Effect.Carrier
 import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
 import Control.Effect.Internal.Regional
+
+import Control.Monad.Trans.Control (control)
 
 -- | Execute a computation modified in some way, providing
 -- the interpreter of @'Regional' s@ a constant to indicate
@@ -66,3 +74,20 @@ hoistToFinal :: ( MonadBaseControl b m
              -> m a
 hoistToFinal = interpretPrimViaHandler
 {-# INLINE hoistToFinal #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'Hoist' m@ handler
+powerAlgHoist :: forall m p a
+               . Algebra' p m a
+              -> Algebra' (Hoist m ': p) m a
+powerAlgHoist alg = powerAlg alg $ \(Regionally (HoistCall n) m) -> n m
+{-# INLINE powerAlgHoist #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'Hoist' b@ handler, where
+-- @b@ is the final base monad.
+powerAlgHoistFinal :: forall b m p a
+                    . MonadBaseControl b m
+                   => Algebra' p m a
+                   -> Algebra' (Hoist b ': p) m a
+powerAlgHoistFinal alg = powerAlg alg $ \case
+  Regionally (HoistCall n) m -> control $ \lower -> n (lower m)
+{-# INLINE powerAlgHoistFinal #-}

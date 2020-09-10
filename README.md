@@ -215,18 +215,18 @@ This prints the following (exact times are machine specific):
   Timing of spin: 1.3399935999768786 seconds.
   Timing of spinAndFail failed due to some error!
   *** Exception: Prelude.undefined
--]
+-}
 ```
 
 ## Advanced Usage
 
-The examples above are somewhat disingeneuos; they cover only the simplest
+The examples above are somewhat disingenuous; they cover only the simplest
 uses of the library. The library has a wide variety of features,
 and using them properly can get very complicated. Because of this,
 [`in-other-words` offers a wiki covering more advanced topics of the
 library.](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics)
 Check it out if you're interested in learning more about the
-library,  or are struggling with a feature or error message you're having a
+library,  or are struggling with a feature you're having a hard
 time with.
 
 
@@ -238,7 +238,7 @@ if I can generalize the problem enough, then I'll expand the wiki to cover the
 issue.
 
 ## Performance
-In the microbenchmarks offered by [`effects-zoo`](https://github.com/ocharles/effect-zoo/),
+In the microbenchmarks offered by [`effects-zoo`](https://github.com/ocharles/effect-zoo/)
 `in-other-words` performs comparably to `mtl` and `fused-effects`;
 at worst up to 2x slower than `fused-effects`. 
 Keep in mind, however, that these *are* only microbenchmarks, and may not
@@ -246,12 +246,14 @@ predict performance in the wild with perfect accuracy.
 [The benchmark results are available here.](https://github.com/KingoftheHomeless/in-other-words/wiki/Benchmarks)
 
 `in-other-words` is, like `mtl` and `fused-effects`, limited
-by how effectively the compiler is able to optimize away the underlying abstractions.
+by how effectively the compiler is able to optimize away the
+underlying abstractions.
 [As noted by Alexis King](https://github.com/ghc-proposals/ghc-proposals/pull/313#issuecomment-590143835),
 the ideal situations under which these libraries are truly zero-cost are unrealistic
-in practice. Although this does adversely affect `in-other-words`, the underlying 
-dispatch cost of effects is low enough to make it largely negligable for most purposes
--- particularly IO-bound applications.
+in practice. Although this does adversely affect `in-other-words`,
+the underlying dispatch cost of effects should be low enough to make
+to it largely negligable for most purposes -- in particular,
+IO-bound applications.
 
 Further benchmarking, profiling, and optimizations are currently
 considered future goals of the library.

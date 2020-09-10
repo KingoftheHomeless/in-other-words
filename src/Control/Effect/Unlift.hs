@@ -15,13 +15,19 @@ module Control.Effect.Unlift
    -- * Threading utilities
  , threadUnliftViaClass
 
+    -- * Combinators for 'Algebra's
+    -- Intended to be used for custom 'Carrier' instances when
+    -- defining 'algPrims'.
+  , powerAlgUnlift
+  , powerAlgUnliftFinal
+
     -- * Carriers
  , UnliftToFinalC
  , UnliftC
  ) where
 
 import Control.Effect
-import Control.Effect.Primitive
+import Control.Effect.Carrier
 import Control.Effect.Internal.Unlift
 
 import Control.Effect.Type.Unlift
@@ -66,3 +72,21 @@ unliftToFinal :: ( MonadBaseControlPure b m
               -> m a
 unliftToFinal = interpretPrimViaHandler
 {-# INLINE unliftToFinal #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'Unlift' m@ handler
+powerAlgUnlift :: forall m p a
+                . Algebra' p m a
+               -> Algebra' (Unlift m ': p) m a
+powerAlgUnlift alg = powerAlg alg $ \case
+  Unlift main -> main id
+{-# INLINE powerAlgUnlift #-}
+
+-- | Strengthen an @'Algebra' p m@ by adding a @'Unlift' b@ handler, where
+-- @b@ is the final base monad.
+powerAlgUnliftFinal :: forall b m p a
+                     . MonadBaseControlPure b m
+                    => Algebra' p m a
+                    -> Algebra' (Unlift b ': p) m a
+powerAlgUnliftFinal alg = powerAlg alg $ \case
+  Unlift main -> unliftBase main
+{-# INLINE powerAlgUnliftFinal #-}

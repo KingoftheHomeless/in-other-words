@@ -53,7 +53,9 @@ choose :: Eff NonDet m => m a -> m a -> m a
 choose ma mb = join $ fromList [ma, mb]
 {-# INLINE choose #-}
 
--- | Fail the current branch and backtrack to the nearest use of 'choose'.
+-- | Fail the current branch and proceed to the next branch,
+-- backtracking to the nearest use of 'choose'/'fromList' that
+-- still has unprocessed branches.
 lose :: Eff NonDet m => m a
 lose = fromList []
 {-# INLINE lose #-}
@@ -62,9 +64,10 @@ lose = fromList []
 -- it may introduce to be at most 1.
 --
 -- @'cull' (return True `'choose'` return False) == return True@
+--
 -- @'cull' ('lose' `'choose'` return False) == return False@
 cull :: Eff Cull m => m a -> m a
-cull = send . Cull
+cull = send .# Cull
 {-# INLINE cull #-}
 
 -- | Fail the current branch, and prevent backtracking up until the nearest
@@ -75,9 +78,13 @@ cutfail :: Eff Cut m => m a
 cutfail = send Cutfail
 {-# INLINE cutfail #-}
 
--- | Commit to the current branch: if all branches stemming from the current one
--- fail, then backtracking will be prevented up until the nearest enclosing use of
--- 'call' (if any).
+-- | Commit to the current branch: prevent all backtracking that would move
+-- execution to before 'cut' was invoked, up until the nearest enclosing use
+-- of 'call' (if any).
+--
+-- @'call' ('fromList' [1,2] >>= \a -> 'cut' >> fromList [a,a+3]) == 'fromList' [1,4]@
+--
+-- @ call (('cut' >> return True) `choose` return False) == return True@
 cut :: Effs '[NonDet, Cut] m => m ()
 cut = pure () `choose` cutfail
 {-# INLINE cut #-}

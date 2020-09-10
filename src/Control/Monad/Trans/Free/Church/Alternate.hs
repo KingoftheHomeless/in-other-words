@@ -5,7 +5,7 @@ import Control.Monad.Trans
 import Control.Monad.Base
 import qualified Control.Monad.Fail as Fail
 import Control.Effect.Internal.Union
-import Control.Effect.Type.Listen
+import Control.Effect.Type.ListenPrim
 import Control.Effect.Type.ReaderPrim
 import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
@@ -94,11 +94,11 @@ instance MonadCatch m => MonadCatch (FreeT f m) where
             c
   {-# INLINE catch #-}
 
-instance Monoid w => ThreadsEff (FreeT f) (Listen w) where
-  threadEff alg (Listen main) = FreeT $ \bind handler c ->
+instance Monoid w => ThreadsEff (FreeT f) (ListenPrim w) where
+  threadEff = threadListenPrim $ \alg main -> FreeT $ \bind handler c ->
     unFreeT main
             (\m cn acc ->
-               alg (Listen m) `bind` \(s, a) ->
+               alg (ListenPrimListen m) `bind` \(s, a) ->
                   cn a $! acc <> s
             )
             (\eff cn acc -> handler eff (`cn` acc))

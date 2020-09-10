@@ -5,10 +5,10 @@ module Control.Effect
   , RepresentationalEff
 
     -- * Effect membership
-  , Member
   , Eff
   , Effs
   , Bundle
+  , Member
 
     -- * Sending actions of effects
   , send
@@ -24,36 +24,37 @@ module Control.Effect
   , Embed(..)
   , embed
 
-    -- * Effect Interpretation
-  , InterpretSimpleC
+    -- * Effect interpretation
+  , EffHandler
+
+    -- ** 'interpretSimple'
   , interpretSimple
   , SimpleInterpreterFor
+  , InterpretSimpleC
 
+    -- ** 'interpretViaHandler'
+  , interpretViaHandler
   , Handler(..)
-  , EffHandler
   , MonadBase(..)
   , InterpretC
-  , interpretViaHandler
 
-  , InterpretReifiedC
-  , ReifiesHandler
-  , ViaReifiedH
+    -- ** 'interpret'
   , interpret
   , InterpreterFor
+  , ReifiesHandler
+  , ViaReifiedH
+  , InterpretReifiedC
 
-    -- ** Effect reinterpretation
-  , ReinterpretC
-  , reinterpretViaHandler
-
-  , ReinterpretReifiedC
-  , reinterpret
-
-  , ReinterpretSimpleC
+    -- * Effect reinterpretation
+    -- ** 'reinterpretSimple'
   , reinterpretSimple
-
-    -- ** Trivial Interpretation
-  , SubsumeC
-  , subsume
+  , ReinterpretSimpleC
+    -- ** 'reinterpretViaHandler'
+  , reinterpretViaHandler
+  , ReinterpretC
+    -- ** 'reinterpret'
+  , reinterpret
+  , ReinterpretReifiedC
 
     -- * Lifting
   , MonadTrans(..)
@@ -62,7 +63,12 @@ module Control.Effect
   , Threaders
   , ReaderThreads
 
-    -- * Effect introduction
+    -- * Effect Introduction
+  , intro1
+  , intro
+  , introUnder1
+  , introUnder
+  , introUnderMany
   , HeadEff
   , HeadEffs
   , IntroConsistent
@@ -70,17 +76,14 @@ module Control.Effect
   , IntroC
   , IntroTopC
   , IntroUnderC
-  , intro1
-  , intro
-  , introUnder1
-  , introUnder
-  , introUnderMany
 
     -- * Combining effect carriers
   , CompositionC
   , runComposition
 
     -- * Other utilities
+  , SubsumeC
+  , subsume
   , Effly(..)
   ) where
 

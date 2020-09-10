@@ -278,6 +278,7 @@ runExceptional = interpretViaHandler
 -- only uses of @eff@ throws those exceptions.
 -- Otherwise, the use of 'catching' is liable to catch
 -- other exceptions not arising from uses of @eff@, or fail to catch
+-- exceptions that do arise from uses of @eff@.
 --
 -- The type of this interpreter is higher-rank, as it makes use of
 -- 'InterpretReifiedC'. __This makes 'runExceptionalJust' difficult to__

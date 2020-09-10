@@ -38,8 +38,8 @@ type Logic = Bundle '[NonDet, Cull, Cut, Split]
 --
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
--- * 'Control.Effect.Writer.Listen' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Writer.Pass' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type NonDetThreads = Threads L.ListT
 

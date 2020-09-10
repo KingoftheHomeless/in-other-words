@@ -1,6 +1,13 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_HADDOCK not-home #-}
-module Control.Effect.Type.Bracket where
+module Control.Effect.Type.Bracket
+ ( -- * Effects
+   Bracket(..)
+ , ExitCase(..)
+
+   -- * Threading utilities
+ , threadBracketViaClass
+ ) where
 
 import Control.Effect.Internal.Union
 import Control.Effect.Internal.Utils
@@ -104,99 +111,3 @@ instance Monoid s => ThreadsEff (CPSWr.WriterT s) Bracket where
         )
         (\(a, s) -> CPSWr.runWriterT (CPSWr.tell s >> use a))
   {-# INLINE threadEff #-}
-
-{-
-instance ThreadsEff Bracket (ReaderT i) where
-  threadEff alg (GeneralBracket acq rel use) = ReaderT $ \s ->
-    alg $
-      GeneralBracket
-        (runReaderT acq s)
-        (\a ec -> runReaderT (rel a ec) s)
-        (\a -> runReaderT (use a) s)
-  {-# INLINE threadEff #-}
-
-instance ThreadsEff Bracket (ExceptT e) where
-  threadEff alg (GeneralBracket acq rel use) = ExceptT $
-      fmap (uncurry (liftA2 (,)))
-    . alg $
-        GeneralBracket
-          (runExceptT acq)
-          (\ea ec -> case ea of
-            Left e -> return (Left e)
-            Right a -> runExceptT $ case ec of
-              ExitCaseSuccess (Right b) ->
-                rel a (ExitCaseSuccess b)
-              ExitCaseException exc ->
-                rel a (ExitCaseException exc)
-              _ -> -- Either ExceptT has failed, or something more global has failed
-                rel a ExitCaseAbort
-          )
-          (\ea -> case ea of
-            Left e -> return (Left e)
-            Right a -> runExceptT (use a)
-          )
-  {-# INLINE threadEff #-}
-
-instance ThreadsEff Bracket (SSt.StateT s) where
-  threadEff alg (GeneralBracket acq rel use) = SSt.StateT $ \sInit ->
-      fmap (\( (b,_), (c,sEnd) ) -> ((b, c), sEnd))
-    . alg $
-      GeneralBracket
-        (SSt.runStateT acq sInit)
-        (\(a, s) ec -> case ec of
-            ExitCaseSuccess (b, s') ->
-              SSt.runStateT (rel a (ExitCaseSuccess b)) s'
-            ExitCaseException exc ->
-              SSt.runStateT (rel a (ExitCaseException exc)) s
-            ExitCaseAbort ->
-              SSt.runStateT (rel a ExitCaseAbort) s
-        )
-        (\(a, s) -> SSt.runStateT (use a) s)
-  {-# INLINE threadEff #-}
-
-instance ThreadsEff Bracket (LSt.StateT s) where
-  threadEff alg (GeneralBracket acq rel use) = LSt.StateT $ \sInit ->
-      fmap (\ ~( ~(b,_), ~(c,sEnd) ) -> ((b, c), sEnd))
-    . alg $
-      GeneralBracket
-        (LSt.runStateT acq sInit)
-        (\ ~(a, s) ec -> case ec of
-            ExitCaseSuccess (~(b, s')) ->
-              LSt.runStateT (rel a (ExitCaseSuccess b)) s'
-            ExitCaseException exc ->
-              LSt.runStateT (rel a (ExitCaseException exc)) s
-            ExitCaseAbort ->
-              LSt.runStateT (rel a ExitCaseAbort) s
-        )
-        (\ ~(a, s) -> LSt.runStateT (use a) s)
-  {-# INLINE threadEff #-}
-
-instance Monoid s => ThreadsEff Bracket (LWr.WriterT s) where
-  threadEff alg (GeneralBracket acq rel use) = LWr.WriterT $
-      fmap (\ ~( ~(b,sUse), ~(c,sEnd) ) -> ((b, c), sUse <> sEnd))
-    . alg $
-      GeneralBracket
-        (LWr.runWriterT acq)
-        (\ ~(a, _) ec -> LWr.runWriterT $ rel a $ case ec of
-          ExitCaseSuccess ~(b, _) -> ExitCaseSuccess b
-          ExitCaseException exc   -> ExitCaseException exc
-          ExitCaseAbort           -> ExitCaseAbort
-        )
-        (\ ~(a, s) -> LWr.runWriterT (LWr.tell s >> use a))
-  {-# INLINE threadEff #-}
-
-instance Monoid s => ThreadsEff Bracket (SWr.WriterT s) where
-  threadEff alg (GeneralBracket acq rel use) = SWr.WriterT $
-      fmap (\( (b,sUse), (c,sEnd) ) -> ((b, c), sUse <> sEnd))
-    . alg $
-      GeneralBracket
-        (SWr.runWriterT acq)
-        (\(a, _) ec -> SWr.runWriterT $ rel a $ case ec of
-          ExitCaseSuccess (b, _) -> ExitCaseSuccess b
-          ExitCaseException exc  -> ExitCaseException exc
-          ExitCaseAbort          -> ExitCaseAbort
-        )
-        (\(a, s) -> SWr.runWriterT (SWr.tell s >> use a))
-  {-# INLINE threadEff #-}
-
--}

@@ -35,7 +35,7 @@ import Control.Effect.Primitive
 import Control.Effect.Type.Bracket
 
 import Control.Monad
-import Control.Monad.Catch (ExitCase(..), MonadMask)
+import Control.Monad.Catch (MonadMask)
 import qualified Control.Monad.Catch as C
 
 generalBracket :: Eff Bracket m

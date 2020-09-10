@@ -79,4 +79,10 @@ unsteps :: forall e m a
 unsteps (Done a)   = return a
 unsteps (More e c) = send @e (coerce e) >>= c >>= unsteps
 
+-- | 'SteppedThreads' accepts the following primitive effects:
+--
+-- * 'Control.Effect.Regional.Regional' @s@
+-- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type SteppedThreads = FreeThreads

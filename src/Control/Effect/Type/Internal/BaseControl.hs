@@ -80,11 +80,11 @@ threadOptionalViaBaseControl alg (Optionally sa m) =
     join
   $ threadEff (\(GainBaseControl main) -> return $ main (proxy# :: Proxy# (Itself m)))
   $ GainBaseControl @m $ \(_ :: Proxy# z) ->
-      coerce $ control @m @z @a $ \lower -> do
-        join $ coerce
-             $ alg
-             $ Optionally (fmap (lower . pure) sa)
-                          (fmap pure (coerce (lower @a) m))
+      coerce $ join $ liftBaseWith @m @z @(z a) $ \lower -> do
+          coerce
+        $ alg
+        $ Optionally (fmap (pure @z) sa)
+                     (fmap restoreM (coerce (lower @a) m))
 {-# INLINE threadOptionalViaBaseControl #-}
 
 

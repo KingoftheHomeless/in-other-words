@@ -1,6 +1,12 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_HADDOCK not-home #-}
-module Control.Effect.Type.Fix where
+module Control.Effect.Type.Fix
+ ( -- * Effects
+   Fix(..)
+
+   -- * Threading utilities
+ , threadFixViaClass
+ ) where
 
 import Control.Monad.Fix
 import qualified Control.Monad.Trans.Except as E

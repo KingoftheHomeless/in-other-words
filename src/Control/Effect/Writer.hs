@@ -68,10 +68,6 @@ module Control.Effect.Writer
   , WriterThreads
   , WriterLazyThreads
 
-    -- * Threading utilities
-  , threadListenViaClass
-  , threadPassViaClass
-
     -- * MonadMask
   , C.MonadMask
 
@@ -104,8 +100,8 @@ import Control.Monad
 import Control.Effect
 import Control.Effect.Reader
 import Control.Effect.Bracket
-import Control.Effect.Type.Listen
-import Control.Effect.Type.Pass
+import Control.Effect.Type.ListenPrim
+import Control.Effect.Type.WriterPrim
 
 import Control.Effect.Carrier
 import Control.Effect.Internal.Writer
@@ -239,7 +235,7 @@ runTell (TellC m) = do
 --
 -- @'Derivs' ('ListenC' s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenC' s m) = 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('ListenC' s m) = 'ListenPrim' s ': 'Prims' m@
 --
 -- This produces the final accumulation strictly. See 'runListenLazy' for a
 -- lazy variant of this.
@@ -265,7 +261,7 @@ runListen (ListenC m) = do
 --
 -- @'Derivs' ('WriterC' s m) = 'Pass' s ': 'Listen' s ': 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('WriterC' s m) = 'WriterPrim' s ': 'Prims' m@
 --
 -- This produces the final accumulation strictly. See 'runWriterLazy' for a
 -- lazy variant of this.
@@ -307,7 +303,7 @@ runTellLazy (TellLazyC m) = swap <$> LW.runWriterT m
 --
 -- @'Derivs' ('ListenLazyC' s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenLazyC' s m) = 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('ListenLazyC' s m) = 'ListenPrim' s ': 'Prims' m@
 --
 -- This is a variant of 'runListen' that produces the
 -- final accumulation lazily. __Use this only if you need__
@@ -328,7 +324,7 @@ runListenLazy (ListenLazyC m) = swap <$> LW.runWriterT m
 --
 -- @'Derivs' ('ListenLazyC' s m) = 'Pass' s ': 'Listen' s ': 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenLazyC' s m) = 'Pass' s ': 'Listen' s ': 'Prims' m@
+-- @'Prims'  ('ListenLazyC' s m) = 'WriterPrim' s ': 'Prims' m@
 --
 -- This is a variant of 'runListen' that produces the
 -- final accumulation lazily. __Use this only if you need__
@@ -734,17 +730,29 @@ writerToBracketTVar tvar =
 data WriterTVarH
 
 type ListenTVarC s = CompositionC
- '[ IntroC '[Listen s, Tell s] '[Local (s -> STM ()), Ask (s -> STM ())]
-  , InterpretPrimC WriterTVarH (Listen s)
+ '[ IntroC '[Listen s, Tell s]
+     '[ ListenPrim s
+      , Local (s -> STM ())
+      , Ask (s -> STM ())
+      ]
+  , InterpretC WriterTVarH (Listen s)
   , InterpretC WriterTVarH (Tell s)
+  , InterpretPrimC WriterTVarH (ListenPrim s)
   , ReaderC (s -> STM ())
   ]
 
 type WriterTVarC s = CompositionC
- '[ IntroC '[Pass s, Listen s, Tell s] '[Local (s -> STM ()), Ask (s -> STM ())]
-  , InterpretPrimC WriterTVarH (Pass s)
-  , InterpretPrimC WriterTVarH (Listen s)
+ '[ IntroC '[Pass s, Listen s, Tell s]
+     '[ ListenPrim s
+      , WriterPrim s
+      , Local (s -> STM ())
+      , Ask (s -> STM ())
+      ]
+  , InterpretC WriterTVarH (Pass s)
+  , InterpretC WriterTVarH (Listen s)
   , InterpretC WriterTVarH (Tell s)
+  , InterpretC WriterTVarH (ListenPrim s)
+  , InterpretPrimC WriterTVarH (WriterPrim s)
   , ReaderC (s -> STM ())
   ]
 
@@ -755,21 +763,42 @@ instance ( Monoid s
   effHandler (Tell o) = tellTVar o
   {-# INLINE effHandler #-}
 
+instance Eff (ListenPrim s) m
+      => Handler WriterTVarH (Listen s) m where
+  effHandler (Listen m) = send $ ListenPrimListen m
+  {-# INLINE effHandler #-}
+
+instance Eff (WriterPrim s) m
+      => Handler WriterTVarH (Pass s) m where
+  effHandler (Pass m) = send $ WriterPrimPass m
+  {-# INLINE effHandler #-}
+
+instance Eff (WriterPrim s) m
+      => Handler WriterTVarH (ListenPrim s) m where
+  effHandler = \case
+    ListenPrimTell o   -> send $ WriterPrimTell o
+    ListenPrimListen m -> send $ WriterPrimListen m
+  {-# INLINE effHandler #-}
 
 instance ( Monoid s
          , Effs '[Reader (s -> STM ()), Embed IO] m
          , C.MonadMask m
          )
-      => PrimHandler WriterTVarH (Listen s) m where
-  effPrimHandler (Listen m) = bracketToIO (listenTVar (lift m))
+      => PrimHandler WriterTVarH (ListenPrim s) m where
+  effPrimHandler = \case
+    ListenPrimTell o -> tellTVar o
+    ListenPrimListen m -> bracketToIO (listenTVar (lift m))
   {-# INLINE effPrimHandler #-}
 
 instance ( Monoid s
          , Effs '[Reader (s -> STM ()), Embed IO] m
          , C.MonadMask m
          )
-      => PrimHandler WriterTVarH (Pass s) m where
-  effPrimHandler (Pass m) = bracketToIO (passTVar (lift m))
+      => PrimHandler WriterTVarH (WriterPrim s) m where
+  effPrimHandler = \case
+    WriterPrimTell o   -> tellTVar o
+    WriterPrimListen m -> bracketToIO (listenTVar (lift m))
+    WriterPrimPass m   -> bracketToIO (passTVar (lift m))
   {-# INLINE effPrimHandler #-}
 
 -- | Run a @'Tell' s@ effect where @s@ is a 'Monoid' by accumulating uses of
@@ -896,7 +925,7 @@ runTellTVarSimple tvar = interpretSimple $ \case
 --
 -- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenTVarC' s m) = 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('ListenTVarC' s m) = 'ListenPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 listenToIO :: forall s m a p
@@ -919,7 +948,7 @@ listenToIO m = do
 --
 -- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenTVarC' s m) = 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('ListenTVarC' s m) = 'ListenPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runListenTVar :: forall s m a p
@@ -936,8 +965,9 @@ runListenTVar tvar =
        s <- readTVar tvar
        writeTVar tvar $! s <> o
      )
-  .# interpretViaHandler
   .# interpretPrimViaHandler
+  .# interpretViaHandler
+  .# interpretViaHandler
   .# introUnderMany
   .# runComposition
 {-# INLINE runListenTVar #-}
@@ -948,7 +978,7 @@ runListenTVar tvar =
 --
 -- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('WriterTVarC' s m) = 'WriterPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 writerToIO :: forall s m a p
@@ -972,7 +1002,7 @@ writerToIO m = do
 --
 -- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('WriterTVarC' s m) = 'WriterPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runWriterTVar :: forall s m a p
@@ -989,9 +1019,11 @@ runWriterTVar tvar =
        s <- readTVar tvar
        writeTVar tvar $! s <> o
      )
+  .# interpretPrimViaHandler
   .# interpretViaHandler
-  .# interpretPrimViaHandler
-  .# interpretPrimViaHandler
+  .# interpretViaHandler
+  .# interpretViaHandler
+  .# interpretViaHandler
   .# introUnderMany
   .# runComposition
 {-# INLINE runWriterTVar #-}

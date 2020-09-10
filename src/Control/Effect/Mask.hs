@@ -85,6 +85,10 @@ type IgnoreMaskC = InterpretC IgnoreMaskH Mask
 
 -- | Run a 'Mask' effect by ignoring it, providing no protection
 -- against asynchronous exceptions.
+--
+-- @'Derivs' ('IgnoreMaskC' m) = 'Mask' ': 'Derivs' m@
+--
+-- @'Prims'  ('IgnoreMaskC' m) = 'Prims' m@
 ignoreMask :: Carrier m
            => IgnoreMaskC m a
            -> m a
