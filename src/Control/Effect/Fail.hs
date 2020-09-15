@@ -112,7 +112,7 @@ instance Eff NonDet m => Handler FailToNonDetH Fail m where
   effHandler _ = lose
   {-# INLINE effHandler #-}
 
-type FailToNonDetC = InterpretFailC FailToAltH
+type FailToNonDetC = InterpretFailC FailToNonDetH
 
 -- | Transform a 'Fail' effect to an 'Alt' effect by having a
 -- pattern match failure be 'empty'.
@@ -132,7 +132,7 @@ failToAlt = interpretViaHandler .# unInterpretFailC
 -- You can use this in application code to locally get access to a 'MonadFail'
 -- instance (since 'FailToNonDetC' has a 'MonadFail' instance based
 -- on the 'Fail' effect this interprets).
-failToNonDet :: Eff Alt m
+failToNonDet :: Eff NonDet m
              => FailToNonDetC m a
              -> m a
 failToNonDet = interpretViaHandler .# unInterpretFailC

@@ -168,13 +168,13 @@ type EffHandler e m =
 -- | The type of effect handlers for a primitive effect @e@ with current
 -- carrier @m@.
 --
--- Unlike 'EffHandler's, 'EffPrimHandler's gain direct access to @m@,
--- giving them significantly more power.
+-- Unlike 'EffHandler's, 'EffPrimHandler's have direct access to @m@,
+-- giving them significantly more powerful.
 --
 -- That said, __you should interpret your own effects as primitives only as a__
--- __last resort.__ Primitive effects come at the cost of enormous amounts of
--- boilerplate: namely, the need for a 'ThreadsEff' instance for every monad
--- transformer that can thread that effect.
+-- __last resort.__ Every primitive effect comes at the cost of enormous amounts
+-- of boilerplate: namely, the need for a 'ThreadsEff' instance for every
+-- monad transformer that can thread that effect.
 --
 -- Some effects in this library are intended to be used as primitive effects,
 -- such as 'Control.Effect.Regional.Regional'. Try to use such effects
@@ -216,7 +216,7 @@ instance ( Carrier m
   algPrims = coerce (algPrims @m)
   {-# INLINEABLE algPrims #-}
 
-  reformulate !n !alg = powerAlg (reformulate (n .# InterpretC) alg) $
+  reformulate n alg = powerAlg (reformulate (n .# InterpretC) alg) $
     let
       !handlerState = HandlerCState (n .# InterpretC) alg
     in
@@ -383,6 +383,32 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
 -- paranthesis or '$'.
 --
 -- Consider using 'interpretSimple' instead if performance is secondary.
+--
+-- Example usage:
+--
+-- @
+-- data Teletype :: Effect where
+--   ReadTTY  :: Teletype m String
+--   WriteTTY :: String -> Teletype m ()
+--
+-- readTTY :: 'Eff' Teletype m => m String
+-- readTTY = send ReadTTY
+--
+-- writeTTY :: 'Eff' Teletype m => String -> m ()
+-- writeTTY = send . WriteTTY
+--
+-- echo :: 'Eff' Teletype m => m ()
+-- echo = readTTY >>= sendTTY
+--
+-- teletypeToIO :: 'Eff' ('Embed' IO) m => 'SimpleInterpreterFor' Teletype m
+-- teletypeToIO = 'interpret' $ \case
+--   ReadTTY -> 'embed' getLine
+--   WriteTTY str -> 'embed' $ putStrLn str
+--
+-- main :: IO ()
+-- main = 'runM' $ teletypeToIO $ echo
+-- @
+--
 interpret :: forall e m a
            . (RepresentationalEff e, Carrier m)
           => EffHandler e m
@@ -392,11 +418,41 @@ interpret h m = reify (ReifiedHandler h) $ \(_ :: p s) ->
   unInterpretC @(ViaReifiedH s) m
 {-# INLINE interpret #-}
 
--- | A significantly slower variant of 'interpret' that doesn't have
--- a higher-ranked type, making it much easier to use partially applied.
+-- | Interpret an effect in terms of other effects, without needing to
+-- define an explicit 'Handler' instance. This is an alternative to
+-- 'interpretViaHandler'.
 --
 -- See 'EffHandler' for more information about the handler you pass to
 -- this function.
+--
+-- This is a significantly slower variant of 'interpret' that doesn't have
+-- a higher-ranked type, making it much easier to use partially applied.
+--
+-- Example usage:
+--
+-- @
+-- data Teletype :: Effect where
+--   ReadTTY  :: Teletype m String
+--   WriteTTY :: String -> Teletype m ()
+--
+-- readTTY :: 'Eff' Teletype m => m String
+-- readTTY = send ReadTTY
+--
+-- writeTTY :: 'Eff' Teletype m => String -> m ()
+-- writeTTY = send . WriteTTY
+--
+-- echo :: 'Eff' Teletype m => m ()
+-- echo = readTTY >>= sendTTY
+--
+-- teletypeToIO :: 'Eff' ('Embed' IO) m => 'SimpleInterpreterFor' Teletype m
+-- teletypeToIO = 'interpretSimple' $ \case
+--   ReadTTY -> 'embed' getLine
+--   WriteTTY str -> 'embed' $ putStrLn str
+--
+-- main :: IO ()
+-- main = 'runM' $ teletypeToIO $ echo
+-- @
+--
 interpretSimple
   :: forall e m a p
    . ( RepresentationalEff e
@@ -417,6 +473,40 @@ interpretSimple h m = coerce m (ReifiedHandler @e @m h)
 -- Unlike 'interpret', this does not have a higher-rank type,
 -- making it easier to use partially applied, and unlike
 -- 'interpretSimple' doesn't sacrifice performance.
+--
+-- Example usage:
+--
+-- @
+-- data Teletype :: Effect where
+--   ReadTTY  :: Teletype m String
+--   WriteTTY :: String -> Teletype m ()
+--
+-- readTTY :: 'Eff' Teletype m => m String
+-- readTTY = send ReadTTY
+--
+-- writeTTY :: 'Eff' Teletype m => String -> m ()
+-- writeTTY = send . WriteTTY
+--
+-- echo :: 'Eff' Teletype m => m ()
+-- echo = readTTY >>= sendTTY
+--
+-- data TeletypeToIOH
+--
+-- instance 'Eff' ('Embed' IO) m
+--       => 'Handler' TeletypeToIOH Teletype m where
+--   effHandler = \case
+--     ReadTTY -> 'embed' getLine
+--     WriteTTY str -> 'embed' $ putStrLn str
+--
+-- type TeletypeToIOC = InterpretC TeletypeToIOH Teletype
+--
+-- teletypeToIO :: 'Eff' ('Embed' IO) m => TeletypeToIOC m a -> m a
+-- teletypeToIO = 'interpretViaHandler'
+--
+-- main :: IO ()
+-- main = 'runM' $ teletypeToIO $ echo
+-- @
+--
 interpretViaHandler :: forall h e m a
                      . Handler h e m
                     => InterpretC h e m a
@@ -587,7 +677,7 @@ reinterpret h main = interpret h $ introUnder (unReinterpretC main)
 reinterpretViaHandler :: forall h new e m a
                        . ( Handler h e m
                          , KnownList new
-                         , IntroConsistent '[] new m
+                         , HeadEffs new m
                          )
                       => ReinterpretC h e new m a
                       -> m a
@@ -609,7 +699,7 @@ deriving via IntroUnderC e new (InterpretSimpleC e m)
     instance ( Threads (ReaderT (ReifiedHandler e m)) (Prims m)
              , RepresentationalEff e
              , KnownList new
-             , IntroConsistent '[] new m
+             , HeadEffs new m
              , Carrier m
              )
           => Carrier (ReinterpretSimpleC e new m)

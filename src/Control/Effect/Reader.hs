@@ -73,7 +73,8 @@ runReader i m = runReaderT (unReaderC m) i
 --
 -- If performance is secondary, consider using the slower 'runAskConstSimple',
 -- which doesn't have a higher-rank type.
-runAskConst :: Carrier m
+runAskConst :: forall i m a
+             . Carrier m
             => i
             -> InterpretReifiedC (Ask i) m a
             -> m a
@@ -91,10 +92,10 @@ runAskConst i = interpret $ \case
 -- If performance is secondary, consider using the slower 'runAskActionSimple',
 -- which doesn't have a higher-rank type.
 runAskAction :: forall i m a
-                . Carrier m
-               => m i
-               -> InterpretReifiedC (Ask i) m a
-               -> m a
+              . Carrier m
+             => m i
+             -> InterpretReifiedC (Ask i) m a
+             -> m a
 runAskAction m = interpret $ \case
   Ask -> liftBase m
 {-# INLINE runAskAction #-}

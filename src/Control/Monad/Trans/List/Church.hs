@@ -12,6 +12,7 @@ import Control.Effect.Type.ListenPrim
 import Control.Effect.Type.WriterPrim
 import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
+import Control.Effect.Type.Unravel
 import Control.Effect.Type.ReaderPrim
 
 newtype ListT m a = ListT {
@@ -22,6 +23,9 @@ newtype ListT m a = ListT {
             -> r -- cutfail
             -> r
   }
+
+cons :: a -> ListT m a -> ListT m a
+cons a m = ListT $ \bind c b t -> c a (unListT m bind c b t)
 
 instance ThreadsEff ListT (Regional s) where
   threadEff alg (Regionally s m) = ListT $ \bind ->
@@ -36,6 +40,18 @@ instance Functor s => ThreadsEff ListT (Optional s) where
       `Optionally`
         fmap cn mx
       ) c b
+  {-# INLINE threadEff #-}
+
+instance ThreadsEff ListT (Unravel p) where
+  threadEff alg (Unravel p cataM main) =
+    unListT
+      main
+      (\mx cn -> lift $ alg $
+        Unravel p (cataM . lift) (fmap (cataM . cn) mx)
+      )
+      cons
+      lose
+      cutfail
   {-# INLINE threadEff #-}
 
 instance Monoid s => ThreadsEff ListT (ListenPrim s) where
@@ -99,6 +115,12 @@ instance MonadCatch m => MonadCatch (ListT m) where
 
 cull :: ListT m a -> ListT m a
 cull m = ListT $ \bind c b t -> unListT m bind (\a _ -> c a b) b t
+
+choose :: ListT m a -> ListT m a -> ListT m a
+choose ma mb = ListT $ \bind c b t -> unListT ma bind c (unListT mb bind c b t) t
+
+lose :: ListT m a
+lose = ListT $ \_ _ b _ -> b
 
 cutfail :: ListT m a
 cutfail = ListT $ \_ _ _ t -> t

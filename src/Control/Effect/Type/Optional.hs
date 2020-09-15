@@ -37,13 +37,12 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 --
 -- The typical use-case of 'Regional' is to lift a natural transformation
 -- of a base monad equipped with the power to recover from an exception.
--- 'Control.Effect.HoistOption' and accompaning interpreters is
+-- 'Control.Effect.Optional.HoistOption' and accompaning interpreters is
 -- provided as a specialization of 'Optional' for this purpose.
 --
 -- 'Optional' in its most general form lacks a pre-defined interpreter:
--- when not using 'Control.Effect.HoistOption', you're expected to define your
--- own interpreter for 'Optional' (treating it as a primitive effect).
--- Note that when used as a primitive effect, @s@ is expected to be a functor.
+-- when not using 'Control.Effect.Optional.HoistOption', you're expected to
+-- define your own interpreter for 'Optional' (treating it as a primitive effect).
 --
 -- __'Optional' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel

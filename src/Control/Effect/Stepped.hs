@@ -5,6 +5,8 @@ module Control.Effect.Stepped
   , unsteps
   , liftSteps
 
+  , FirstOrder
+
     -- Threading constraints
   , SteppedThreads
   ) where

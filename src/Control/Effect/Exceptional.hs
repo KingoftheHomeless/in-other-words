@@ -83,10 +83,10 @@ import Control.Effect.Carrier.Internal.Compose
 --
 -- * Spawns an asynchronous computation
 -- * Throws an exception inside the asynchronous computation from a use of @eff@
--- * Return the 'Control.Effect.Conc.Async' of that asynchronous computation
+-- * Returns the 'Control.Effect.Conc.Async' of that asynchronous computation
 --
 -- Then 'Control.Effect.Conc.wait'ing on that 'Control.Effect.Conc.Async'
--- will throw that exception without it being caught.
+-- outside of the 'catching' will throw that exception without it being caught.
 newtype Exceptional eff exc m a = Exceptional (Union '[eff, Catch exc] m a)
 
 -- | A particularly useful specialization of 'Exceptional', for gaining
@@ -164,7 +164,7 @@ instance Eff (Exceptional eff exc) m
   {-# INLINEABLE algDerivs #-}
 
 -- | Gain access to @eff@ and @'Catch' exc@ within a region,
--- but only if you're ready to handle any unhandld exception @e :: exc@
+-- but only if you're ready to handle any unhandled exception @e :: exc@
 -- that may arise from the use of @eff@ within that region.
 --
 -- For example:

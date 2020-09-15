@@ -107,15 +107,15 @@ unionize :: ( Eff (Union b) m
 unionize = unUnionizeC
 {-# INLINE unionize #-}
 
--- | Rewrite uses of effects in @b@ into a @'Union' b@ effect on top of the effect stack.
---
--- @'Derivs' (UnionizeC b m) = b ++ StripPrefix '['Union' b] 'Derivs' m@
 type UnionizeHeadC b = CompositionC
  '[ IntroC b '[Union b]
   , UnionizeC b
   ]
 
 
+-- | Rewrite uses of effects in @b@ into a @'Union' b@ effect on top of the effect stack.
+--
+-- @'Derivs' (UnionizeC b m) = b ++ StripPrefix '['Union' b] 'Derivs' m@
 unionizeHead :: ( HeadEff (Union b) m
                 , KnownList b
                 )

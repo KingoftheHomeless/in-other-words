@@ -58,6 +58,7 @@ hoistOption n = optionally (HoistOptionCall n)
 -- @m@ is the current monad.
 --
 -- @'Derivs' ('HoistOptionC' m) = 'HoistOption' m ': 'Derivs' m@
+--
 -- @'Prims'  ('HoistOptionC' m) = 'HoistOption' m ': 'Prims' m@
 runHoistOption :: Carrier m
                => HoistOptionC m a
@@ -82,6 +83,7 @@ type HoistOptionToFinalC b = InterpretPrimC HoistOptionToFinalH (HoistOption b)
 -- @b@ is the final base monad.
 --
 -- @'Derivs' ('HoistOptionToFinalC' b m) = 'HoistOption' b ': 'Derivs' m@
+--
 -- @'Prims'  ('HoistOptionToFinalC' b m) = 'HoistOption' b ': 'Prims' m@
 hoistOptionToFinal :: ( MonadBaseControl b m
                       , Carrier m

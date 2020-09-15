@@ -35,12 +35,12 @@ easier to use -- than other effect libraries of its kind.
 If you're experienced with the mechanisms behind `freer-simple`,
 `fused-effects`, and `polysemy`, and would like to learn more about what makes
 `in-other-words` different, see
-[this wiki page](https://github.com/KingoftheHomeless/in-other-words/wiki/The-inner-workings-of-the-library).
+[this wiki page](https://github.com/KingoftheHomeless/in-other-words/wiki/The-Inner-Workings-of-the-Library).
 
 Unfortunately, in its current state `in-other-words` is rather inaccessible.
 Ample documentation and guides are provided for the library, but inexperienced
-users are still likely to run into gotchas and confusing error
-messages. As such, if you're a beginner to effect systems,
+users are still likely to run into gotchas that result in very
+confusing error messages. As such, if you're a beginner to effect systems,
 `freer-simple` or `polysemy` would serve as better starting points.
 
 ## Features
@@ -95,7 +95,6 @@ Some features of the library could require enabling more extensions.
 
 First-order usage:
 ```haskell
-
 import Control.Effect
 import Control.Effect.Error
 import Control.Effect.State
@@ -114,17 +113,24 @@ readTTY = send ReadTTY
 writeTTY :: Eff Teletype m => String -> m ()
 writeTTY str = send (WriteTTY str)
 
-teletypeToIO :: Eff (Embed IO) m => SimpleInterpreterFor Teletype m
-teletypeToIO = interpretSimple $ \case
-  ReadTTY      -> embed getLine
-  WriteTTY msg -> embed $ putStrLn msg
-
 challenge :: Eff Teletype m => m ()
 challenge = do
   writeTTY "What is 3 + 4?"
   readTTY >>= \str -> case readMaybe @Int str of
     Just 7  -> writeTTY "Correct!"
     _       -> writeTTY "Nope." >> challenge
+
+
+teletypeToIO :: Eff (Embed IO) m => SimpleInterpreterFor Teletype m
+teletypeToIO = interpretSimple $ \case
+  ReadTTY      -> embed getLine -- use 'embed' to lift IO actions.
+  WriteTTY msg -> embed $ putStrLn msg
+
+
+-- Make a challenge to the user
+challengeIO :: IO ()
+challengeIO = runM $ teletypeToIO $ challenge
+
 
 -- Interpret a `Teletype` effect in terms of `Ask` and `Tell` effects
 runTeletype :: Effs '[Ask String, Tell String] m
@@ -134,8 +140,8 @@ runTeletype = interpretSimple $ \case
   WriteTTY msg -> tell msg
 
 -- Runs a challenge with the provided inputs purely.
-runChallengePure :: [String] -> Either String [String]
-runChallengePure testInputs =
+challengePure :: [String] -> Either String [String]
+challengePure testInputs =
     -- Extract the final result, now that all effects have been interpreted.
     run
     -- Run the @Throw String@ effect, resulting in @Either String [String]@
@@ -146,9 +152,10 @@ runChallengePure testInputs =
     -- strings into a list, resulting in ([String], ())
   $ runTellList @String
     -- Run the @State [String]@ effect with initial state
-    -- @inputs@. @evalState@ discards the end state.
+    -- @testInputs@. @evalState@ discards the end state.
   $ evalState testInputs
-    -- interpret the @Ask String@ effect by going through the provided inputs.
+    -- Interpret the @Ask String@ effect by going through the provided inputs
+    -- one by one.
     -- Throw an exception if we go through all the inputs without completing the
     -- challenge.
   $ runAskActionSimple (do
@@ -163,21 +170,16 @@ runChallengePure testInputs =
 -- evaluates to True
 testChallenge :: Bool
 testChallenge =
-    runChallengePure ["4","-7", "i dunno", "7"]
+    challengePure ["4","-7", "i dunno", "7"]
  == Right ["What is 3 + 4?", "Nope."
           ,"What is 3 + 4?", "Nope."
           ,"What is 3 + 4?", "Nope."
           ,"What is 3 + 4?", "Correct!"
           ]
-
--- Make a challenge to the user
-challengeIO :: IO ()
-challengeIO = runM $ teletypeToIO $ challenge
 ```
 
 <span id="higher-order">Higher-order usage:</span>
 ```haskell
-
 import Control.Effect
 import Control.Effect.Bracket
 import Control.Effect.Trace
@@ -192,13 +194,16 @@ time label m = send (ProfileTiming label m)
 profileTimingToIO :: Effs '[Embed IO, Trace, Bracket] m
                   => SimpleInterpreterFor ProfileTiming m
 profileTimingToIO = interpretSimple $ \case
-  ProfileTiming str action -> do
+  ProfileTiming label action -> do
     before <- embed getMonotonicTime
-    a <-   action
-        `onError`
-           trace ("Timing of " ++ str ++ " failed due to some error!")
+    -- To execute a provided computation when interpreting a
+    -- higher-order effect, just bind it.
+    -- You can also use other higher-order effects to interact with it!
+    a <-   action 
+        `onError` -- Provided by 'Bracket'
+           trace ("Timing of " ++ label ++ " failed due to some error!")
     after <- embed getMonotonicTime
-    trace ("Timing of " ++ str ++ ": " ++ show (after - before) ++ " seconds.")
+    trace ("Timing of " ++ label ++ ": " ++ show (after - before) ++ " seconds.")
     return a
 
 spin :: Monad m => Integer -> m ()
@@ -224,10 +229,9 @@ The examples above are somewhat disingenuous; they cover only the simplest
 uses of the library. The library has a wide variety of features,
 and using them properly can get very complicated. Because of this,
 [`in-other-words` offers a wiki covering more advanced topics of the
-library.](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-topics)
+library.](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics)
 Check it out if you're interested in learning more about the
-library,  or are struggling with a feature you're having a hard
-time with.
+library,  or are struggling with a feature.
 
 
 ## Troubleshooting
@@ -252,17 +256,17 @@ underlying abstractions.
 the ideal situations under which these libraries are truly zero-cost are unrealistic
 in practice. Although this does adversely affect `in-other-words`,
 the underlying dispatch cost of effects should be low enough to make
-to it largely negligable for most purposes -- in particular,
-IO-bound applications.
+to it largely negligable for most purposes -- in particular, IO-bound
+applications.
 
 Further benchmarking, profiling, and optimizations are currently
 considered future goals of the library.
 
 ***
-<b id="f1">[1](#a1)</b> Every effect is required to be *representational* in the carrier monad.
-This means that if you can represent your effect using:
+<b id="f1">[1](#a1)</b> Every effect is required to be *representational*
+in the carrier monad. This means that if you can represent your effect using:
 * a `mtl`-style effect class
 * without any associated type families
 * and it can be newtype derived
 
-then you can represent your effect with `in-other-words`.
+then you can also represent your effect with `in-other-words`.

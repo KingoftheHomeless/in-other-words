@@ -15,7 +15,7 @@ import Control.Effect.Internal.Utils
 import Control.Effect.Internal.Derive
 import Control.Effect.Internal.Itself
 
--- | The class of effect carriers, and is the underlying mechanism with which
+-- | The class of effect carriers, and the underlying mechanism with which
 -- effects are implemented.
 --
 -- Each carrier is able to implement a number of /derived/ effects,

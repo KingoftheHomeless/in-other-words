@@ -202,6 +202,8 @@ runTellListLazy =
 -- | Run a @'Tell' s@ effect, where @s@ is a 'Monoid', by accumulating
 -- all the uses of 'tell'.
 --
+-- You may want to combine this with 'tellIntoTell'.
+--
 -- Unlike 'runListen' and 'runWriter', this does not provide the ability to
 -- interact with the 'tell's through 'listen' and 'pass'; but also doesn't
 -- impose any primitive effects, meaning 'runTell' doesn't restrict what
@@ -538,7 +540,7 @@ tellToTellSimple f = interpretSimple $ \case
 -- stack by providing a function to transform the type told.
 --
 -- This is useful to rewrite a @'Tell' s@ effect where @s@ isn't a 'Monoid'
--- into a @'Tell' t@ effect where @@ _is_ a 'Monoid', and thus can be
+-- into a @'Tell' t@ effect where @t@ _is_ a 'Monoid', and thus can be
 -- interpreted using the various 'Monoid'al 'Tell' interpreters.
 --
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
@@ -804,6 +806,8 @@ instance ( Monoid s
 -- | Run a @'Tell' s@ effect where @s@ is a 'Monoid' by accumulating uses of
 -- 'tell' through atomic operations in 'IO'.
 --
+-- You may want to combine this with 'tellIntoTell'.
+--
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
 -- __This makes 'tellToIO' very difficult to use partially applied.__
 -- __In particular, it can't be composed using @'.'@.__
@@ -867,6 +871,8 @@ runTellTVar tvar = interpret $ \case
 
 -- | Run a @'Tell' s@ effect where @s@ is a 'Monoid' by accumulating uses of
 -- 'tell' through atomic operations in 'IO'.
+--
+-- You may want to combine this with 'tellIntoTellSimple'.
 --
 -- This is a less performant version of 'tellToIO' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.

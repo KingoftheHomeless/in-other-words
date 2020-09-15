@@ -74,7 +74,7 @@ wrap = unWrapC
 -- newtype Counter m a = Counter ('Control.Effect.State.State' Int m)
 --
 -- probe :: Eff Counter m => m Int
--- probe = 'wrapWith' Counter $ 'Control.Effect.State.state'' @Int (\s -> (s + 1, s))
+-- probe = 'wrapWith' Counter $ 'Control.Effect.State.state'' \@Int (\s -> (s + 1, s))
 -- @
 --
 wrapWith :: ( Member e (Derivs m)

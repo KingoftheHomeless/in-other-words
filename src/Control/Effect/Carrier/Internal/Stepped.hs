@@ -14,6 +14,14 @@ import Control.Effect.Internal.Union
 data FOEff e x where
   FOEff :: e q x -> FOEff e x
 
+-- | A constraint that @e@ is first-order.
+--
+-- This is automatically deduced by the compiler.
+class    (forall m n x. Coercible (e m x) (e n x))
+      => FirstOrder e
+instance (forall m n x. Coercible (e m x) (e n x))
+      => FirstOrder e
+
 -- | A carrier for any first-order effect @e@ that allows for
 -- dividing a computation into several steps, where
 -- each step is seperated by the use of the effect.
@@ -71,7 +79,7 @@ liftSteps (More e c) = More e (lift . fmap liftSteps . c)
 
 -- | Execute all the steps of a computation.
 unsteps :: forall e m a
-         . ( forall z x. Coercible (e z x) (e m x)
+         . ( FirstOrder e
            , Member e (Derivs m)
            , Carrier m
            )
@@ -83,6 +91,7 @@ unsteps (More e c) = send @e (coerce e) >>= c >>= unsteps
 --
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
+-- * 'Control.Effect.Type.Unravel.Unravel' @p@ @b@
 -- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type SteppedThreads = FreeThreads

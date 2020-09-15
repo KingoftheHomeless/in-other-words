@@ -5,6 +5,7 @@ import Control.Monad.Trans
 import Control.Monad.Base
 import qualified Control.Monad.Fail as Fail
 import Control.Effect.Internal.Union
+import Control.Effect.Type.Unravel
 import Control.Effect.Type.ListenPrim
 import Control.Effect.Type.ReaderPrim
 import Control.Effect.Type.Regional
@@ -119,6 +120,18 @@ instance Functor s => ThreadsEff (FreeT f) (Optional s) where
             )
             handler
             c
+  {-# INLINE threadEff #-}
+
+instance ThreadsEff (FreeT f) (Unravel p) where
+  threadEff alg (Unravel p cataM main) =
+    unFreeT main
+            (\m cn ->
+               lift $ alg $ Unravel p
+                                    (cataM . lift)
+                                    (fmap (cataM . cn) m)
+            )
+            (\f c -> liftF f >>= c)
+            return
   {-# INLINE threadEff #-}
 
 instance ThreadsEff (FreeT f) (ReaderPrim i) where

@@ -66,7 +66,7 @@ runCont =
 -- restrictive in what interpreters are used after it, since there are very
 -- few primitive effects that the carrier for 'runContFast' is able to thread.
 -- In fact, of all the primitive effects featured in this library, only
--- one satisfies 'ContThreads': namely, 'Control.Effect.Reader.Reader'.
+-- one satisfies 'ContFastThreads': namely, 'Control.Effect.Type.ReaderPrim.ReaderPrim'.
 runContFast :: forall m a p
              . ( Carrier m
                , Threaders '[ContFastThreads] m p

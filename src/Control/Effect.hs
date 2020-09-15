@@ -63,9 +63,8 @@ module Control.Effect
   , runComposition
 
     -- * Other utilities
-  , SubsumeC
-  , subsume
   , Effly(..)
+  , subsume
 
     -- * Carriers and other misc. types
   , InterpretSimpleC
@@ -81,6 +80,7 @@ module Control.Effect
   , IntroTopC
   , IntroUnderC
   , KnownList
+  , SubsumeC
   ) where
 
 import Control.Effect.Internal
@@ -96,12 +96,16 @@ import Control.Monad.Base
 import Control.Monad.Trans
 
 -- | A useful type synonym for the type of 'interpret' provided a handler
+--
+-- @m@ is left polymorphic so that you may place @'Eff'/s@ constraints on it.
 type InterpreterFor e m =
      forall x
    . InterpretReifiedC e m x
   -> m x
 
 -- | A useful type synonym for the type of 'interpretSimple' provided a handler
+--
+-- @m@ is left polymorphic so that you may place @'Eff'/s@ constraints on it.
 type SimpleInterpreterFor e m =
      forall x p
    . Threaders '[ReaderThreads] m p

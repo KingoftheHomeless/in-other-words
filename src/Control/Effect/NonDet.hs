@@ -82,7 +82,7 @@ cutfail = send Cutfail
 -- execution to before 'cut' was invoked, up until the nearest enclosing use
 -- of 'call' (if any).
 --
--- @'call' ('fromList' [1,2] >>= \a -> 'cut' >> fromList [a,a+3]) == 'fromList' [1,4]@
+-- @'call' ('fromList' [1,2] >>= \\a -> 'cut' >> fromList [a,a+3]) == 'fromList' [1,4]@
 --
 -- @ call (('cut' >> return True) `choose` return False) == return True@
 cut :: Effs '[NonDet, Cut] m => m ()
