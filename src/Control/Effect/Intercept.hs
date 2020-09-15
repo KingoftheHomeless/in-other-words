@@ -15,6 +15,7 @@ module Control.Effect.Intercept
     -- * Interpretations for other effects
   , runStateStepped
   , runTellStepped
+  , runTellListStepped
   , runListenStepped
 
     -- * Threading constraints

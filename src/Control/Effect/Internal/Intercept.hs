@@ -145,13 +145,13 @@ instance ( FirstOrder e
 -- * __This imposes the very restrictive primitive effect__
 -- __'Control.Effect.Type.Unravel.Unravel'__. Most notably, neither
 -- 'StateThreads' nor 'WriterThreads' accepts it.
--- Because of that, this module offers 'runStateStepped', 'runTellStepped',
--- and 'runListenStepped' which can be used instead of 'runState',
--- and 'runTell' and 'runWriter' in case you need to.
+-- Because of that, this module offers various alternatives
+-- of several common 'State' and 'Tell' interpreters with threading
+-- constraints that do accept 'Unravel''
 --
 -- @'Derivs' ('InterceptContC' e m) = 'Intercept' e ': 'InterceptCont' e ': e ': Derivs m@
 --
--- @'Prims'  ('InterceptContC' e m) = 'Control.Effect.Type.Unravel.Unravel' (InterceptB e) ': 'Control.Effect.Carrier.Prims' m@
+-- @'Prims'  ('InterceptContC' e m) = 'Unravel' (InterceptB e) ': 'Prims' m@
 runInterceptCont :: forall e m a p
                   . ( FirstOrder e
                     , Carrier m
@@ -194,7 +194,24 @@ runStateStepped s0 m =
     s0
 {-# INLINE runStateStepped #-}
 
--- | A variant of 'runState' with a 'SteppedThreads' threading constraint
+-- | A variant of 'runTell' with a 'SteppedThreads' threading constraint
+-- instead of a 'StateThreads' threading constraint.
+runTellListStepped :: forall o m a p
+                    . ( Carrier m
+                      , Threaders '[SteppedThreads] m p
+                      )
+                   => SteppedC (Tell o) m a
+                   -> m ([o], a)
+runTellListStepped m =
+  unFreeT
+    (unSteppedC m)
+    (\mx c s -> mx >>= (`c` s))
+    (\(FOEff (Tell o)) c s -> c () $! (o : s))
+    (\a s -> return (reverse s, a))
+    []
+{-# INLINE runTellListStepped #-}
+
+-- | A variant of 'runTell' with a 'SteppedThreads' threading constraint
 -- instead of a 'StateThreads' threading constraint.
 runTellStepped :: forall w m a p
                 . ( Monoid w
