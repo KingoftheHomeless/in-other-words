@@ -68,7 +68,7 @@ bracketOnError :: Eff Bracket m
                => m a
                -> (a -> m c)
                -> (a -> m b)
-              -> m b
+               -> m b
 bracketOnError acquire release use = do
   (b, _) <- generalBracket
               acquire
@@ -128,7 +128,7 @@ type BracketLocallyC = InterpretPrimC BracketLocallyH Bracket
 -- any abortive computations of purely local effects
 -- -- i.e. effects interpreted before 'runBracketLocally'
 -- that are not interpreted in terms of the final monad
--- nor effects after 'runBracketLocally'.
+-- nor other effects interpreted after 'runBracketLocally'.
 --
 -- This does /not/ protect against IO exceptions of any kind,
 -- including asynchronous exceptions.

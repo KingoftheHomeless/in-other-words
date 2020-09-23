@@ -3,6 +3,7 @@
 module Control.Effect.Carrier.Internal.Stepped where
 
 import Data.Coerce
+import Control.Applicative
 import Control.Monad.Trans
 import Control.Monad.Trans.Free.Church.Alternate
 import Control.Effect.Internal
@@ -18,7 +19,7 @@ data FOEff e x where
 --
 -- This is automatically deduced by the compiler.
 class    (forall m n x. Coercible (e m x) (e n x))
-      => FirstOrder e
+      => FirstOrder (e :: Effect)
 instance (forall m n x. Coercible (e m x) (e n x))
       => FirstOrder e
 
@@ -53,11 +54,23 @@ instance ( Threads (FreeT (FOEff e)) (Prims m)
   reformulate n alg = powerAlg' (reformulate (n . lift) alg) (n . sendStepped)
   {-# INLINEABLE reformulate #-}
 
-deriving instance Functor m => Functor (Steps e m)
 
-data Steps e m a where
+data Steps (e :: Effect) m a where
   Done :: a -> Steps e m a
   More :: e q x -> (x -> m (Steps e m a)) -> Steps e m a
+
+deriving instance Functor m => Functor (Steps e m)
+
+instance Functor m => Applicative (Steps e m) where
+  pure = Done
+  {-# INLINE pure #-}
+
+  liftA2 f (Done a) fb = fmap (f a) fb
+  liftA2 f (More e c) fb = More e (fmap (\fa -> liftA2 f fa fb) . c)
+
+instance Functor m => Monad (Steps e m) where
+  Done a >>= f = f a
+  More e c >>= f = More e (fmap (>>= f) . c)
 
 -- | Run the first-order effect @e@ by breaking the computation using it
 -- into steps, where each step is seperated by the use of actions of @e@.

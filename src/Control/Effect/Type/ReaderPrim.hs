@@ -105,7 +105,7 @@ threadReaderPrimViaRegional :: forall i t m a
                         -> ReaderPrim i (t m) a -> t m a
 threadReaderPrimViaRegional alg ReaderPrimAsk = lift (alg ReaderPrimAsk)
 threadReaderPrimViaRegional alg (ReaderPrimLocal f m) =
-  threadEff (\(Regionally _ m') -> alg $ (ReaderPrimLocal f m')) (Regionally () m)
+  threadEff (\(Regionally _ m') -> alg $ ReaderPrimLocal f m') (Regionally () m)
 {-# INLINE threadReaderPrimViaRegional #-}
 
 #define THREAD_READER(monadT)                                 \

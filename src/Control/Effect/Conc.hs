@@ -94,7 +94,7 @@ import Control.Monad.Trans.Identity
 import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Interpret
 
--- | An effect for concurrent operations.
+-- | An effect for concurrent execution.
 newtype Conc m a = Conc (Unlift IO m a)
   deriving EffNewtype via Conc `WrapperOf` Unlift IO
 
@@ -109,8 +109,26 @@ type ConcToIOC = CompositionC
 
 type ConcToUnliftIOC = UnwrapC Conc
 
--- | Run a 'Conc' effect if all effects in the effect stack are
--- eventually reduced to operations on 'IO'.
+-- | Run a 'Conc' effect if __all__ effects used in the program --
+-- past and future -- are eventually reduced to operations on 'IO'.
+--
+-- Due to its very restrictive primitive effect and carrier constraint,
+-- `concToIO` can't be used together with most pure interpreters.
+-- For example, instead of 'Control.Effect.Error.runError', you must use
+-- 'Control.Effect.Error.errorToIO'.
+--
+-- This poses a problem if you want to use some effect that /doesn't have/
+-- an interpreter compatible with 'concToIO' -- like
+-- 'Control.Effect.NonDet.NonDet'.
+-- In that case, you might sitll be able to use both effects in the same program
+-- by applying
+-- [/Split Interpretation/](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics#split-interpretation)
+-- to seperate their uses.
+--
+-- @'Derivs' ('ConcToIOC' m) = 'Conc' ': 'Derivs' m@
+--
+-- @'Control.Effect.Primitive.Prims' ('ConcToIOC' m) = 'Unlift' 'IO' ': 'Control.Effect.Primitive.Prims' m@
+--
 concToIO :: ( Carrier m
             , MonadBaseControlPure IO m
             )

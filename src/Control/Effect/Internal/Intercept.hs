@@ -5,20 +5,24 @@ import Data.Coerce
 
 import Control.Monad
 import Control.Effect
+import Control.Effect.Unlift
+import Control.Effect.Carrier
 import Control.Effect.State
 import Control.Effect.Writer
-import Control.Effect.Primitive
 import Control.Effect.Carrier.Internal.Stepped
 import Control.Monad.Trans.Free.Church.Alternate
+import Control.Monad.Trans.Reader
 
 import Control.Effect.Type.Unravel
 import Control.Effect.Type.ListenPrim
+
+import Control.Effect.Internal.Utils
 
 
 -- | An effect for intercepting actions of a first-order effect.
 --
 -- Even for this library, proper usage of this effect is very complicated.
--- When properly wielded, this can be a very useful helper effect,
+-- When properly used, this can be a very useful helper effect,
 -- allowing you write interpretations for a class of higher-order effects
 -- that wouldn't otherwise be possible.
 --
@@ -48,6 +52,7 @@ data InterceptionMode
 data InterceptB e a where
   InterceptB :: (forall q x. (x -> a) -> e q x -> a)
              -> InterceptB e a
+
 interceptB :: forall e m q a
             . ( FirstOrder e
               , Eff (Unravel (InterceptB e)) m
@@ -56,37 +61,16 @@ interceptB :: forall e m q a
            -> m a -> m a
 interceptB h m = join $ send $
   Unravel @(InterceptB e)
-    (InterceptB (\c e -> h c (coerce e)))
+    (InterceptB (\c -> h c .# coerce))
     join
     (fmap pure m)
 {-# INLINE interceptB #-}
 
--- TODO: Make this less messy
-data EStack e m a where
-  EDone  :: a -> EStack e m a
-  EEff   :: (x -> EStack e m a) -> e q x -> EStack e m a
-  EEmbed :: m (EStack e m a) -> EStack e m a
-
-collapseStack :: forall e m a
-               . (Carrier m, Member e (Derivs m), FirstOrder e)
-              => EStack e m a -> m a
-collapseStack (EDone a) = return a
-collapseStack (EEmbed mx) = mx >>= collapseStack
-collapseStack (EEff c e) = send @e (coerce e) >>= collapseStack . c
-
-injectFirst :: (FirstOrder e, Carrier m, Member e (Derivs m))
-            => (forall x. (x -> m a) -> e q x -> m a)
-            -> EStack e m a
-            -> m a
-injectFirst _ (EDone a) = return a
-injectFirst h (EEmbed mx) = mx >>= injectFirst h
-injectFirst h (EEff c e) = h (collapseStack . c) (coerce e)
-
 type InterceptContC e = CompositionC
- '[ IntroC '[Intercept e, InterceptCont e]
+ '[ IntroC '[InterceptCont e, Intercept e]
             '[Unravel (InterceptB e)]
-  , InterpretC InterceptH (Intercept e)
   , InterpretC InterceptH (InterceptCont e)
+  , InterpretC InterceptH (Intercept e)
   , InterpretPrimC InterceptH (Unravel (InterceptB e))
   , SteppedC e
   ]
@@ -98,7 +82,7 @@ instance ( FirstOrder e
          )
       => Handler InterceptH (Intercept e) m where
   effHandler (Intercept h m) =
-    interceptB 
+    interceptB
       (\c e -> h e >>= c)
       m
   {-# INLINE effHandler #-}
@@ -108,14 +92,21 @@ instance ( FirstOrder e
          , Eff (Unravel (InterceptB e)) m
          )
       => Handler InterceptH (InterceptCont e) m where
-  effHandler (InterceptCont mode h m) = case mode of
-    InterceptAll -> interceptB h m
+  effHandler (InterceptCont mode h main) = case mode of
+    InterceptAll -> interceptB h main
     InterceptOne ->
-          send (Unravel @(InterceptB e)
-                        (InterceptB (\c e -> EEff c e))
-                        EEmbed
-                        (fmap EDone m))
-      >>= injectFirst h
+          send (Unravel
+                  @(InterceptB e)
+                  (InterceptB $ \c e b ->
+                      if b then
+                        h (`c` False) (coerce e)
+                      else
+                        send @e (coerce e) >>= (`c` b)
+                  )
+                  (\m b -> m >>= \f -> f b)
+                  (fmap (const . pure) main)
+               )
+      >>= \f -> f True
   {-# INLINE effHandler #-}
 
 instance ( FirstOrder e
@@ -126,15 +117,16 @@ instance ( FirstOrder e
                      (Unravel (InterceptB e))
                      (SteppedC e m) where
   effPrimHandler (Unravel (InterceptB cataEff) cataM main) =
-    let
-      go (Done a) = a
-      go (More e c) = cataEff (cataM . lift . fmap go . c) e
-    in
-      return $ cataM (fmap go (lift (steps main)))
+    return $
+      unFreeT (unSteppedC main)
+        (\mx c -> cataM $ fmap c $ lift mx)
+        (\(FOEff e) c -> cataEff c e)
+        id
   {-# INLINE effPrimHandler #-}
 
--- | Run @'Intercept' e@ and @'InterceptCont' e@ effects, provided
--- @e@ is first-order and part of the effect stack.
+
+-- | Run @'Intercept' e@, @'InterceptCont' e@ and @e@ effects, provided
+-- that @e@ is first-order and also part of the remaining effect stack.
 --
 -- There are three very important things to note here:
 --
@@ -149,7 +141,7 @@ instance ( FirstOrder e
 -- of several common 'State' and 'Tell' interpreters with threading
 -- constraints that do accept 'Unravel''
 --
--- @'Derivs' ('InterceptContC' e m) = 'Intercept' e ': 'InterceptCont' e ': e ': Derivs m@
+-- @'Derivs' ('InterceptContC' e m) = 'InterceptCont' e ': 'Intercept' e ': e ': Derivs m@
 --
 -- @'Prims'  ('InterceptContC' e m) = 'Unravel' (InterceptB e) ': 'Prims' m@
 runInterceptCont :: forall e m a p
@@ -206,7 +198,7 @@ runTellListStepped m =
   unFreeT
     (unSteppedC m)
     (\mx c s -> mx >>= (`c` s))
-    (\(FOEff (Tell o)) c s -> c () $! (o : s))
+    (\(FOEff (Tell o)) c s -> c () (o : s))
     (\a s -> return (reverse s, a))
     []
 {-# INLINE runTellListStepped #-}
@@ -274,3 +266,88 @@ runListenStepped m =
   $ runComposition
   $ m
 {-# INLINE runListenStepped #-}
+
+
+
+newtype ReifiedFOHandler e m = ReifiedFOHandler (forall q x. e q x -> m x)
+
+newtype InterceptRC (e :: Effect) m a = InterceptRC {
+    unInterceptRC :: ReaderT (ReifiedFOHandler e m) m a
+  }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b, MonadBaseControl b
+           )
+
+instance MonadTrans (InterceptRC e) where
+  lift = InterceptRC #. lift
+  {-# INLINE lift #-}
+
+instance ( FirstOrder e
+         , Carrier m
+         , Threads (ReaderT (ReifiedFOHandler e m)) (Prims m)
+         )
+      => Carrier (InterceptRC e m) where
+  type Derivs (InterceptRC e m) = Intercept e ': e ': Derivs m
+  type Prims  (InterceptRC e m) = Unlift (ReaderT (ReifiedFOHandler e m) m)
+                                  ': Prims m
+
+  algPrims =
+    powerAlg (
+      coerce (thread @(ReaderT (ReifiedFOHandler e m)) (algPrims @m))
+    ) $ \case
+      Unlift main -> InterceptRC (main unInterceptRC)
+  {-# INLINEABLE algPrims #-}
+
+  reformulate n alg =
+    powerAlg (
+    powerAlg' (
+      reformulate (n . lift) (weakenAlg alg)
+    ) $ \e -> do
+        ReifiedFOHandler h <- n $ InterceptRC ask
+        n $ lift $ h e
+    ) $ \case
+      Intercept h m ->
+        (alg . inj) $ Unlift @(ReaderT (ReifiedFOHandler e m) m) $ \lower ->
+          local
+            (\h' -> ReifiedFOHandler $ \e ->
+              runReaderT (lower (h (coerce e))) h'
+            )
+            (lower m)
+  {-# INLINEABLE reformulate #-}
+
+
+-- | Run @'Intercept' e@ and @e@ effects, provided
+-- @e@ is first-order and part of the effect stack.
+--
+-- 'runInterceptR' differs from 'runInterceptCont' in four different ways:
+--
+-- * It doesn't handle 'InterceptCont'.
+-- * It has the significantly less restrictive threading constraint
+-- 'ReaderThreads' instead of 'SteppedThreads'
+-- * It imposes the significantly /more/ restrictive primitive effect 'Unlift'
+-- instead of 'Unravel'.
+-- * It is significantly faster.
+--
+-- There are some interpreters -- such as 'bracketToIO' and 'concToIO' --
+-- that 'runInterceptCont' can't be used together with in any capacity
+-- due to its 'SteppedThreads' threading constraint. In
+-- these cases, 'runInterceptR' can be used instead.
+--
+-- @'Derivs' ('InterceptRC' e m) = 'Intercept' e ': e ': 'Derivs m'
+--
+-- @'Prims'  ('InterceptRC' e m) = 'Unlift' (ReaderT (ReifiedFOHandler e m)) ': 'Derivs m'
+runInterceptR :: forall e m a p
+               . ( FirstOrder e
+                 , Member e (Derivs m)
+                 , Carrier m
+                 , Threaders '[ReaderThreads] m p
+                 )
+              => InterceptRC e m a
+              -> m a
+runInterceptR m =
+  runReaderT (unInterceptRC m)
+             (ReifiedFOHandler $ \e -> send @e (coerce e))
+{-# INLINE runInterceptR #-}

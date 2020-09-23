@@ -14,10 +14,8 @@ module Control.Effect
   , send
 
     -- * Running final monad
-  , RunC
   , run
 
-  , RunMC(RunMC)
   , runM
 
     -- * Integrating external monads
@@ -35,15 +33,11 @@ module Control.Effect
   , InterpreterFor
 
   , EffHandler
-  , MonadBase(..)
 
     -- * Effect reinterpretation
   , reinterpretSimple
   , reinterpretViaHandler
   , reinterpret
-
-    -- * Lifting
-  , MonadTrans(..)
 
     -- * Threading constraints
   , Threaders
@@ -66,7 +60,13 @@ module Control.Effect
   , Effly(..)
   , subsume
 
+    -- * Reexports from other modules
+  , MonadBase(..)
+  , MonadTrans(..)
+
     -- * Carriers and other misc. types
+  , RunC
+  , RunMC
   , InterpretSimpleC
   , InterpretC
   , InterpretReifiedC
@@ -79,6 +79,7 @@ module Control.Effect
   , IntroC
   , IntroTopC
   , IntroUnderC
+  , IntroUnderManyC
   , KnownList
   , SubsumeC
   ) where

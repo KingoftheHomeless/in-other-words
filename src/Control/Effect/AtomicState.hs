@@ -48,7 +48,7 @@ atomicModifyIORefP ref f = do
 {-# INLINE atomicModifyIORefP #-}
 # endif
 
--- | An effect for atomically reading and writing a piece of state.
+-- | An effect for atomically reading and modifying a piece of state.
 --
 -- Convention: the interpreter for the @AtomicState@ action must force
 -- the resulting tuple of the function, but not the end state or returned value.

@@ -9,7 +9,10 @@ import Control.Effect.Carrier
 import qualified Control.Monad.Trans.State.Strict as SSt
 import qualified Control.Monad.Trans.State.Lazy as LSt
 
--- | An effect for non-atomic stateful operations
+-- | An effect for __non-atomic__ stateful operations.
+--
+-- If you need atomicity, use 'Control.Effect.AtomicState.AtomicState'
+-- instead.
 data State s m a where
   Get :: State s m s
   Put :: s -> State s m ()

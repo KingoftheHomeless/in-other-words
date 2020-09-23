@@ -82,7 +82,7 @@ unliftT main = liftWith $ \lower ->
 -- a @'ThreadsEff'@ instance for that monad transformer to lift
 -- @'Unlift' b@ (if possible). 'threadUnliftViaClass' can help you with that.
 data Unlift b m a where
-  Unlift :: ((forall x. m x -> b x) -> b a) -> Unlift b m a
+  Unlift :: forall b m a. ((forall x. m x -> b x) -> b a) -> Unlift b m a
 
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Unlift' b) t@ instance,
 -- given that @t@ is a 'MonadTransControl' where @'StT' t a ~ a@ holds for all @a@.

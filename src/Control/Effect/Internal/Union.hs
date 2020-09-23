@@ -11,6 +11,16 @@ import Control.Monad.Trans.Reader (ReaderT)
 import Control.Effect.Internal.Membership
 import Control.Effect.Internal.Utils
 
+-- | The kind of effects.
+--
+-- Helpful for defining new effects:
+--
+-- @
+-- data InOut i o :: Effect where
+--   Input  :: InOut i o m i
+--   Output :: o -> InOut i o m ()
+-- @
+--
 type Effect = (* -> *) -> * -> *
 
 -- | An effect for collecting multiple effects into one effect.
@@ -137,11 +147,20 @@ weakenReform :: Reformulation' (e ': r) p m z a
 weakenReform reform n alg = weakenAlg (reform n alg)
 {-# INLINE weakenReform #-}
 
+-- | A /less/ higher-rank variant of 'Reformulation', which is sometimes
+-- important.
 type Reformulation' r p m z a
   =  (forall x. m x -> z x)
   -> Algebra p z
   -> Algebra' r z a
 
+-- | The type of 'Control.Effect.Carrier.reformulate'.
+--
+-- A @'Reformulation' r p m@ describes how the derived effects @r@ are
+-- formulated in terms of the primitive effects @p@ and first-order operations
+-- of @m@.
+-- This is done by providing an @'Algebra' r z@ for any monad @z@ that lifts
+-- @m@ and implements an 'Algebra' over @p@.
 type Reformulation r p m
   =  forall z
    . Monad z
@@ -149,12 +168,37 @@ type Reformulation r p m
   -> Algebra p z
   -> Algebra r z
 
+-- | An instance of 'ThreadsEff' represents the ability for a monad transformer
+-- @t@ to thread an effect @e@ -- i.e. lift handlers of that effect.
+--
+-- Instances of 'ThreadsEff' are accumulated into entire stacks of primitive
+-- effects by 'Threads'.
+--
+-- You only need to make 'ThreadsEff' instances for monad transformers that
+-- aren't simply newtypes over existing monad transformers. You also don't need
+-- to make them for 'Control.Monad.Trans.Identity.IdentityT'.
 class RepresentationalEff e => ThreadsEff t e where
   threadEff :: Monad m
             => (forall x. e m x -> m x)
             -> e (t m) a
             -> t m a
 
+-- | @'Threads' t p@ is satisfied if @ThreadsEff t e@ instances are defined for
+-- each effect @e@ in @p@. By using the @'Threads' t p@ constraint, you're
+-- able to lift 'Algebra's over p from any monad @m@ to @t m@. This is useful
+-- when defining custom 'Control.Effect.Carrier.Carrier' instances.
+--
+-- Note that you /should not/ place a @'Threads' t p@ constraint if @t@ is
+-- simply a newtype over an existsing monad transformer @u@ that already has
+-- 'ThreadsEff' instances defined for it. Instead, you should place a
+-- @'Threads' u p@ constraint, and use its 'thread' by coercing the resulting
+-- algebra from @'Algrebra' p (t m)@ to @'Algebra' p (u m)@'.
+-- That way, you avoid having to define redundant 'ThreadsEff' instances for
+-- every newtype of a monad transformer.
+--
+-- 'Threads' forms the basis of /threading constraints/
+-- (see 'Control.Effect.Threaders'), and every threading constraint offered
+-- in the library makes use of 'Threads' in one way or another.
 class Threads t p where
   thread :: Monad m
          => Algebra p m
@@ -213,7 +257,7 @@ coerceAlg = coerce
 -- so
 --
 -- @
--- 'Control.Effect.Eff' ('Control.Effect.Error.Error' e) m = ('Control.Effect.Carrier' m, 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m), 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m))
+-- 'Control.Effect.Eff' ('Control.Effect.Error.Error' e) m = ('Control.Effect.Carrier' m, 'Control.Effect.Member' ('Control.Effect.Error.Throw' e) ('Control.Effect.Derivs' m), 'Control.Effect.Member' ('Control.Effect.Error.Catch' e) ('Control.Effect.Derivs' m))
 -- @
 --
 -- 'Bundle' should /never/ be used in any other contexts but within

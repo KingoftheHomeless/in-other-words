@@ -63,6 +63,9 @@ instance ( Carrier m
 type IntroTopC = IntroC '[]
 type IntroUnderC e = IntroC '[e]
 
+-- | Synonym for 'IntroC' to match 'introUnderMany'
+type IntroUnderManyC = IntroC
+
 -- | A constraint that the effect stack of @m@ -- @'Control.Effect.Derivs' m@ --
 -- begins with the effect @e@.
 --
@@ -91,7 +94,7 @@ introUnderMany :: forall new top m a
                   , KnownList new
                   , IntroConsistent top new m
                   )
-               => IntroC top new m a
+               => IntroUnderManyC top new m a
                -> m a
 introUnderMany = runIntroC
 {-# INLINE introUnderMany #-}

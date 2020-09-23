@@ -146,7 +146,8 @@ challengePure testInputs =
     run
     -- Run the @Throw String@ effect, resulting in @Either String [String]@
   $ runThrow @String
-    -- We discard the output of @challenge@; we're not interested in it.
+    -- We discard the return value of @challenge@ -- () --
+    -- while retaining the list of told strings..
   $ fmap fst
     -- Run the @Tell String@ effect by gathering all told
     -- strings into a list, resulting in ([String], ())
@@ -165,6 +166,7 @@ challengePure testInputs =
     )
     -- Interpret @Teletype@ in terms of @Ask String@ and @Tell String@
   $ runTeletype
+    -- Run the main program @challenge@, which returns ()
   $ challenge
 
 -- evaluates to True

@@ -11,6 +11,7 @@ module Control.Effect.Intercept
 
     -- * Interpretations
   , runInterceptCont
+  , runInterceptR
 
     -- * Interpretations for other effects
   , runStateStepped
@@ -23,6 +24,7 @@ module Control.Effect.Intercept
 
     -- * Carriers
   , InterceptContC
+  , InterceptRC
   , SteppedC
   , ListenSteppedC
   ) where
