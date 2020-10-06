@@ -81,6 +81,10 @@ unliftT main = liftWith $ \lower ->
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff'@ instance for that monad transformer to lift
 -- @'Unlift' b@ (if possible). 'threadUnliftViaClass' can help you with that.
+--
+-- The following threading constraints accept 'Split':
+--
+-- * 'Control.Effect.ReaderThreads'
 data Unlift b m a where
   Unlift :: forall b m a. ((forall x. m x -> b x) -> b a) -> Unlift b m a
 

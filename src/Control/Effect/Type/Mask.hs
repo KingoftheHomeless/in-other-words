@@ -34,6 +34,15 @@ data MaskMode
 -- non-trivial monad transformer @t@, then you need to make a
 -- a @'ThreadsEff' t 'Mask'@ instance (if possible).
 -- 'threadMaskViaClass' can help you with that.
+--
+-- The following threading constraints accept 'Bracket':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
 data Mask m a where
   Mask :: MaskMode
        -> ((forall x. m x -> m x) -> m a)

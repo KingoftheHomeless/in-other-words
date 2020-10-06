@@ -235,7 +235,7 @@ errorToError to from m0 =
 {-# INLINE errorToError #-}
 
 -- KingoftheHomeless: We could skip having to use 'OpaqueExc'
--- by requiring the exception type @e@ to be typeable. Or have
+-- by requiring the exception type @e@ to be typeable. Or have it be
 -- an instance of 'Exception'.
 --
 -- I choose not to for two reasons:
@@ -245,7 +245,7 @@ errorToError to from m0 =
 --      belonging to /another/, identical @'Error' e@ effect interpreted
 --      using 'errorToErrorIO'. So by using OpaqueExc, we get coherency.
 --
---  2. In case we eventuall yimplement a system for polymorphic effect
+--  2. In case we eventually implement a system for polymorphic effect
 --     interpreters inside of application code, like something like this:
 --    @
 --    manageError :: HasErrorInterpreter s m

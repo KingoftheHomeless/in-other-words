@@ -36,6 +36,19 @@ import Control.Effect.Internal.Union
 -- non-trivial monad transformer @t@, then you need to make a
 -- a @'Monoid' w => 'ThreadsEff' t ('ListenPrim' w)@ instance (if possible).
 -- 'threadListenPrim' and 'threadListenPrimViaClass' can help you with that.
+--
+-- The following threading constraints accept 'ListenPrim':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
+-- * 'Control.Effect.NonDet.NonDetThreads'
+-- * 'Control.Effect.Stepped.SteppedThreads'
+-- * 'Control.Effect.Cont.ContThreads'
+-- * 'Control.Effect.Select.SelectThreads'
 data ListenPrim w m a where
   ListenPrimTell   :: w -> ListenPrim w m ()
   ListenPrimListen :: m a -> ListenPrim w m (w, a)

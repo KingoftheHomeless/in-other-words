@@ -39,6 +39,19 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- a @'ThreadsEff' t ('Regional' s)@ instance (if possible).
 -- 'Control.Effect.Regional.threadRegionalViaOptional'
 -- can help you with that.
+--
+-- The following threading constraints accept 'Regional':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
+-- * 'Control.Effect.NonDet.NonDetThreads'
+-- * 'Control.Effect.Stepped.SteppedThreads'
+-- * 'Control.Effect.Cont.ContThreads'
+-- * 'Control.Effect.Select.SelectThreads'
 data Regional s m a where
   Regionally :: s -> m a -> Regional s m a
 

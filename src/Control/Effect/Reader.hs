@@ -6,6 +6,7 @@ module Control.Effect.Reader
 
     -- * Actions
   , ask
+  , asks
   , local
 
     -- * Interpretations

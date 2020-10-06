@@ -33,6 +33,15 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- non-trivial monad transformer @t@, then you need to make a
 -- a @'ThreadsEff' t 'Bracket'@ instance (if possible).
 -- 'threadBracketViaClass' can help you with that.
+--
+-- The following threading constraints accept 'Bracket':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
 data Bracket m a where
   GeneralBracket :: m a
                  -> (a -> ExitCase b -> m c)

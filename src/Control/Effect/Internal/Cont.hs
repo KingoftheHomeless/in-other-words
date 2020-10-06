@@ -90,7 +90,7 @@ instance ( Carrier m
 --
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
--- * 'Control.Effect.Type.Unravel.Unravel' @p@ @b@
+-- * 'Control.Effect.Type.Unravel.Unravel' @p@
 -- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type ContThreads = FreeThreads

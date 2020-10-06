@@ -107,14 +107,14 @@ instance ( Eff (Exceptional eff exc) m
 
 type ExceptionallyC eff exc = InterpretC (ExceptionallH exc) eff
 
-handling :: forall eff exc m a
+catching :: forall eff exc m a
           . ( Eff (Exceptional eff exc) m
             , RepresentationalEff eff
             )
          => ExceptionallyC exc eff m a
          -> (exc -> m a)
          -> m a
-handling m h =
+catching m h =
   send $ Exceptional @eff @exc $
     inj (Catch @exc (interpretViaHandler m) h)
 

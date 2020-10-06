@@ -107,7 +107,7 @@ withLowerToBase main = join $ send $
 -- runWithFile :: 'Eff' ('BaseControl' IO) m => 'SimpleInterpreterFor' WithFile m
 -- runWithFile = 'interpretSimple' $ \case
 --   WithFile fp mode c -> 'gainBaseControl' $ 'control' $ \lower ->
---     SysIO.withFile fp mode (lower . lift . c)
+--     SysIO.withFile fp mode (\hdl -> lower (lift (c hdl)))
 -- @
 --
 gainBaseControl
@@ -147,7 +147,8 @@ instance ( MonadBaseControl b m
 -- @'Derivs' ('BaseControlToFinalC' b m) = 'BaseControl' b ': 'Derivs' m@
 --
 -- @'Prims'  ('BaseControlToFinalC' b m) = 'BaseControl' b ': 'Prims' m@
-baseControlToFinal :: (MonadBaseControl b m, Carrier m) => BaseControlToFinalC b m a -> m a
+baseControlToFinal :: (MonadBaseControl b m, Carrier m)
+                   => BaseControlToFinalC b m a -> m a
 baseControlToFinal = interpretPrimViaHandler
 {-# INLINE baseControlToFinal #-}
 

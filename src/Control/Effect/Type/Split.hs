@@ -18,6 +18,14 @@ import qualified Control.Monad.Trans.Writer.CPS    as CPSWr
 -- non-trivial monad transformer, then you need to make a
 -- a @'ThreadsEff'@ instance for that monad transformer
 -- to lift 'Split' (if possible).
+--
+-- The following threading constraints accept 'Split':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
 data Split m a where
   Split :: (Maybe (a, m a) -> b) -> m a -> Split m b
 

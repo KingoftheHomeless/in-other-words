@@ -46,6 +46,21 @@ import Control.Effect.Internal.Union
 -- a @'ThreadsEff' t ('ReaderPrim' i)@ instance (if possible).
 -- 'threadReaderPrimViaClass' and 'threadReaderPrimViaRegional'
 -- can help you with that.
+--
+-- The following threading constraints accept 'ReaderPrim':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
+-- * 'Control.Effect.NonDet.NonDetThreads'
+-- * 'Control.Effect.Stepped.SteppedThreads'
+-- * 'Control.Effect.Cont.ContThreads'
+-- * 'Control.Effect.Cont.ContFastThreads'
+-- * 'Control.Effect.Select.SelectThreads'
+-- * 'Control.Effect.Select.SelectFastThreads'
 data ReaderPrim i m a where
   ReaderPrimAsk   :: ReaderPrim i m i
   ReaderPrimLocal :: (i -> i) -> m a -> ReaderPrim i m a

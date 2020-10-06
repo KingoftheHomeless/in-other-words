@@ -17,6 +17,15 @@ import Control.Monad.Trans.Except (ExceptT(..))
 -- 'Control.Effect.Intercept.InterceptCont'.
 --
 -- OBS! 'ThreadsEff' instances are not allowed to assume that @p@ is a functor.
+--
+-- The following threading constraints accept 'Unravel':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.NonDet.NonDetThreads'
+-- * 'Control.Effect.Stepped.SteppedThreads'
+-- * 'Control.Effect.Cont.ContThreads'
+-- * 'Control.Effect.Select.SelectThreads'
 data Unravel p :: Effect where
   Unravel :: p a -> (m a -> a) -> m a -> Unravel p m a
 

@@ -169,7 +169,7 @@ type Reformulation r p m
   -> Algebra r z
 
 -- | An instance of 'ThreadsEff' represents the ability for a monad transformer
--- @t@ to thread an effect @e@ -- i.e. lift handlers of that effect.
+-- @t@ to thread a primitive effect @e@ -- i.e. lift handlers of that effect.
 --
 -- Instances of 'ThreadsEff' are accumulated into entire stacks of primitive
 -- effects by 'Threads'.
@@ -235,10 +235,10 @@ coerceEff :: forall n m e a
 coerceEff = coerce
 {-# INLINE coerceEff #-}
 
-coerceAlg :: forall n m e a
+coerceAlg :: forall n m e a b
            . (Coercible n m, RepresentationalEff e)
-          => (e m a -> m a)
-          -> e n a -> n a
+          => (e m a -> m b)
+          -> e n a -> n b
 coerceAlg = coerce
 {-# INLINE coerceAlg #-}
 

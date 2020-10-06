@@ -40,6 +40,15 @@ import Control.Monad.Trans.Writer.CPS as CPSWr
 -- non-trivial monad transformer @t@, then you need to make a
 -- a @'ThreadsEff' t ('BaseControl' b)@ instance (if possible).
 -- 'threadBaseControlViaClass' can help you with that.
+--
+-- The following threading constraints accept 'BaseControl':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
 newtype BaseControl b m a where
   GainBaseControl :: (  forall z
                       . (MonadBaseControl b z, Coercible z m)

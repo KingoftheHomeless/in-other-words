@@ -38,7 +38,7 @@ type Logic = Bundle '[NonDet, Cull, Cut, Split]
 --
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
--- * 'Control.Effect.Type.Unravel.Unravel' @p@ @b@
+-- * 'Control.Effect.Type.Unravel.Unravel' @p@
 -- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
@@ -155,7 +155,7 @@ runNonDet = L.runListT .# unNonDetC
 -- This is the equivalent of
 -- @'runCullCut' \@Maybe . 'Control.Effect.NonDet.cull'@
 -- or @'runLogic' \@Maybe . 'Control.Effect.NonDet.cull'@, but doesn't impose
--- any primitive effects, meaning 'runNonDet' doesn't restrict what interpreters
+-- any primitive effects, meaning 'runNonDet1' doesn't restrict what interpreters
 -- are run before it.
 --
 -- @'Derivs' ('NonDetC' m) = 'NonDet' ': 'Derivs' m@

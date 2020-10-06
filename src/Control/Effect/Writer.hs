@@ -184,7 +184,9 @@ instance Eff (Tell (Endo [s])) m
 
 -- | Run a @'Tell' s@ by gathering the 'tell's into a list.
 --
--- The resulting list is produced lazily.
+-- This is a variant of 'runTellList' that produces the
+-- final list lazily. __Use this only if you need__
+-- __the laziness, as this would otherwise incur an unneccesary space leak.__
 runTellListLazy :: forall s m a p
                  . ( Carrier m
                    , Threaders '[WriterLazyThreads] m p
@@ -287,7 +289,7 @@ runWriter (WriterC m) = do
 --
 -- @'Prims'  ('TellLazyC' s m) = 'Prims' m@
 --
--- This is a variant of 'runTell'. that produces the final accumulation
+-- This is a variant of 'runTell' that produces the final accumulation
 -- lazily. __Use this only if you need__
 -- __the laziness, as this would otherwise incur an unneccesary space leak.__
 runTellLazy :: forall s m a p
@@ -706,7 +708,7 @@ writerToBracket m = do
 --
 -- @'Derivs' ('WriterToBracketC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterToBracketC' s m) = 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('WriterToBracketC' s m) = 'Control.Effect.Type.ReaderPrim.ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 writerToBracketTVar :: forall s m a p
@@ -929,9 +931,9 @@ runTellTVarSimple tvar = interpretSimple $ \case
 -- | Run connected @'Listen' s@ and @'Tell' s@ effects by accumulating uses of
 -- 'tell' through using atomic operations in 'IO'.
 --
--- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
+-- @'Derivs' ('ListenTVarC' s m) = 'Listen' s ': 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenTVarC' s m) = 'ListenPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('ListenTVarC' s m) = 'ListenPrim' s ': 'Control.Effect.Type.ReaderPrim.ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 listenToIO :: forall s m a p
@@ -954,7 +956,7 @@ listenToIO m = do
 --
 -- @'Derivs' ('ListenTVarC' s m) = 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('ListenTVarC' s m) = 'ListenPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('ListenTVarC' s m) = 'ListenPrim' s ': 'Control.Effect.Type.ReaderPrim.ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runListenTVar :: forall s m a p
@@ -984,7 +986,7 @@ runListenTVar tvar =
 --
 -- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterTVarC' s m) = 'WriterPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('WriterTVarC' s m) = 'WriterPrim' s ': 'Control.Effect.Type.ReaderPrim.ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'tellToIO', this does not have a higher-rank type.
 writerToIO :: forall s m a p
@@ -1008,7 +1010,7 @@ writerToIO m = do
 --
 -- @'Derivs' ('WriterTVarC' s m) = 'Pass' s ': 'Listen' s : 'Tell' s ': 'Derivs' m@
 --
--- @'Prims'  ('WriterTVarC' s m) = 'WriterPrim' s ': 'ReaderPrim' (s -> STM ()) ': 'Prims' m@
+-- @'Prims'  ('WriterTVarC' s m) = 'WriterPrim' s ': 'Control.Effect.Type.ReaderPrim.ReaderPrim' (s -> STM ()) ': 'Prims' m@
 --
 -- Note that unlike 'runTellTVar', this does not have a higher-rank type.
 runWriterTVar :: forall s m a p

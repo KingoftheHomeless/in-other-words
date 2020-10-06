@@ -65,12 +65,13 @@ excludes actions such as
 from `MonadWriter`, and `async`/`await` style concurrency.
 
 `in-other-words` also places restrictions on what effects may be represented
--- but in comparison to the libraries mentioned above, these restrictions are
-very minor.<sup id="a1">[1](#f1)</sup> This is because `in-other-words`
-does not attempt to make every possible effect play nicely together with
-every other effect: instead, just like `mtl`, some effects can't be used
-together with other effects (depending on how they're interpreted), and
-this is enforced by constraints that interpreters may introduce.
+-- but in contrast to the libraries mentioned above, these restrictions are
+almost always negligable.<sup id="a1">[1](#f1)</sup> This is possible because
+unlike most other effect systems, `in-other-words` does not attempt to make
+every possible effect play nicely together with every other effect: instead,
+just like `mtl`, some effects can't be used together with other effects
+(depending on how they're interpreted),
+and this is enforced by constraints that interpreters may introduce.
 
 ## Required Language Extensions
 The following extensions are needed for basic usage of the library:
@@ -121,6 +122,7 @@ challenge = do
     _       -> writeTTY "Nope." >> challenge
 
 
+-- Interpret a Teletype effect in terms of IO operations
 teletypeToIO :: Eff (Embed IO) m => SimpleInterpreterFor Teletype m
 teletypeToIO = interpretSimple $ \case
   ReadTTY      -> embed getLine -- use 'embed' to lift IO actions.
@@ -193,6 +195,8 @@ data ProfileTiming m a where
 time :: Eff ProfileTiming m => String -> m a -> m a
 time label m = send (ProfileTiming label m)
 
+-- Interpret a ProfileTiming effect in terms of IO operations,
+-- 'Trace', and 'Bracket'.
 profileTimingToIO :: Effs '[Embed IO, Trace, Bracket] m
                   => SimpleInterpreterFor ProfileTiming m
 profileTimingToIO = interpretSimple $ \case

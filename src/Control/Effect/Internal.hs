@@ -149,11 +149,10 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 --
 -- This is used for /threading constraints/.
 --
--- Every interpreter that relies an underlying
+-- Every interpreter that relies on an underlying
 -- non-trivial monad transformer -- such as 'Control.Effect.State.runState',
 -- which uses 'Control.Monad.Trans.State.Strict.StateT' internally --
--- must be able to
--- lift all primitive effect handlers of the monad it's transforming
+-- must be able to lift all primitive effect handlers of the monad it's transforming
 -- so that the resulting transformed monad can also handle the primitive effects.
 --
 -- The ability of a monad transformer to lift handlers of a particular
@@ -179,15 +178,15 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 -- is necessary to propagate the threading constraints
 -- throughout the application.
 --
--- The third argument @p@ should always be a polymorphic type variable, which
--- you can simply provide and ignore.
+-- __The third argument @p@ should always be a polymorphic type variable, which__
+-- __you can simply provide and ignore.__
 -- It exists as a work-around to the fact that many threading constraints
 -- /don't actually work/ if they operate on @'Prims' m@ directly, since
 -- threading constraints often involve quantified constraints, which are fragile
 -- in combination with type families -- like 'Prims'.
 --
 -- So @'Threaders' '['Control.Effect.State.StateThreads'] m p@
--- doesn't expand to @'Control.Effect.State.StateThreads' (Prims m)@, but rather,
+-- doesn't expand to @'Control.Effect.State.StateThreads' ('Prims' m)@, but rather,
 -- @(p ~ 'Prims' m, 'Control.Effect.State.StateThreads' p)@
 type Threaders cs m p = (p ~ Prims m, SatisfiesAll p cs)
 
@@ -256,8 +255,8 @@ instance ( Carrier m
 -- reinterpreters into regular interpreters.
 --
 -- For example,
--- @'subsume' . 'Control.Effect.reinterpretSimple' h@ is morally equivalent
--- to @'Control.Effect.interpretSimple' h@
+-- @'subsume' . 'Control.Effect.reinterpretSimple' \@e h@ is morally equivalent
+-- to @'Control.Effect.interpretSimple' \@e h@
 subsume :: ( Carrier m
            , Member e (Derivs m)
            )

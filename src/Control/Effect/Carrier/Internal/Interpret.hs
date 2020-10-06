@@ -428,6 +428,11 @@ interpret h m = reify (ReifiedHandler h) $ \(_ :: p s) ->
 -- This is a significantly slower variant of 'interpret' that doesn't have
 -- a higher-ranked type, making it much easier to use partially applied.
 --
+-- Note: this emits the threading constraint 'ReaderThreads' (see 'Threaders').
+-- This makes 'interpretSimple' significantly less attractive to use
+-- in application code, as it means propagating that constraint
+-- through your application.
+--
 -- Example usage:
 --
 -- @

@@ -35,9 +35,9 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- 'Control.Effect.Optional.Optional', 'Control.Effect.BaseControl.BaseControl'
 -- and 'Control.Effect.Unlift.Unlift'.
 --
--- The typical use-case of 'Regional' is to lift a natural transformation
+-- The typical use-case of 'Optional' is to lift a natural transformation
 -- of a base monad equipped with the power to recover from an exception.
--- 'Control.Effect.Optional.HoistOption' and accompaning interpreters is
+-- 'Control.Effect.Optional.HoistOption' and accompanying interpreters is
 -- provided as a specialization of 'Optional' for this purpose.
 --
 -- 'Optional' in its most general form lacks a pre-defined interpreter:
@@ -50,6 +50,19 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- a @Functor s => 'ThreadsEff' t ('Optional' s)@ instance (if possible).
 -- 'Control.Effect.Optional.threadOptionalViaBaseControl'
 -- can help you with that.
+--
+-- The following threading constraints accept 'Optional':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
+-- * 'Control.Effect.NonDet.NonDetThreads'
+-- * 'Control.Effect.Stepped.SteppedThreads'
+-- * 'Control.Effect.Cont.ContThreads'
+-- * 'Control.Effect.Select.SelectThreads'
 data Optional s m a where
   Optionally :: s a -> m a -> Optional s m a
 

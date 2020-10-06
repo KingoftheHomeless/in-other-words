@@ -33,6 +33,15 @@ import Control.Effect.Internal.Union
 -- non-trivial monad transformer @t@, then you need to make a
 -- a @'ThreadsEff' t 'Fix'@ instance (if possible).
 -- 'threadFixViaClass' can help you with that.
+--
+-- The following threading constraints accept 'Fix':
+--
+-- * 'Control.Effect.ReaderThreads'
+-- * 'Control.Effect.State.StateThreads'
+-- * 'Control.Effect.State.StateLazyThreads'
+-- * 'Control.Effect.Error.ErrorThreads'
+-- * 'Control.Effect.Writer.WriterThreads'
+-- * 'Control.Effect.Writer.WriterLazyThreads'
 newtype Fix m a where
   Fix :: (a -> m a) -> Fix m a
 
