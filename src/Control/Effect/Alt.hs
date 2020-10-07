@@ -140,12 +140,20 @@ runAltMaybe =
 -- instance (since 'InterpretAltReifiedC' has an 'Alternative' instance based
 -- on the 'Alt' effect this interprets).
 --
--- This has a higher-rank type, as it makes use of 'InterpretAltReifiedC'.
+-- For example:
+--
+-- @
+-- 'altToError' ('throw' exc) 'empty' = 'throw' exc
+-- @
+--
+-- 'altToError' has a higher-rank type, as it makes use of 'InterpretAltReifiedC'.
 -- __This makes 'altToError' very difficult to use partially applied.__
 -- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'altToErrorSimple',
--- which doesn't have a higher-rank type.
+-- which doesn't have a higher-rank type. __However__, you typically don't
+-- want to use 'altToErrorSimple' in application code, since 'altToErrorSimple'
+-- emits a 'ReaderThreads' threading constraint (see 'Threaders').
 altToError :: forall e m a
             . Eff (Error e) m
            => e
@@ -176,6 +184,12 @@ type AltToNonDetC = InterpretAltC AltToNonDetH
 -- You can use this in application code to locally get access to an 'Alternative'
 -- instance (since 'AltToNonDetC' has an 'Alternative' instance based
 -- on the 'Alt' effect this interprets).
+--
+-- For example:
+--
+-- @
+-- 'altToNonDet' 'empty' = 'lose'
+-- @
 altToNonDet :: Eff NonDet m
             => AltToNonDetC m a
             -> m a
@@ -186,12 +200,12 @@ altToNonDet = interpretViaHandler .# unInterpretAltC
 -- | Transform an 'Alt' in terms of 'throw' and 'catch', by providing an
 -- exception to act as 'empty'.
 --
--- You can use this in application code to locally get access to an 'Alternative'
--- instance (since 'InterpretAltSimpleC' has an 'Alternative' instance based
--- on the 'Alt' effect this interprets).
---
 -- This is a less performant version of 'altToError' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.
+--
+-- Unlike 'altToError', __you typically don't want to use this in__
+-- __application code__, since this emits a 'ReaderThreads'
+-- threading constraint (see 'Threaders').
 altToErrorSimple :: forall e m a p
                   . ( Eff (Error e) m
                     , Threaders '[ReaderThreads] m p

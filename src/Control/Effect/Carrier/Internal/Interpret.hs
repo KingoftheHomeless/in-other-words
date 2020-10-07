@@ -656,7 +656,7 @@ type ReinterpretReifiedC e new m a =
 -- paranthesis or '$'.
 --
 -- Consider using 'reinterpretSimple' instead if performance is secondary.
-reinterpret :: forall new e m a
+reinterpret :: forall e new m a
              . ( RepresentationalEff e
                , KnownList new
                , HeadEffs new m
@@ -679,7 +679,7 @@ reinterpret h main = interpret h $ introUnder (unReinterpretC main)
 -- Unlike 'reinterpret', this does not have a higher-rank type,
 -- making it easier to use partially applied, and unlike
 -- 'reinterpretSimple' doesn't sacrifice performance.
-reinterpretViaHandler :: forall h new e m a
+reinterpretViaHandler :: forall h e new m a
                        . ( Handler h e m
                          , KnownList new
                          , HeadEffs new m
@@ -717,7 +717,7 @@ deriving via IntroUnderC e new (InterpretSimpleC e m)
 --
 -- This is a significantly slower variant of 'reinterpret' that doesn't have
 -- a higher-ranked type, making it much easier to use partially applied.
-reinterpretSimple :: forall new e m a p
+reinterpretSimple :: forall e new m a p
                    . ( RepresentationalEff e
                      , KnownList new
                      , HeadEffs new m

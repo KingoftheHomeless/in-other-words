@@ -8,6 +8,14 @@ module Control.Effect.Type.Alt where
 -- is based on this effect; by having access to 'Alt', you're able to use
 -- 'Control.Applicative.<|>' and 'Control.Applicative.empty' inside of effect
 -- handlers.
+--
+-- Outside of that, 'Alt' itself is fairly useless -- however, its
+-- interpreters are still very useful.
+-- Each 'Alt' interpreter's associated carrier
+-- has an 'Control.Applicative.Alternative' instance based on
+-- how it interprets 'Alt'. This means you can use
+-- an 'Alt' interpreter to locally gain access to an 'Alternative'
+-- instance inside of application code.
 data Alt m a where
   Empty :: Alt m a
   Alt   :: m a -> m a -> Alt m a

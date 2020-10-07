@@ -19,6 +19,7 @@ module Control.Effect.Carrier
   , addDeriv
   , addPrim
   , weakenReform
+  , weakenReformUnder1
   , weakenReformUnder
   , weakenReformUnderMany
   , coerceReform

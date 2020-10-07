@@ -89,7 +89,7 @@ type IntroConsistent top new m
 -- stack -- or rather, reveal those effects which were previously hidden.
 --
 -- @'Derivs' ('IntroC' top new m) = Append top ('Control.Effect.Carrier.StripPrefix' (Append top new) ('Derivs' m))@
-introUnderMany :: forall new top m a
+introUnderMany :: forall top new m a
                 . ( KnownList top
                   , KnownList new
                   , IntroConsistent top new m

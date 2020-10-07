@@ -100,7 +100,7 @@ weakenReformMid sl sm reform = \n alg u -> reform n alg (weakenMid @right sl sm 
 
 
 -- | Weaken a 'Reformulation' by removing a number of derived effects under
--- the the topmost effect.
+-- the topmost effect.
 --
 -- This needs a type application to specify what effects to remove.
 weakenReformUnder :: forall new e r p m z a
@@ -110,15 +110,31 @@ weakenReformUnder :: forall new e r p m z a
 weakenReformUnder = weakenReformMid @r (singList @'[e]) (singList @new)
 {-# INLINE weakenReformUnder #-}
 
+-- | Weaken a 'Reformulation' by removing a derived effect under
+-- the topmost effect.
+weakenReformUnder1 :: forall e' e r p m z a
+                    . Reformulation' (e ': e' ': r) p m z a
+                   -> Reformulation' (e ': r) p m z a
+weakenReformUnder1 = weakenReformMid @r (singList @'[e]) (singList @'[e'])
+{-# INLINE weakenReformUnder1 #-}
+
 -- | Weaken a 'Reformulation' by removing a number of derived effects under
 -- a number of topmost effects.
 --
--- This needs a type application to specify what effects to remove,
--- and another type application to specify the top effects of the stack
--- underneath which effects are removed.
-weakenReformUnderMany :: forall new top r p m z a
-                       . ( KnownList new
-                         , KnownList top
+-- This needs a type application to specify the top effects of the stack
+-- underneath which effects are removed, and another
+-- type application to specify what effects to remove.
+--
+-- For example:
+--
+-- @
+-- weakenReformUnderMany \@'['Control.Effect.Error.Catch' e] \@'['Control.Effect.Optional.Optional' ((->) e)]
+--   :: Reformulation ('Control.Effect.Error.Catch' e ': 'Control.Effect.Optional.Optional' ((->) e) ': r) p m
+--   -> Reformulation ('Control.Effect.Error.Catch' e ': r) p m
+-- @
+weakenReformUnderMany :: forall top new r p m z a
+                       . ( KnownList top
+                         , KnownList new
                          )
                       => Reformulation' (Append top (Append new r)) p m z a
                       -> Reformulation' (Append top r) p m z a

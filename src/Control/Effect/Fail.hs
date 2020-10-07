@@ -81,12 +81,21 @@ deriving via Effly (InterpretFailC h m)
 -- instance (since 'InterpretFailReifiedC' has a 'MonadFail' instance based
 -- on the 'Fail' effect this interprets).
 --
+-- For example:
+--
+-- @
+--   'failToThrow' (\_ -> 'throw' exc) (do { Just a <- pure Nothing; return a})
+-- = 'throw' exc
+-- @
+--
 -- This has a higher-rank type, as it makes use of 'InterpretFailReifiedC'.
 -- __This makes 'failToThrow' very difficult to use partially applied.__
 -- __In particular, it can't be composed using @'.'@.__
 --
 -- If performance is secondary, consider using the slower 'failToThrowSimple',
--- which doesn't have a higher-rank type.
+-- which doesn't have a higher-rank type. __However__, you typically don't
+-- want to use 'failToThrowSimple' in application code, since 'failToThrowSimple'
+-- emits a 'ReaderThreads' threading constraint (see 'Threaders').
 failToThrow :: Eff (Throw e) m
             => (String -> e)
             -> InterpretFailReifiedC m a
@@ -132,6 +141,13 @@ failToAlt = interpretViaHandler .# unInterpretFailC
 -- You can use this in application code to locally get access to a 'MonadFail'
 -- instance (since 'FailToNonDetC' has a 'MonadFail' instance based
 -- on the 'Fail' effect this interprets).
+--
+-- For example:
+--
+-- @
+--   'failToNonDet' (do { Just a <- pure Nothing; return a})
+-- = 'lose'
+-- @
 failToNonDet :: Eff NonDet m
              => FailToNonDetC m a
              -> m a
@@ -191,12 +207,12 @@ instance (Monad m, Carrier (InterpretSimpleC Fail m))
 -- | Transform a 'Fail' effect to a 'Throw' effect by providing a function
 -- to transform a pattern match failure into an exception.
 --
--- You can use this in application code to locally get access to a 'MonadFail'
--- instance (since 'InterpretFailSimpleC' has a 'MonadFail' instance based
--- on the 'Fail' effect this interprets).
---
 -- This is a less performant version of 'failToThrow' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.
+--
+-- Unlike 'failToThrow', __you typically don't want to use this in__
+-- __application code__, since this emits a 'ReaderThreads'
+-- threading constraint (see 'Threaders').
 failToThrowSimple :: forall e m a p
                    . ( Eff (Throw e) m
                      , Threaders '[ReaderThreads] m p
