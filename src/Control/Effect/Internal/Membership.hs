@@ -42,7 +42,7 @@ instance {-# OVERLAPPING #-} Member e (e ': r) where
 
 instance Member e r => Member e (_e ': r) where
   membership = There membership
-  {-# INLINE membership #-}
+  {-# INLINEABLE membership #-}
 
 instance TypeError (     'Text "Unhandled effect: " ':<>: 'ShowType e
                    ':$$: 'Text "You need to either add or replace an \

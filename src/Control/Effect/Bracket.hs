@@ -94,7 +94,7 @@ instance (Carrier m, MonadMask m)
       => PrimHandler BracketToIOH Bracket m where
   effPrimHandler (GeneralBracket acquire release use) =
     C.generalBracket acquire release use
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type BracketToIOC = InterpretPrimC BracketToIOH Bracket
 
@@ -120,7 +120,7 @@ instance Carrier m => PrimHandler BracketLocallyH Bracket m where
     b <- use a
     c <- release a (ExitCaseSuccess b)
     return (b, c)
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type BracketLocallyC = InterpretPrimC BracketLocallyH Bracket
 
@@ -156,7 +156,7 @@ instance Carrier m => Handler IgnoreBracketH Bracket m where
     b <- use a
     c <- release a (ExitCaseSuccess b)
     return (b, c)
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 -- | Run a 'Bracket' effect by ignoring it, providing no protection at all.
 --

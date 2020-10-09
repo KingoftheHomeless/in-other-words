@@ -113,13 +113,13 @@ type FailToAltC = InterpretFailC FailToAltH
 
 instance Eff Alt m => Handler FailToAltH Fail m where
   effHandler _ = runEffly empty
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 data FailToNonDetH
 
 instance Eff NonDet m => Handler FailToNonDetH Fail m where
   effHandler _ = lose
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type FailToNonDetC = InterpretFailC FailToNonDetH
 
@@ -164,7 +164,7 @@ type FailC = CompositionC
 instance Eff (Throw String) m
       => Handler FailH Fail m where
   effHandler = throw @String .# coerce
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 -- | Run a 'Fail' effect purely, by returning @Left failureMessage@
 -- upon a pattern match failure.

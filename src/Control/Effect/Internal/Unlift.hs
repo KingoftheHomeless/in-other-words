@@ -16,7 +16,7 @@ data UnliftH
 instance Carrier m
       => PrimHandler UnliftH (Unlift m) m where
   effPrimHandler (Unlift main) = main id
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 newtype UnliftC m a = UnliftC {
     unUnliftC :: m a

@@ -9,8 +9,6 @@ module Control.Effect.Type.Alt where
 -- 'Control.Applicative.<|>' and 'Control.Applicative.empty' inside of effect
 -- handlers.
 --
--- Outside of that, 'Alt' itself is fairly useless -- however, its
--- interpreters are still very useful.
 -- Each 'Alt' interpreter's associated carrier
 -- has an 'Control.Applicative.Alternative' instance based on
 -- how it interprets 'Alt'. This means you can use

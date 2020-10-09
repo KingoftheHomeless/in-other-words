@@ -55,7 +55,7 @@ instance ( MonadBaseControlPure b m
          )
       => PrimHandler UnliftToFinalH (Unlift b) m where
   effPrimHandler (Unlift main) = unliftBase main
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type UnliftToFinalC b = InterpretPrimC UnliftToFinalH (Unlift b)
 

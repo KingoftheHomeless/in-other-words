@@ -23,7 +23,7 @@ data HoistH
 
 instance Carrier m => PrimHandler HoistH (Hoist m) m where
   effPrimHandler (Regionally (HoistCall b) m) = b m
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 data HoistToFinalH
 
@@ -45,4 +45,4 @@ instance ( Carrier m
          )
       => PrimHandler HoistToFinalH (Hoist b) m where
   effPrimHandler (Regionally (HoistCall b) m) = control $ \lower -> b (lower m)
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}

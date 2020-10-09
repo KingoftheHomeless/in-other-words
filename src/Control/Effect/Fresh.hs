@@ -57,7 +57,7 @@ data FreshToIOH
 instance Eff (Embed IO) m
       => Handler FreshToIOH (Fresh Unique) m where
   effHandler Fresh = embed newUnique
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type FreshToIOC = InterpretC FreshToIOH (Fresh Unique)
 
@@ -114,7 +114,7 @@ data FreshEnumH
 instance (Enum uniq, Eff (State uniq) m)
       => Handler FreshEnumH (Fresh uniq) m where
   effHandler Fresh = state' (\s -> (succ s, s))
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type FreshEnumC uniq = CompositionC
  '[ ReinterpretC FreshEnumH (Fresh uniq) '[State uniq]

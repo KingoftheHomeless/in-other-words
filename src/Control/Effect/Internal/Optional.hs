@@ -25,7 +25,7 @@ data HoistOptionH
 
 instance Carrier m => PrimHandler HoistOptionH (HoistOption m) m where
   effPrimHandler (Optionally (HoistOptionCall b) m) = b id m
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 newtype HoistOptionC m a = HoistOptionC {
     unHoistOptionC :: m a

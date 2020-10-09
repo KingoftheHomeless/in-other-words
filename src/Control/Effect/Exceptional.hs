@@ -245,7 +245,7 @@ instance ( Member eff (Derivs m)
     Union Here eff             -> algDerivs (Union membership eff)
     Union (There Here) eff     -> algDerivs (Union membership eff)
     Union (There (There pr)) _ -> absurdMember pr
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type ExceptionalC eff exc = InterpretC ExceptionalH (Exceptional eff exc)
 

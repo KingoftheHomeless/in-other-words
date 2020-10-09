@@ -85,7 +85,7 @@ instance ( FirstOrder e
     interceptB
       (\c e -> h e >>= c)
       m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance ( FirstOrder e
          , Member e (Derivs m)
@@ -107,7 +107,7 @@ instance ( FirstOrder e
                   (fmap (const . pure) main)
                )
       >>= \f -> f True
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance ( FirstOrder e
          , Carrier m
@@ -122,7 +122,7 @@ instance ( FirstOrder e
         (\mx c -> cataM $ fmap c $ lift mx)
         (\(FOEff e) c -> cataEff c e)
         id
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 
 -- | Run @'Intercept' e@, @'InterceptCont' e@ and @e@ effects, provided
@@ -226,7 +226,7 @@ data ListenSteppedH
 instance Eff (ListenPrim w) m
       => Handler ListenSteppedH (Listen w) m where
   effHandler (Listen m) = send $ ListenPrimListen m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance (Monoid w, Carrier m, Threaders '[SteppedThreads] m p)
       => PrimHandler ListenSteppedH (ListenPrim w) (SteppedC (Tell w) m) where
@@ -238,7 +238,7 @@ instance (Monoid w, Carrier m, Threaders '[SteppedThreads] m p)
         (\e@(FOEff (Tell o)) c' s -> handler e $ \a -> c' a $! s <> o)
         (\a s -> c (s, a))
         mempty
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type ListenSteppedC w = CompositionC
  '[ ReinterpretC ListenSteppedH (Listen w) '[ListenPrim w]

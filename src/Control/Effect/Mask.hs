@@ -56,7 +56,7 @@ instance ( Carrier m
       => PrimHandler MaskToIOH Mask m where
   effPrimHandler (Mask InterruptibleMask main)   = C.mask main
   effPrimHandler (Mask UninterruptibleMask main) = C.uninterruptibleMask main
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type MaskToIOC = InterpretPrimC MaskToIOH Mask
 
@@ -79,7 +79,7 @@ data IgnoreMaskH
 instance Carrier m
       => Handler IgnoreMaskH Mask m where
   effHandler (Mask _ main) = main id
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type IgnoreMaskC = InterpretC IgnoreMaskH Mask
 

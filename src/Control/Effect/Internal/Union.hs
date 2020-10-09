@@ -114,7 +114,7 @@ powerAlg' :: forall e r m a
           -> Algebra' (e ': r) m a
 powerAlg' _ h (Union Here e) = h e
 powerAlg' alg _ (Union (There pr) e) = alg (Union pr e)
-{-# INLINE powerAlg' #-}
+{-# INLINEABLE powerAlg' #-}
 
 
 -- | Add a primitive effect and corresponding derived effect to a 'Reformulation'.
@@ -210,7 +210,7 @@ instance Threads t '[] where
 
 instance (ThreadsEff t e, Threads t p) => Threads t (e ': p) where
   thread alg = powerAlg (thread (weakenAlg alg)) (threadEff (alg . Union Here))
-  {-# INLINE thread #-}
+  {-# INLINEABLE thread #-}
 
 -- | Inject an effect into a 'Union' containing that effect.
 inj :: Member e r => e m a -> Union r m a

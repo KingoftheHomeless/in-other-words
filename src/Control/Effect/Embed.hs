@@ -80,11 +80,11 @@ instance ( MonadBase b m
          )
       => Handler EmbedToMonadBaseH (Embed b) m where
   effHandler = liftBase . liftBase .# unEmbed
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance (MonadIO m, Carrier m) => Handler EmbedToMonadIOH (Embed IO) m where
   effHandler = liftBase . liftIO .# unEmbed
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type EmbedToMonadBaseC b = InterpretC EmbedToMonadBaseH (Embed b)
 type EmbedToMonadIOC = InterpretC EmbedToMonadIOH (Embed IO)

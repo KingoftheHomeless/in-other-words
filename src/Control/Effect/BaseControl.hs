@@ -140,7 +140,7 @@ instance ( MonadBaseControl b m
          )
       => PrimHandler BaseControlToFinalH (BaseControl b) m where
   effPrimHandler (GainBaseControl main) = return $ main (proxy# :: Proxy# m)
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 -- | Run a @'BaseControl' b@ effect, where the base @b@ is the final base monad.
 --
@@ -160,7 +160,7 @@ powerAlgBaseControl :: forall m p a
                     -> Algebra' (BaseControl m ': p) m a
 powerAlgBaseControl alg = powerAlg alg $ \case
   GainBaseControl main -> return $ main (proxy# :: Proxy# (Itself m))
-{-# INLINE powerAlgBaseControl #-}
+{-# INLINEABLE powerAlgBaseControl #-}
 
 -- | Strengthen an @'Algebra' p m@ by adding a @'BaseControl' b@ handler,
 -- where @b@ is the final base monad.
@@ -170,4 +170,4 @@ powerAlgBaseControlFinal :: forall b m p a
                          -> Algebra' (BaseControl b ': p) m a
 powerAlgBaseControlFinal alg = powerAlg alg $ \case
   GainBaseControl main -> return $ main (proxy# :: Proxy# m)
-{-# INLINE powerAlgBaseControlFinal #-}
+{-# INLINEABLE powerAlgBaseControlFinal #-}

@@ -75,7 +75,7 @@ instance ( Carrier m
   effPrimHandler (Optionally (HoistOptionCall b) m) =
     join $ liftBaseWith $ \lower ->
       b pure (restoreM <$> lower m)
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type HoistOptionToFinalC b = InterpretPrimC HoistOptionToFinalH (HoistOption b)
 

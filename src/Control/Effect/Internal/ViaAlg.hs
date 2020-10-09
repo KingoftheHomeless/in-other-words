@@ -26,6 +26,7 @@ mapViaAlgT :: forall s e t m n a b
            -> t (ViaAlg s e m) a
            -> t (ViaAlg s e n) b
 mapViaAlgT = coerce
+{-# INLINE mapViaAlgT #-}
 
 mapUnViaAlgT :: forall s e t m n a b
              . RepresentationalT t
@@ -33,3 +34,4 @@ mapUnViaAlgT :: forall s e t m n a b
              -> t m a
              -> t n b
 mapUnViaAlgT = coerce
+{-# INLINE mapUnViaAlgT #-}

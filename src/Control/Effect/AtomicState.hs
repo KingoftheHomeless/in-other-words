@@ -240,7 +240,7 @@ instance Eff (State s) m
   effHandler = \case
     AtomicState f -> state f
     AtomicGet     -> get
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 -- | Transform an 'AtomicState' effect into a 'State' effect, discarding atomicity.
 atomicStateToState :: Eff (State s) m

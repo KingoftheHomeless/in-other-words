@@ -101,7 +101,7 @@ instance Eff (Error ()) m
   effHandler = \case
     Empty     -> throw ()
     Alt ma mb -> ma `catch` \() -> mb
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type AltMaybeC = CompositionC
  '[ IntroUnderC Alt '[Catch (), Throw ()]
@@ -173,7 +173,7 @@ instance Eff NonDet m => Handler AltToNonDetH Alt m where
   effHandler = \case
     Empty     -> lose
     Alt ma mb -> choose ma mb
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 
 type AltToNonDetC = InterpretAltC AltToNonDetH

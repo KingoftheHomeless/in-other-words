@@ -63,7 +63,7 @@ instance ( C.MonadThrow m
             Nothing -> liftBase $ C.throwM x
         )
         (fmap pure m)
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance ( C.MonadCatch m
          , Carrier m
@@ -71,7 +71,7 @@ instance ( C.MonadCatch m
       => PrimHandler ErrorIOFinalH (Optional ((->) SomeException)) m where
   effPrimHandler = \case
     Optionally h m -> m `C.catch` (return . h)
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 
 instance ( Eff (Error SomeException) m
@@ -83,7 +83,7 @@ instance ( Eff (Error SomeException) m
     CatchIO m h -> send $ Catch m $ \e -> case X.fromException e of
       Just e' -> h e'
       _       -> send $ Throw e
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 
 type ErrorIOToIOC = CompositionC

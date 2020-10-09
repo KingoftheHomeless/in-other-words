@@ -85,7 +85,7 @@ data TracePrintingH
 instance Eff (Embed IO) m
       => Handler TracePrintingH Trace m where
   effHandler (Trace str) = embed $ hPutStrLn stderr str
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type TracePrintingC = InterpretC TracePrintingH Trace
 
@@ -175,7 +175,7 @@ data IgnoreTraceH
 instance Carrier m
       => Handler IgnoreTraceH Trace m where
   effHandler (Trace _) = pure ()
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type IgnoreTraceC = InterpretC IgnoreTraceH Trace
 
@@ -191,7 +191,7 @@ data TraceToTellH
 instance Eff (Tell String) m
       => Handler TraceToTellH Trace m where
   effHandler (Trace str) = tell str
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 type TraceIntoTellC = ReinterpretC TraceToTellH Trace '[Tell String]
 

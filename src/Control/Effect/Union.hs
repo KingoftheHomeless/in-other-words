@@ -61,7 +61,7 @@ instance ( KnownList l
   type Prims  (UnionC l m) = Prims m
 
   algPrims = coerce (algPrims @m)
-  {-# INLINE algPrims #-}
+  {-# INLINEABLE algPrims #-}
 
   reformulate (n :: forall x. UnionC l m x -> z x) alg =
     let
@@ -70,7 +70,7 @@ instance ( KnownList l
     in
       powerAlg (weakenAlgN (singList @l) algDerivs') $ \(Union pr e) ->
         algDerivs' (Union (lengthenMembership @(StripPrefix l (Derivs m)) pr) e)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs =
     let
@@ -79,7 +79,7 @@ instance ( KnownList l
     in
       powerAlg (weakenAlgN (singList @l) algD') $ \(Union pr e) ->
         algD' (Union (lengthenMembership @(StripPrefix l (Derivs m)) pr) e)
-  {-# INLINE algDerivs #-}
+  {-# INLINEABLE algDerivs #-}
 
 -- | Run an @'Union' b@ effect by placing the effects of @b@ on top of the
 -- effect stack.

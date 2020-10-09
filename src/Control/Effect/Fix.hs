@@ -24,7 +24,7 @@ data FixToFinalH
 instance (Carrier m, MonadFix m)
       => PrimHandler FixToFinalH Fix m where
   effPrimHandler (Fix f) = mfix f
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 type FixToFinalC = InterpretPrimC FixToFinalH Fix
 
@@ -40,4 +40,4 @@ fixToFinal :: ( Carrier m
            => FixToFinalC m a
            -> m a
 fixToFinal = interpretPrimViaHandler
-{-# INLINE fixToFinal #-}
+{-# INLINEABLE fixToFinal #-}

@@ -151,7 +151,7 @@ type TellListC s = CompositionC
 instance Eff (Tell (Dual [s])) m
       => Handler TellListH (Tell s) m where
   effHandler (Tell s) = tell (Dual [s])
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 -- | Run a @'Tell' s@ by gathering the 'tell's into a list.
 --
@@ -180,7 +180,7 @@ type TellListLazyC s = CompositionC
 instance Eff (Tell (Endo [s])) m
       => Handler TellListLazyH (Tell s) m where
   effHandler (Tell s) = tell (Endo (s:))
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 -- | Run a @'Tell' s@ by gathering the 'tell's into a list.
 --
@@ -359,13 +359,13 @@ data WriterToEndoWriterH
 instance (Monoid s, Eff (Tell (Endo s)) m)
       => Handler WriterToEndoWriterH (Tell s) m where
   effHandler (Tell s) = tell (Endo (s <>))
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance (Monoid s, Eff (Listen (Endo s)) m)
       => Handler WriterToEndoWriterH (Listen s) m where
   effHandler (Listen m) =
     (fmap . first) (\(Endo f) -> f mempty) $ listen m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance (Monoid s, Eff (Pass (Endo s)) m)
       => Handler WriterToEndoWriterH (Pass s) m where
@@ -374,7 +374,7 @@ instance (Monoid s, Eff (Pass (Endo s)) m)
       (fmap . first)
         (\f (Endo ss) -> let !s' = f (ss mempty) in Endo (s' <>))
         m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 fromEndoWriter :: (Monoid s, Functor f)
                => f (Endo s, a)
@@ -612,7 +612,6 @@ listenTVar main = do
        (embed $ atomically $ writeTVar switch False)
   s <- embed $ readTVarIO localVar
   return (s, a)
-{-# INLINE listenTVar #-}
 
 passTVar :: forall s m a
           . ( Monoid s
@@ -651,7 +650,6 @@ passTVar main = do
       )
       (\_ -> local (\_ -> writeLocal) main)
   return a
-{-# INLINE passTVar #-}
 
 data WriterToBracketH
 
@@ -668,14 +666,14 @@ instance ( Monoid s
          )
       => Handler WriterToBracketH (Listen s) m where
   effHandler (Listen m) = listenTVar m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance ( Monoid s
          , Effs '[Reader (s -> STM ()), Embed IO, Bracket] m
          )
       => Handler WriterToBracketH (Pass s) m where
   effHandler (Pass m) = passTVar m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 -- | Run connected @'Pass' s@, @'Listen' s@ and @'Tell' s@ effects
 -- -- i.e. @'Writer' s@ -- by accumulating uses of 'tell' through using atomic
@@ -765,24 +763,24 @@ instance ( Monoid s
          )
       => Handler WriterTVarH (Tell s) m where
   effHandler (Tell o) = tellTVar o
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance Eff (ListenPrim s) m
       => Handler WriterTVarH (Listen s) m where
   effHandler (Listen m) = send $ ListenPrimListen m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance Eff (WriterPrim s) m
       => Handler WriterTVarH (Pass s) m where
   effHandler (Pass m) = send $ WriterPrimPass m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance Eff (WriterPrim s) m
       => Handler WriterTVarH (ListenPrim s) m where
   effHandler = \case
     ListenPrimTell o   -> send $ WriterPrimTell o
     ListenPrimListen m -> send $ WriterPrimListen m
-  {-# INLINE effHandler #-}
+  {-# INLINEABLE effHandler #-}
 
 instance ( Monoid s
          , Effs '[Reader (s -> STM ()), Embed IO] m
@@ -792,7 +790,7 @@ instance ( Monoid s
   effPrimHandler = \case
     ListenPrimTell o -> tellTVar o
     ListenPrimListen m -> bracketToIO (listenTVar (lift m))
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 instance ( Monoid s
          , Effs '[Reader (s -> STM ()), Embed IO] m
@@ -803,7 +801,7 @@ instance ( Monoid s
     WriterPrimTell o   -> tellTVar o
     WriterPrimListen m -> bracketToIO (listenTVar (lift m))
     WriterPrimPass m   -> bracketToIO (passTVar (lift m))
-  {-# INLINE effPrimHandler #-}
+  {-# INLINEABLE effPrimHandler #-}
 
 -- | Run a @'Tell' s@ effect where @s@ is a 'Monoid' by accumulating uses of
 -- 'tell' through atomic operations in 'IO'.
