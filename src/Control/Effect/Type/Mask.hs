@@ -31,11 +31,11 @@ data MaskMode
 --
 -- __'Mask' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer @t@, then you need to make a
+-- non-trivial monad transformer @t@, then you need to make
 -- a @'ThreadsEff' t 'Mask'@ instance (if possible).
 -- 'threadMaskViaClass' can help you with that.
 --
--- The following threading constraints accept 'Bracket':
+-- The following threading constraints accept 'Mask':
 --
 -- * 'Control.Effect.ReaderThreads'
 -- * 'Control.Effect.State.StateThreads'

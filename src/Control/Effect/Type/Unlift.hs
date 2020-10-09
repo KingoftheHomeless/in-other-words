@@ -78,11 +78,11 @@ unliftT main = liftWith $ \lower ->
 --
 -- __'Unlift' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
--- a @'ThreadsEff'@ instance for that monad transformer to lift
--- @'Unlift' b@ (if possible). 'threadUnliftViaClass' can help you with that.
+-- non-trivial monad transformer @t@, then you need to make
+-- a @'ThreadsEff' t ('Unlift' b)@ instance (if possible).
+-- 'threadUnliftViaClass' can help you with that.
 --
--- The following threading constraints accept 'Split':
+-- The following threading constraints accept 'Unlift':
 --
 -- * 'Control.Effect.ReaderThreads'
 data Unlift b m a where

@@ -139,7 +139,7 @@ instance ( FirstOrder e
 -- 'StateThreads' nor 'WriterThreads' accepts it.
 -- Because of that, this module offers various alternatives
 -- of several common 'State' and 'Tell' interpreters with threading
--- constraints that do accept 'Unravel''
+-- constraints that do accept 'Unravel'.
 --
 -- @'Derivs' ('InterceptContC' e m) = 'InterceptCont' e ': 'Intercept' e ': e ': Derivs m@
 --
@@ -331,14 +331,14 @@ instance ( FirstOrder e
 -- instead of 'Unravel'.
 -- * It is significantly faster.
 --
--- There are some interpreters -- such as 'bracketToIO' and 'concToIO' --
+-- There are some interpreters -- such as 'Control.Effect.Bracket.bracketToIO' and 'Control.Effect.Conc.concToIO' --
 -- that 'runInterceptCont' can't be used together with in any capacity
 -- due to its 'SteppedThreads' threading constraint. In
 -- these cases, 'runInterceptR' can be used instead.
 --
--- @'Derivs' ('InterceptRC' e m) = 'Intercept' e ': e ': 'Derivs m'
+-- @'Derivs' ('InterceptRC' e m) = 'Intercept' e ': e ': 'Derivs m'@
 --
--- @'Prims'  ('InterceptRC' e m) = 'Unlift' (ReaderT (ReifiedFOHandler e m)) ': 'Derivs m'
+-- @'Prims'  ('InterceptRC' e m) = 'Unlift' (ReaderT (ReifiedFOHandler e m)) ': 'Derivs m'@
 runInterceptR :: forall e m a p
                . ( FirstOrder e
                  , Member e (Derivs m)

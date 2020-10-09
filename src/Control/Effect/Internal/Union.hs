@@ -192,7 +192,7 @@ class RepresentationalEff e => ThreadsEff t e where
 -- simply a newtype over an existsing monad transformer @u@ that already has
 -- 'ThreadsEff' instances defined for it. Instead, you should place a
 -- @'Threads' u p@ constraint, and use its 'thread' by coercing the resulting
--- algebra from @'Algrebra' p (t m)@ to @'Algebra' p (u m)@'.
+-- algebra from @'Algebra' p (u m)@ to @'Algebra' p (t m)@'.
 -- That way, you avoid having to define redundant 'ThreadsEff' instances for
 -- every newtype of a monad transformer.
 --

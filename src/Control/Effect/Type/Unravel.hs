@@ -16,7 +16,12 @@ import Control.Monad.Trans.Except (ExceptT(..))
 -- 'Control.Effect.Intercept.Intercept' and
 -- 'Control.Effect.Intercept.InterceptCont'.
 --
--- OBS! 'ThreadsEff' instances are not allowed to assume that @p@ is a functor.
+-- Note: 'ThreadsEff' instances are not allowed to assume that @p@ is a functor.
+--
+-- __'Unravel' is typically used as a primitive effect.__
+-- If you define a 'Control.Effect.Carrier' that relies on a novel
+-- non-trivial monad transformer @t@, then you need to make
+-- a @'ThreadsEff' t ('Unravel' p)@ instance (if possible).
 --
 -- The following threading constraints accept 'Unravel':
 --

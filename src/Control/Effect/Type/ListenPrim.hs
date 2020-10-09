@@ -33,7 +33,7 @@ import Control.Effect.Internal.Union
 --
 -- __'ListenPrim' is only used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer @t@, then you need to make a
+-- non-trivial monad transformer @t@, then you need to make
 -- a @'Monoid' w => 'ThreadsEff' t ('ListenPrim' w)@ instance (if possible).
 -- 'threadListenPrim' and 'threadListenPrimViaClass' can help you with that.
 --
@@ -79,7 +79,7 @@ instance ( Reifies s (ReifiedEffAlgebra (ListenPrim w) m)
   tell w = case reflect @s of
     ReifiedEffAlgebra alg -> coerceAlg alg (ListenPrimTell w)
 
-  pass = error "threadListenViaClass: Transformers threading ListenPrim \
+  pass = error "threadListenPrimViaClass: Transformers threading ListenPrim \
                  \are not allowed to use pass."
 
   listen m = case reflect @s of
@@ -87,10 +87,10 @@ instance ( Reifies s (ReifiedEffAlgebra (ListenPrim w) m)
       fmap (\(s, a) -> (a, s)) $ coerceAlg alg (ListenPrimListen m)
   {-# INLINE listen #-}
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ListenPrim' w)@ instance,
--- given that @t@ lifts @'MonadWriter' w@.
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' t ('ListenPrim' w)@
+-- instance, given that @t@ lifts @'MonadWriter' w@.
 --
--- __BEWARE__: 'threadListenViaClass' is only safe if the implementation of
+-- __BEWARE__: 'threadListenPrimViaClass' is only safe if the implementation of
 -- 'listen' for @t m@ only makes use of 'listen' and 'tell' for @m@, and not
 -- 'pass'.
 threadListenPrimViaClass :: forall w t m a

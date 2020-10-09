@@ -12,7 +12,7 @@ module Control.Effect.Type.Alt where
 -- Each 'Alt' interpreter's associated carrier
 -- has an 'Control.Applicative.Alternative' instance based on
 -- how it interprets 'Alt'. This means you can use
--- an 'Alt' interpreter to locally gain access to an 'Alternative'
+-- an 'Alt' interpreter to locally gain access to an 'Control.Applicative.Alternative'
 -- instance inside of application code.
 data Alt m a where
   Empty :: Alt m a

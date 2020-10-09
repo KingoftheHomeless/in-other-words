@@ -400,13 +400,13 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
 -- echo :: 'Eff' Teletype m => m ()
 -- echo = readTTY >>= sendTTY
 --
--- teletypeToIO :: 'Eff' ('Embed' IO) m => 'SimpleInterpreterFor' Teletype m
+-- teletypeToIO :: 'Eff' ('Control.Effect.Embed' IO) m => 'Control.Effect.InterpreterFor' Teletype m
 -- teletypeToIO = 'interpret' $ \case
---   ReadTTY -> 'embed' getLine
---   WriteTTY str -> 'embed' $ putStrLn str
+--   ReadTTY -> 'Control.Effect.embed' getLine
+--   WriteTTY str -> 'Control.Effect.embed' $ putStrLn str
 --
 -- main :: IO ()
--- main = 'runM' $ teletypeToIO $ echo
+-- main = 'Control.Effect.runM' $ teletypeToIO $ echo
 -- @
 --
 interpret :: forall e m a
@@ -449,13 +449,13 @@ interpret h m = reify (ReifiedHandler h) $ \(_ :: p s) ->
 -- echo :: 'Eff' Teletype m => m ()
 -- echo = readTTY >>= sendTTY
 --
--- teletypeToIO :: 'Eff' ('Embed' IO) m => 'SimpleInterpreterFor' Teletype m
+-- teletypeToIO :: 'Eff' ('Control.Effect.Embed' IO) m => 'Control.Effect.SimpleInterpreterFor' Teletype m
 -- teletypeToIO = 'interpretSimple' $ \case
---   ReadTTY -> 'embed' getLine
---   WriteTTY str -> 'embed' $ putStrLn str
+--   ReadTTY -> 'Control.Effect.embed' getLine
+--   WriteTTY str -> 'Control.Effect.embed' $ putStrLn str
 --
 -- main :: IO ()
--- main = 'runM' $ teletypeToIO $ echo
+-- main = 'Control.Effect.runM' $ teletypeToIO $ echo
 -- @
 --
 interpretSimple
@@ -497,19 +497,19 @@ interpretSimple h m = coerce m (ReifiedHandler @e @m h)
 --
 -- data TeletypeToIOH
 --
--- instance 'Eff' ('Embed' IO) m
+-- instance 'Eff' ('Control.Effect.Embed' IO) m
 --       => 'Handler' TeletypeToIOH Teletype m where
 --   effHandler = \case
---     ReadTTY -> 'embed' getLine
---     WriteTTY str -> 'embed' $ putStrLn str
+--     ReadTTY -> 'Control.Effect.embed' getLine
+--     WriteTTY str -> 'Control.Effect.embed' $ putStrLn str
 --
--- type TeletypeToIOC = InterpretC TeletypeToIOH Teletype
+-- type TeletypeToIOC = 'InterpretC' TeletypeToIOH Teletype
 --
--- teletypeToIO :: 'Eff' ('Embed' IO) m => TeletypeToIOC m a -> m a
+-- teletypeToIO :: 'Eff' ('Control.Effect.Embed' IO) m => TeletypeToIOC m a -> m a
 -- teletypeToIO = 'interpretViaHandler'
 --
 -- main :: IO ()
--- main = 'runM' $ teletypeToIO $ echo
+-- main = 'Control.Effect.runM' $ teletypeToIO $ echo
 -- @
 --
 interpretViaHandler :: forall h e m a

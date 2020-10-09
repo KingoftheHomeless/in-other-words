@@ -42,8 +42,8 @@ import Control.Effect.Internal.Union
 --
 -- __'ReaderPrim' is only used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer @t@, then you need to make a
--- a @'ThreadsEff' t ('ReaderPrim' i)@ instance (if possible).
+-- non-trivial monad transformer @t@, then you need to make
+-- a @'Monoid' i => 'ThreadsEff' t ('ReaderPrim' i)@ instance (if possible).
 -- 'threadReaderPrimViaClass' and 'threadReaderPrimViaRegional'
 -- can help you with that.
 --

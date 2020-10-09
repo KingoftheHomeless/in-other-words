@@ -46,7 +46,7 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 --
 -- __'Optional' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer @t@, then you need to make a
+-- non-trivial monad transformer @t@, then you need to make
 -- a @Functor s => 'ThreadsEff' t ('Optional' s)@ instance (if possible).
 -- 'Control.Effect.Optional.threadOptionalViaBaseControl'
 -- can help you with that.

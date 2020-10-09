@@ -4,12 +4,12 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 48c1f4472420448e534cb09457219da5488ba1f5e8db02cd8865e10404f4703f
+-- hash: 5691f1b3edb3d6bb8b5277178284148c39ae5ec82a327591c9ed5883b3639928
 
 name:           in-other-words
 version:        0.1.0.0
 synopsis:       A higher-order effect system where the sky's the limit
-description:    A low-boilerplate effect system with easy higher-order effects and very strong expressive power
+description:    A low-boilerplate effect system with easy higher-order effects and very high expressive power
 category:       Control
 homepage:       https://github.com/KingoftheHomeless/in-other-words#readme
 author:         Love Waern
@@ -130,7 +130,7 @@ test-suite in-other-words-test
   hs-source-dirs:
       test
   default-extensions: BangPatterns ConstraintKinds DataKinds DerivingStrategies EmptyCase FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving LambdaCase PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies UndecidableInstances
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
   build-tool-depends:
       hspec-discover:hspec-discover >=2.0
   build-depends:

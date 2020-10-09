@@ -30,7 +30,7 @@ import Control.Effect.Internal.Union
 --
 -- __Fix is typically used as a primitive effect__.
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer @t@, then you need to make a
+-- non-trivial monad transformer @t@, then you need to make
 -- a @'ThreadsEff' t 'Fix'@ instance (if possible).
 -- 'threadFixViaClass' can help you with that.
 --

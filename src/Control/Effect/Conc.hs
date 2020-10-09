@@ -127,7 +127,7 @@ type ConcToUnliftIOC = UnwrapC Conc
 --
 -- @'Derivs' ('ConcToIOC' m) = 'Conc' ': 'Derivs' m@
 --
--- @'Control.Effect.Primitive.Prims' ('ConcToIOC' m) = 'Unlift' 'IO' ': 'Control.Effect.Primitive.Prims' m@
+-- @'Control.Effect.Primitive.Prims'  ('ConcToIOC' m) = 'Unlift' 'IO' ': 'Control.Effect.Primitive.Prims' m@
 --
 concToIO :: ( Carrier m
             , MonadBaseControlPure IO m

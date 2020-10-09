@@ -15,7 +15,7 @@ import qualified Control.Monad.Trans.Writer.CPS    as CPSWr
 --
 -- __'Split' is typically used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer, then you need to make a
+-- non-trivial monad transformer, then you need to make
 -- a @'ThreadsEff'@ instance for that monad transformer
 -- to lift 'Split' (if possible).
 --

@@ -39,7 +39,7 @@ import Control.Effect.Type.ListenPrim
 --
 -- __'WriterPrim' is only used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
--- non-trivial monad transformer @t@, then you need to make a
+-- non-trivial monad transformer @t@, then you need to make
 -- a @'Monoid' w => 'ThreadsEff' t ('WriterPrim' w)@ instance (if possible).
 -- 'threadWriterPrim' and 'threadWriterPrimViaClass' can help you with that.
 --
