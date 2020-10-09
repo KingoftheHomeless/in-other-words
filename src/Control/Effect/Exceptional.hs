@@ -172,14 +172,14 @@ instance Eff (Exceptional eff exc) m
 -- @
 -- -- A part of the program unknowing and uncaring that the use of SomeEffect
 -- -- may throw exceptions.
--- uncaringProgram :: Eff SomeEffect m => m String
+-- uncaringProgram :: 'Eff' SomeEffect m => m String
 -- uncaringProgram = do
 --   doSomeThing
 --   doSomeOtherThing
 --
--- caringProgram :: Eff (Exceptionally SomeEffect SomeEffectExc) m => m String
+-- caringProgram :: 'Eff' ('Exceptional' SomeEffect SomeEffectExc) m => m String
 -- caringProgram =
---   catching @eff uncaringProgram (\(exc :: SomeEffectExc) -> handleExc exc)
+--   'catching' @eff uncaringProgram (\(exc :: SomeEffectExc) -> handlerForSomeEffectExc exc)
 -- @
 --
 catching :: forall eff exc m a

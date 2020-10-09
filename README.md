@@ -52,7 +52,7 @@ boilerplate associated with the interpretation of higher-order effects
 first-order effects. Go [here](#higher-order) for an example.
 
 ### No cumbersome restrictions to effects
-Every effect-system previously mentioned has serious restrictions in what
+Every effect system previously mentioned has serious restrictions in what
 effects they may represent.
 * `freer-simple` is restricted to first-order effects.
 * `fused-effects` and `polysemy` are built around
@@ -66,7 +66,7 @@ from `MonadWriter`, and `async`/`await` style concurrency.
 
 `in-other-words` also places restrictions on what effects may be represented
 -- but in contrast to the libraries mentioned above, these restrictions are
-almost always negligable.<sup id="a1">[1](#f1)</sup> This is possible because
+almost completely negligable.<sup id="a1">[1](#f1)</sup> This is possible because
 unlike most other effect systems, `in-other-words` does not attempt to make
 every possible effect play nicely together with every other effect: instead,
 just like `mtl`, some effects can't be used together with other effects
