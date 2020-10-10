@@ -51,7 +51,6 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- * 'Control.Effect.NonDet.NonDetThreads'
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
--- * 'Control.Effect.Select.SelectThreads'
 data Regional s m a where
   Regionally :: s -> m a -> Regional s m a
 

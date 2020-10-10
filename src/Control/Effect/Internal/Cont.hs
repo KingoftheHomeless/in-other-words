@@ -16,67 +16,63 @@ import qualified Control.Monad.Trans.Cont as C
 import Control.Monad.Trans.Free.Church.Alternate
 
 -- | An effect for abortive continuations.
-data Cont m a where
+newtype Cont m a where
   CallCC :: ((forall b. a -> m b) -> m a) -> Cont m a
 
-data ContBase s a where
-  Jump    :: s -> ContBase s a
-  GetCont :: ContBase s (Either (a -> s) a)
+-- | An effect for non-abortive continuations of a program
+-- that eventually produces a result of type @r@.
+--
+-- This isn't quite as powerful as proper delimited continuations,
+-- as this doesn't provide any equivalent of the @reset@ operator.
+--
+-- This can be useful as a helper effect.
+newtype Shift r m a where
+  Shift :: ((a -> m r) -> m r) -> Shift r m a
+
+data ContBase r a where
+  Exit    :: r -> ContBase r a
+  GetCont :: ContBase r (Either (a -> r) a)
 
 
-getCont :: ContC s m (Either (a -> s) a)
-getCont = ContC $ liftF $ GetCont
-{-# INLINE getCont #-}
-
-exit :: s -> ContC s m a
-exit = ContC #. liftF . Jump
-{-# INLINE exit #-}
-
-newtype ContC s m a = ContC { unContC :: FreeT (ContBase s) m a }
+newtype ContC r m a = ContC { unContC :: FreeT (ContBase (m r)) m a }
   deriving ( Functor, Applicative, Monad
            , MonadBase b, Fail.MonadFail, MonadIO
            , MonadThrow, MonadCatch
            )
-  deriving MonadTrans
+
+instance MonadTrans (ContC s) where
+  lift = ContC #. lift
+  {-# INLINE lift #-}
 
 instance ( Carrier m
-         , Threads (FreeT (ContBase s)) (Prims m)
+         , Threads (FreeT (ContBase (m r))) (Prims m)
          )
-      => Carrier (ContC s m) where
-  type Derivs (ContC s m) = Cont ': Derivs m
-  type Prims  (ContC s m) = Prims m
+      => Carrier (ContC r m) where
+  type Derivs (ContC r m) = Cont ': Derivs m
+  type Prims  (ContC r m) = Prims m
 
-  algPrims = coerce (thread @(FreeT (ContBase s)) (algPrims @m))
+  algPrims = coerce (thread @(FreeT (ContBase (m r))) (algPrims @m))
   {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
-    CallCC main -> n getCont >>= \case
-      Left c  -> main (n . exit . c)
+    CallCC main -> n (ContC $ liftF $ GetCont) >>= \case
+      Left c  -> main (n . ContC #. liftF . Exit . c)
       Right a -> return a
   {-# INLINEABLE reformulate #-}
 
 
-newtype ContFastC s m a = ContFastC { unContFastC :: C.ContT s m a }
-  deriving (Functor, Applicative, Monad)
+newtype ContFastC (r :: *) m a = ContFastC { unContFastC :: C.ContT r m a }
+  deriving (Functor, Applicative, Monad, MonadBase b, MonadIO, Fail.MonadFail)
   deriving MonadTrans
 
--- I don't understand why these have to be standalone, when
--- SelectFastC's instances don't have to be.
-deriving instance MonadBase b m
-               => MonadBase b (ContFastC s m)
-deriving instance MonadIO m
-               => MonadIO (ContFastC s m)
-deriving instance Fail.MonadFail m
-               => Fail.MonadFail (ContFastC s m)
-
 instance ( Carrier m
-         , Threads (C.ContT s) (Prims m)
+         , Threads (C.ContT r) (Prims m)
          )
-      => Carrier (ContFastC s m) where
-  type Derivs (ContFastC s m) = Cont ': Derivs m
-  type Prims  (ContFastC s m) = Prims m
+      => Carrier (ContFastC r m) where
+  type Derivs (ContFastC r m) = Cont ': Derivs m
+  type Prims  (ContFastC r m) = Prims m
 
-  algPrims = coerce (thread @(C.ContT s) (algPrims @m))
+  algPrims = coerce (thread @(C.ContT r) (algPrims @m))
   {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
@@ -85,6 +81,55 @@ instance ( Carrier m
         Left c  -> main (\a -> n $ ContFastC $ C.ContT $ \_ -> c a)
         Right a -> return a
   {-# INLINEABLE reformulate #-}
+
+newtype ShiftC r m a = ShiftC { unShiftC :: FreeT (ContBase (m r)) m a }
+  deriving ( Functor, Applicative, Monad
+           , MonadBase b, Fail.MonadFail, MonadIO
+           , MonadThrow, MonadCatch
+           )
+
+instance MonadTrans (ShiftC s) where
+  lift = ShiftC #. lift
+  {-# INLINE lift #-}
+
+instance ( Carrier m
+         , Threads (FreeT (ContBase (m r))) (Prims m)
+         )
+      => Carrier (ShiftC r m) where
+  type Derivs (ShiftC r m) = Shift r ': Derivs m
+  type Prims  (ShiftC r m) = Prims m
+
+  algPrims = coerce (thread @(FreeT (ContBase (m r))) (algPrims @m))
+  {-# INLINEABLE algPrims #-}
+
+  reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
+    Shift main -> n (ShiftC $ liftF $ GetCont) >>= \case
+      Left c  -> main (n . lift . c) >>= \r ->
+        n (ShiftC $ liftF $ Exit (pure r))
+      Right a -> return a
+  {-# INLINEABLE reformulate #-}
+
+instance ( Carrier m
+         , Threads (C.ContT r) (Prims m)
+         )
+      => Carrier (ShiftFastC r m) where
+  type Derivs (ShiftFastC r m) = Shift r ': Derivs m
+  type Prims  (ShiftFastC r m) = Prims m
+
+  algPrims = coerce (thread @(C.ContT r) (algPrims @m))
+  {-# INLINEABLE algPrims #-}
+
+  reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
+    Shift main ->
+      n (ShiftFastC $ C.ContT $ \c -> c (Left (c . Right))) >>= \case
+        Left c  -> main (n . lift . c) >>= \r ->
+          n (ShiftFastC $ C.ContT $ \_ -> return r)
+        Right a -> return a
+  {-# INLINEABLE reformulate #-}
+
+newtype ShiftFastC (r :: *) m a = ShiftFastC { unShiftFastC :: C.ContT r m a }
+  deriving (Functor, Applicative, Monad, MonadBase b, MonadIO, Fail.MonadFail)
+  deriving MonadTrans
 
 -- | 'ContThreads' accepts the following primitive effects:
 --

@@ -43,7 +43,7 @@ import Control.Effect.Type.ListenPrim
 -- a @'Monoid' w => 'ThreadsEff' t ('WriterPrim' w)@ instance (if possible).
 -- 'threadWriterPrim' and 'threadWriterPrimViaClass' can help you with that.
 --
--- The following threading constraints accept 'ListenPrim':
+-- The following threading constraints accept 'WriterPrim':
 --
 -- * 'Control.Effect.ReaderThreads'
 -- * 'Control.Effect.State.StateThreads'

@@ -62,7 +62,6 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- * 'Control.Effect.NonDet.NonDetThreads'
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
--- * 'Control.Effect.Select.SelectThreads'
 data Optional s m a where
   Optionally :: s a -> m a -> Optional s m a
 

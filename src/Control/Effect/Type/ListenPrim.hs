@@ -48,7 +48,6 @@ import Control.Effect.Internal.Union
 -- * 'Control.Effect.NonDet.NonDetThreads'
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
--- * 'Control.Effect.Select.SelectThreads'
 data ListenPrim w m a where
   ListenPrimTell   :: w -> ListenPrim w m ()
   ListenPrimListen :: m a -> ListenPrim w m (w, a)

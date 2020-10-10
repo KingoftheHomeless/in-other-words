@@ -23,7 +23,7 @@ class    (forall m n x. Coercible (e m x) (e n x))
 instance (forall m n x. Coercible (e m x) (e n x))
       => FirstOrder e
 
--- | A carrier for any first-order effect @e@ that allows for
+-- | A carrier for any __first-order__ effect @e@ that allows for
 -- dividing a computation into several steps, where
 -- each step is seperated by the use of the effect.
 --
@@ -54,7 +54,8 @@ instance ( Threads (FreeT (FOEff e)) (Prims m)
   reformulate n alg = powerAlg' (reformulate (n . lift) alg) (n . sendStepped)
   {-# INLINEABLE reformulate #-}
 
-
+-- | A stack of continuations of @m@ that eventually produces a result of type @a@.
+-- Each continuation is seperated by the use of the effect @e@.
 data Steps (e :: Effect) m a where
   Done :: a -> Steps e m a
   More :: e q x -> (x -> m (Steps e m a)) -> Steps e m a
@@ -72,8 +73,8 @@ instance Functor m => Monad (Steps e m) where
   Done a >>= f = f a
   More e c >>= f = More e (fmap (>>= f) . c)
 
--- | Run the first-order effect @e@ by breaking the computation using it
--- into steps, where each step is seperated by the use of actions of @e@.
+-- | Run the __first-order__ effect @e@ by breaking the computation using it
+-- into steps, where each step is seperated by the use of an action of @e@.
 steps :: forall e m a p
        . ( Carrier m
          , Threaders '[SteppedThreads] m p

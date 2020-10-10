@@ -30,7 +30,6 @@ import Control.Monad.Trans.Except (ExceptT(..))
 -- * 'Control.Effect.NonDet.NonDetThreads'
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
--- * 'Control.Effect.Select.SelectThreads'
 data Unravel p :: Effect where
   Unravel :: p a -> (m a -> a) -> m a -> Unravel p m a
 

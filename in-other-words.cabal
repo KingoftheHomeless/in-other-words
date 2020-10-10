@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5691f1b3edb3d6bb8b5277178284148c39ae5ec82a327591c9ed5883b3639928
+-- hash: 391e1bf43205bfa3b9719626f8fbbd2f7e5d117aa180b0780022450a404f75de
 
 name:           in-other-words
 version:        0.1.0.0
@@ -60,7 +60,6 @@ library
       Control.Effect.Internal.Reader
       Control.Effect.Internal.Reflection
       Control.Effect.Internal.Regional
-      Control.Effect.Internal.Select
       Control.Effect.Internal.State
       Control.Effect.Internal.Union
       Control.Effect.Internal.Unlift
