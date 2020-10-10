@@ -142,7 +142,7 @@ runShift = coerce (runCont @r @m @p)
 -- one satisfies 'ContFastThreads': namely,
 -- 'Control.Effect.Type.ReaderPrim.ReaderPrim'.
 --
--- @'Derivs' ('ShiftFastC' r m) = 'Cont' ': 'Derivs' m@
+-- @'Derivs' ('ShiftFastC' r m) = 'Shift' r ': 'Derivs' m@
 --
 -- @'Control.Effect.Primitive.Prims'  ('ShiftFastC' r m) = 'Control.Effect.Primitive.Prims' m@
 runShiftFast :: forall r m p
