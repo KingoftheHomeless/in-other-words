@@ -399,7 +399,7 @@ fromEndoWriter = (fmap . first) (\(Endo f) -> f mempty)
 type TellIntoEndoTellC o =
   ReinterpretC WriterToEndoWriterH (Tell o) '[Tell (Endo o)]
 
--- | Rewrite a @'Tell' o@ effect into a @'Tell' ('Endo' s)@ effect.
+-- | Rewrite a @'Tell' o@ effect into a @'Tell' ('Endo' o)@ effect.
 --
 -- This effectively right-associates all uses of 'tell', which
 -- asymptotically improves performance if the time complexity of '<>' for the
@@ -433,7 +433,7 @@ type ListenIntoEndoListenC o = CompositionC
    ]
 
 -- | Rewrite connected @'Listen' o@ and @'Tell' o@ effects into
--- connected @'Listen' ('Endo' s)@ and @'Tell' ('Endo' s)@ effects.
+-- connected @'Listen' ('Endo' o)@ and @'Tell' ('Endo' o)@ effects.
 --
 -- This effectively right-associates all uses of 'tell', which
 -- asymptotically improves performance if the time complexity of '<>' for the
@@ -474,9 +474,9 @@ type WriterIntoEndoWriterC o = CompositionC
    ]
 
 -- | Rewrite connected @'Pass' o@, @'Listen' o@ and @'Tell' o@ effects
--- -- i.e. @'Writer' o@ -- into connected @'Pass' ('Endo' s)@,
--- @'Listen' ('Endo' s)@ and @'Tell' (Endo o)@ effects on top of the effect
--- stack -- i.e. @'Writer' (Endo o)@.
+-- -- i.e. @'Writer' o@ -- into connected @'Pass' ('Endo' o)@,
+-- @'Listen' ('Endo' o)@ and @'Tell' ('Endo' o)@ effects on top of the effect
+-- stack -- i.e. @'Writer' ('Endo' o)@.
 --
 -- This effectively right-associates all uses of 'tell', which
 -- asymptotically improves performance if the time complexity of '<>' for the
