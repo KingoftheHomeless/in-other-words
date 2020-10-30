@@ -59,7 +59,7 @@ import Control.Effect.Internal.Union
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
 -- * 'Control.Effect.Cont.ContFastThreads'
-data ReaderPrim i m a where
+data ReaderPrim i :: Effect where
   ReaderPrimAsk   :: ReaderPrim i m i
   ReaderPrimLocal :: (i -> i) -> m a -> ReaderPrim i m a
 
@@ -76,7 +76,7 @@ instance ( Reifies s (ReifiedEffAlgebra (ReaderPrim i) m)
 
 -- | Construct a valid definition of 'threadEff' for a
 -- @'ThreadsEff' t ('ReaderPrim' w)@ instance
--- only be specifying how 'ReaderPrimLocal' should be lifted.
+-- only by specifying how 'ReaderPrimLocal' should be lifted.
 --
 -- This uses 'lift' to lift 'ReaderPrimAsk'.
 threadReaderPrim :: forall i t m a

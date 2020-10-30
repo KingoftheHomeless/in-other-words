@@ -44,8 +44,7 @@ instance Eff (Shift (s, r)) m
       => Handler (SelectH r) (Select s) m where
   effHandler = \case
     Select main -> shift @(s, r) $ \c ->
-          main (\a -> (\(s,r) -> (s, (s, r))) <$> c a)
-      >>= \t -> shift $ \_ -> return t
+      main $ \a -> (\(s,r) -> (s, (s, r))) <$> c a
   {-# INLINEABLE effHandler #-}
 
 type SelectC s r = CompositionC

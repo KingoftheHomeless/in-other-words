@@ -62,7 +62,7 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- * 'Control.Effect.NonDet.NonDetThreads'
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
-data Optional s m a where
+data Optional s :: Effect where
   Optionally :: s a -> m a -> Optional s m a
 
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Regional' s) t@ instance,

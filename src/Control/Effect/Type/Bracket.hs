@@ -42,7 +42,7 @@ import qualified Control.Monad.Trans.Writer.CPS as CPSWr
 -- * 'Control.Effect.Error.ErrorThreads'
 -- * 'Control.Effect.Writer.WriterThreads'
 -- * 'Control.Effect.Writer.WriterLazyThreads'
-data Bracket m a where
+data Bracket :: Effect where
   GeneralBracket :: m a
                  -> (a -> ExitCase b -> m c)
                  -> (a -> m b)

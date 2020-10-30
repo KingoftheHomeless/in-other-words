@@ -12,5 +12,5 @@ module Control.Effect.Type.Fail where
 -- how it interprets 'Fail'. This means you can use
 -- an 'Fail' interpreter to locally gain access to an 'Control.Monad.Fail.MonadFail'
 -- instance inside of application code.
-newtype Fail m a where
+newtype Fail (m :: * -> *) (a :: *) where
   Fail :: String -> Fail m a

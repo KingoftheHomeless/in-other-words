@@ -52,7 +52,8 @@ type Algebra' r m a = Union r m a -> m a
 -- | 'RepresentationalEff' is the constraint every effect is expected
 -- to satisfy: namely, that any effect @e m a@ is representational in @m@,
 -- which -- in practice -- means that no constraints are ever placed upon
--- @m@ within the definion of @e@.
+-- @m@ within the definion of @e@, and that @m@ isn't present in
+-- the return type of any action of @e@.
 --
 -- You don't need to make instances of 'RepresentationalEff'; the compiler
 -- will automatically infer if your effect satisfies it.
@@ -183,9 +184,9 @@ class RepresentationalEff e => ThreadsEff t e where
             -> e (t m) a
             -> t m a
 
--- | @'Threads' t p@ is satisfied if @ThreadsEff t e@ instances are defined for
+-- | @'Threads' t p@ is satisfied if @'ThreadsEff' t e@ instances are defined for
 -- each effect @e@ in @p@. By using the @'Threads' t p@ constraint, you're
--- able to lift 'Algebra's over p from any monad @m@ to @t m@. This is useful
+-- able to lift 'Algebra's over @p@ from any monad @m@ to @t m@. This is useful
 -- when defining custom 'Control.Effect.Carrier.Carrier' instances.
 --
 -- Note that you /should not/ place a @'Threads' t p@ constraint if @t@ is

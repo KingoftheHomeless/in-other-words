@@ -47,6 +47,11 @@ import Control.Effect.Internal.State
 import qualified Control.Monad.Trans.State.Strict as SSt
 import qualified Control.Monad.Trans.State.Lazy as LSt
 
+-- | Read and modify the state.
+--
+-- The resulting tuple of the computation is forced. You can
+-- control what parts of the computation are evaluated by tying
+-- their evaluation to the tuple.
 state :: Eff (State s) m => (s -> (s, a)) -> m a
 state f = do
   (s, a) <- f <$> get

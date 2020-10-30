@@ -88,7 +88,9 @@ type IntroConsistent top new m
 -- | Introduce multiple effects under a number of top effects of the effect
 -- stack -- or rather, reveal those effects which were previously hidden.
 --
--- @'Derivs' ('IntroC' top new m) = Append top ('Control.Effect.Carrier.StripPrefix' (Append top new) ('Derivs' m))@
+-- @'Derivs' ('IntroUnderManyC' top new m) = Append top ('Control.Effect.Carrier.StripPrefix' (Append top new) ('Derivs' m))@
+--
+-- @'Prims'  ('IntroUnderManyC' top new m) = 'Prims' m@
 introUnderMany :: forall top new m a
                 . ( KnownList top
                   , KnownList new
@@ -103,6 +105,8 @@ introUnderMany = runIntroC
 -- -- or rather, reveal those effects which were previously hidden.
 --
 -- @'Derivs' ('IntroUnderC' e new m) = e ': 'Control.Effect.Carrier.StripPrefix' (e ': new) ('Derivs' m)@
+--
+-- @'Prims'  ('IntroUnderC' e new m) = 'Prims' m@
 introUnder :: forall new e m a
             . ( KnownList new
               , IntroConsistent '[e] new m
@@ -116,6 +120,8 @@ introUnder = runIntroC
 -- -- or rather, reveal that effect which was previously hidden.
 --
 -- @'Derivs' ('IntroUnderC' e '[new] m) = e ': 'Control.Effect.Carrier.StripPrefix' [e, new] ('Derivs' m)@
+--
+-- @'Prims'  ('IntroUnderC' e '[new] m) = 'Prims' m@
 introUnder1 :: forall new e m a
              . IntroConsistent '[e] '[new] m
             => IntroUnderC e '[new] m a
@@ -127,6 +133,8 @@ introUnder1 = runIntroC
 -- -- or rather, reveal effects previously hidden.
 --
 -- @'Derivs' ('IntroTopC' new m) = 'Control.Effect.Carrier.StripPrefix' new ('Derivs' m)@
+--
+-- @'Prims'  ('IntroTopC' new m) = 'Prims' m@
 intro :: forall new m a
        . ( KnownList new
          , IntroConsistent '[] new m
@@ -139,7 +147,9 @@ intro = runIntroC
 -- | Introduce an effect at the top of the stack -- or rather, reveal an effect
 -- previously hidden.
 --
--- @'Derivs' ('IntroTopC' [e] m) = 'Control.Effect.Carrier.StripPrefix' '[e] ('Derivs' m)@
+-- @'Derivs' ('IntroTopC' '[e] m) = 'Control.Effect.Carrier.StripPrefix' '[e] ('Derivs' m)@
+--
+-- @'Prims'  ('IntroTopC' '[e] m) = 'Prims' m@
 intro1 :: forall e m a
         . IntroConsistent '[] '[e] m
        => IntroTopC '[e] m a

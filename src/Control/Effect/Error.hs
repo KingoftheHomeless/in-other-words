@@ -126,7 +126,7 @@ fromEither = either throw pure
 --
 -- @'Derivs' ('ThrowC' e m) = 'Throw' e ': 'Derivs' m@
 --
--- @'Control.Effect.Primitive.Prims' ('ThrowC' e m) = 'Control.Effect.Primitive.Prims' m@
+-- @'Control.Effect.Primitive.Prims'  ('ThrowC' e m) = 'Control.Effect.Primitive.Prims' m@
 runThrow :: forall e m a p
           . ( Carrier m
             , Threaders '[ErrorThreads] m p
@@ -140,7 +140,7 @@ runThrow = coerce
 --
 -- @'Derivs' ('ErrorC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
--- @'Control.Effect.Primitive.Prims' ('ErrorC' e m) = 'Control.Effect.Optional.Optional' ((->) e) ': 'Control.Effect.Primitive.Prims' m@
+-- @'Control.Effect.Primitive.Prims'  ('ErrorC' e m) = 'Control.Effect.Optional.Optional' ((->) e) ': 'Control.Effect.Primitive.Prims' m@
 runError :: forall e m a p
           . ( Carrier m
             , Threaders '[ErrorThreads] m p
@@ -321,7 +321,7 @@ type ErrorToIOC e m a =
 --
 -- @'Derivs' ('ErrorToIOC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
--- @'Control.Effect.Primitive.Prims' ('ErrorToIOC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Control.Effect.Primitive.Prims' m@
+-- @'Control.Effect.Primitive.Prims'  ('ErrorToIOC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Control.Effect.Primitive.Prims' m@
 --
 -- This has a higher-rank type, as it makes use of 'ErrorToIOC'.
 -- __This makes 'errorToIO' very difficult to use partially applied.__
@@ -449,7 +449,7 @@ errorToErrorIOSimple main = do
 --
 -- @'Derivs' ('ErrorToIOSimpleC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
--- @'Control.Effect.Primitive.Prims' ('ErrorToIOSimpleC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Control.Effect.Primitive.Prims' m@
+-- @'Control.Effect.Primitive.Prims'  ('ErrorToIOSimpleC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Control.Effect.Primitive.Prims' m@
 --
 -- This is a less performant version of 'errorToIO' that doesn't have
 -- a higher-rank type, making it much easier to use partially applied.

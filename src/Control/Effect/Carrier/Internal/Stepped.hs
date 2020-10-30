@@ -75,6 +75,10 @@ instance Functor m => Monad (Steps e m) where
 
 -- | Run the __first-order__ effect @e@ by breaking the computation using it
 -- into steps, where each step is seperated by the use of an action of @e@.
+--
+-- @'Derivs' ('SteppedC' e m) = e ': 'Derivs' m@
+--
+-- @'Control.Effect.Primitive.Prims'  ('SteppedC' e m) = 'Control.Effect.Primitive.Prims' m@
 steps :: forall e m a p
        . ( Carrier m
          , Threaders '[SteppedThreads] m p
@@ -106,6 +110,6 @@ unsteps (More e c) = send @e (coerce e) >>= c >>= unsteps
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.Type.Unravel.Unravel' @p@
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type SteppedThreads = FreeThreads

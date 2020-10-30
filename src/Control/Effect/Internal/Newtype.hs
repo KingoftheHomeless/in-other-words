@@ -74,7 +74,7 @@ wrap = unWrapC
 -- newtype Counter m a = Counter ('Control.Effect.State.State' Int m)
 --
 -- probe :: Eff Counter m => m Int
--- probe = 'wrapWith' Counter $ 'Control.Effect.State.state'' \@Int (\s -> (s + 1, s))
+-- probe = 'wrapWith' Counter $ 'Control.Effect.State.state'' \@Int (\\s -> (s + 1, s))
 -- @
 --
 wrapWith :: ( Member e (Derivs m)
@@ -183,7 +183,7 @@ class EffNewtype (e :: Effect) where
 --
 -- @
 -- newtype SomeWrapper m a = SomeWrapper (SomeEffect m a)
---   deriving 'EffNewtype' via SomeWrapper `'WrapperOf'` SomeEffect
+--   deriving 'EffNewtype' via SomeWrapper \`'WrapperOf'\` SomeEffect
 -- @
 newtype WrapperOf (e :: Effect) (e' :: Effect) m a = WrapperOf (e m a)
 

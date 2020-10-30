@@ -11,13 +11,13 @@ import Control.Effect.Type.ReaderPrim
 import Control.Monad.Trans.Reader (ReaderT(..))
 import qualified Control.Monad.Trans.Reader as R
 
--- | An effect for gaining access to information.
-data Ask i m a where
+-- | An effect for arbitrary input
+data Ask i :: Effect where
   Ask :: Ask i m i
 
 -- | An effect for locally modifying an environment
 -- used to gain access to information.
-data Local i m a where
+data Local i :: Effect where
   Local :: (i -> i) -> m a -> Local i m a
 
 -- | A pseudo-effect for connected @'Ask' i@ and @'Local' i@ effects.

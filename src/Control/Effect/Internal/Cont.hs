@@ -29,12 +29,13 @@ newtype Cont m a where
 newtype Shift r m a where
   Shift :: ((a -> m r) -> m r) -> Shift r m a
 
-data ContBase r a where
-  Exit    :: r -> ContBase r a
-  GetCont :: ContBase r (Either (a -> r) a)
+data ContBase mr r a where
+  Exit    :: r -> ContBase mr r a
+  Attempt :: mr -> ContBase mr r r
+  GetCont :: ContBase mr r (Either (a -> mr) a)
 
 
-newtype ContC r m a = ContC { unContC :: FreeT (ContBase (m r)) m a }
+newtype ContC r m a = ContC { unContC :: FreeT (ContBase (m r) r) m a }
   deriving ( Functor, Applicative, Monad
            , MonadBase b, Fail.MonadFail, MonadIO
            , MonadThrow, MonadCatch
@@ -45,18 +46,18 @@ instance MonadTrans (ContC s) where
   {-# INLINE lift #-}
 
 instance ( Carrier m
-         , Threads (FreeT (ContBase (m r))) (Prims m)
+         , Threads (FreeT (ContBase (m r) r)) (Prims m)
          )
       => Carrier (ContC r m) where
   type Derivs (ContC r m) = Cont ': Derivs m
   type Prims  (ContC r m) = Prims m
 
-  algPrims = coerce (thread @(FreeT (ContBase (m r))) (algPrims @m))
+  algPrims = coerce (thread @(FreeT (ContBase (m r) r)) (algPrims @m))
   {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     CallCC main -> n (ContC $ liftF $ GetCont) >>= \case
-      Left c  -> main (n . ContC #. liftF . Exit . c)
+      Left c  -> main (\x -> n $ ContC $ liftF (Attempt (c x)) >>= liftF . Exit)
       Right a -> return a
   {-# INLINEABLE reformulate #-}
 
@@ -82,7 +83,7 @@ instance ( Carrier m
         Right a -> return a
   {-# INLINEABLE reformulate #-}
 
-newtype ShiftC r m a = ShiftC { unShiftC :: FreeT (ContBase (m r)) m a }
+newtype ShiftC r m a = ShiftC { unShiftC :: FreeT (ContBase (m r) r) m a }
   deriving ( Functor, Applicative, Monad
            , MonadBase b, Fail.MonadFail, MonadIO
            , MonadThrow, MonadCatch
@@ -93,19 +94,19 @@ instance MonadTrans (ShiftC s) where
   {-# INLINE lift #-}
 
 instance ( Carrier m
-         , Threads (FreeT (ContBase (m r))) (Prims m)
+         , Threads (FreeT (ContBase (m r) r)) (Prims m)
          )
       => Carrier (ShiftC r m) where
   type Derivs (ShiftC r m) = Shift r ': Derivs m
   type Prims  (ShiftC r m) = Prims m
 
-  algPrims = coerce (thread @(FreeT (ContBase (m r))) (algPrims @m))
+  algPrims = coerce (thread @(FreeT (ContBase (m r) r)) (algPrims @m))
   {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n . lift) alg) $ \case
     Shift main -> n (ShiftC $ liftF $ GetCont) >>= \case
-      Left c  -> main (n . lift . c) >>= \r ->
-        n (ShiftC $ liftF $ Exit (pure r))
+      Left c  -> main (\x -> n $ ShiftC $ liftF $ Attempt (c x)) >>= \r ->
+        n (ShiftC $ liftF $ Exit r)
       Right a -> return a
   {-# INLINEABLE reformulate #-}
 
@@ -136,7 +137,7 @@ newtype ShiftFastC (r :: *) m a = ShiftFastC { unShiftFastC :: C.ContT r m a }
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.Type.Unravel.Unravel' @p@
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type ContThreads = FreeThreads
 

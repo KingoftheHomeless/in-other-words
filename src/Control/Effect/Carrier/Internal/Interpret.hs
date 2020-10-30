@@ -169,7 +169,7 @@ type EffHandler e m =
 -- carrier @m@.
 --
 -- Unlike 'EffHandler's, 'EffPrimHandler's have direct access to @m@,
--- giving them significantly more powerful.
+-- making them significantly more powerful.
 --
 -- That said, __you should interpret your own effects as primitives only as a__
 -- __last resort.__ Every primitive effect comes at the cost of enormous amounts
@@ -377,6 +377,10 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
 -- See 'EffHandler' for more information about the handler you pass to
 -- this function.
 --
+-- @'Derivs' ('InterpretReifiedC' e m) = e ': 'Derivs' m@
+--
+-- @'Prims'  ('InterpretReifiedC' e m) = 'Prims' m@
+--
 -- This has a higher-rank type, as it makes use of 'InterpretReifiedC'.
 -- __This makes 'interpret' very difficult to use partially applied.__
 -- __In particular, it can't be composed using @'.'@.__ You must use
@@ -424,6 +428,10 @@ interpret h m = reify (ReifiedHandler h) $ \(_ :: p s) ->
 --
 -- See 'EffHandler' for more information about the handler you pass to
 -- this function.
+--
+-- @'Derivs' ('InterpretSimpleC' e m) = e ': 'Derivs' m@
+--
+-- @'Prims'  ('InterpretSimpleC' e m) = 'Prims' m@
 --
 -- This is a significantly slower variant of 'interpret' that doesn't have
 -- a higher-ranked type, making it much easier to use partially applied.
@@ -479,6 +487,10 @@ interpretSimple h m = coerce m (ReifiedHandler @e @m h)
 -- making it easier to use partially applied, and unlike
 -- 'interpretSimple' doesn't sacrifice performance.
 --
+-- @'Derivs' ('InterpretC' h e m) = e ': 'Derivs' m@
+--
+-- @'Prims'  ('InterpretC' h e m) = 'Prims' m@
+--
 -- Example usage:
 --
 -- @
@@ -521,8 +533,12 @@ interpretViaHandler = unInterpretC
 
 -- | Interpret an effect as a new primitive effect.
 --
--- __*Only interpret your own effects as primitives as a last resort.__
+-- __Only interpret your own effects as primitives as a last resort.__
 -- See 'EffPrimHandler'.
+--
+-- @'Derivs' ('InterpretPrimReifiedC' e m) = e ': 'Derivs' m@
+--
+-- @'Prims'  ('InterpretPrimReifiedC' e m) = e ': 'Prims' m@
 --
 -- This has a higher-rank type, as it makes use of 'InterpretPrimReifiedC'.
 -- __This makes 'interpretPrim' very difficult to use partially applied.__
@@ -551,6 +567,10 @@ interpretPrim h m =
 --
 -- __Only interpret your own effects as primitives as a last resort.__
 -- See 'EffPrimHandler'.
+---
+-- @'Derivs' ('InterpretPrimC' h e m) = e ': 'Derivs' m@
+--
+-- @'Prims'  ('InterpretPrimC' h e m) = e ': 'Prims' m@
 --
 -- Unlike 'interpretPrim', this does not have a higher-rank type,
 -- making it easier to use partially applied, and unlike
@@ -566,8 +586,12 @@ interpretPrimViaHandler = unInterpretPrimC
 -- | A significantly slower variant of 'interpretPrim' that doesn't have
 -- a higher-ranked type, making it much easier to use partially applied.
 --
--- __*Only interpret your own effects as primitives as a last resort.__
+-- __Only interpret your own effects as primitives as a last resort.__
 -- See 'EffPrimHandler'.
+--
+-- @'Derivs' ('InterpretPrimSimpleC' e m) = e ': 'Derivs' m@
+--
+-- @'Prims'  ('InterpretPrimSimpleC' e m) = e ': 'Prims' m@
 --
 -- Note the @ReaderThreads '[e]@ constraint, meaning
 -- you need to define a @ThreadsEff e (ReaderT i)@ instance in order
@@ -650,6 +674,10 @@ type ReinterpretReifiedC e new m a =
 -- This combines 'interpret' and 'introUnder' in order to introduce the effects
 -- @new@ under @e@, which you then may make use of inside the handler for @e@.
 --
+-- @'Derivs' ('ReinterpretReifiedC' e new m) = e ': 'StripPrefix' new ('Derivs' m)@
+--
+-- @'Prims'  ('ReinterpretReifiedC' e new m) = 'Prims' m@
+--
 -- This has a higher-rank type, as it makes use of 'ReinterpretReifiedC'.
 -- __This makes 'reinterpret' very difficult to use partially applied.__
 -- __In particular, it can't be composed using @'.'@.__ You must use
@@ -675,6 +703,10 @@ reinterpret h main = interpret h $ introUnder (unReinterpretC main)
 -- This combines 'interpretViaHandler' and 'introUnder' in order to introduce
 -- the effects @new@ under @e@, which you then may make use of inside the handler
 -- for @e@.
+--
+-- @'Derivs' ('ReinterpretC' h e new m) = e ': 'StripPrefix' new ('Derivs' m)@
+--
+-- @'Prims'  ('ReinterpretC' h e new m) = 'Prims' m@
 --
 -- Unlike 'reinterpret', this does not have a higher-rank type,
 -- making it easier to use partially applied, and unlike
@@ -714,6 +746,10 @@ deriving via IntroUnderC e new (InterpretSimpleC e m)
 -- This combines 'interpretSimple' and 'introUnder' in order to introduce
 -- the effects @new@ under @e@, which you then may make use of inside the
 -- handler for @e@.
+--
+-- @'Derivs' ('ReinterpretSimpleC' e new m) = e ': 'StripPrefix' new ('Derivs' m)@
+--
+-- @'Prims'  ('ReinterpretSimpleC' e new m) = 'Prims' m@
 --
 -- This is a significantly slower variant of 'reinterpret' that doesn't have
 -- a higher-ranked type, making it much easier to use partially applied.

@@ -47,7 +47,7 @@ interceptCont :: Eff (InterceptCont e) m
 interceptCont h m = send (InterceptCont InterceptAll h m)
 {-# INLINE interceptCont #-}
 
--- | Intercept only the _first_ use of an effect within a region --
+-- | Intercept only the /first/ use of an effect within a region --
 -- and at that use-site, capture the continuation of the argument computation,
 -- and also allow for early abortion (by not invoking the continuation).
 interceptCont1 :: Eff (InterceptCont e) m

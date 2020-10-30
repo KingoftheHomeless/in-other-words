@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK not-home #-}
 -- | Module exporting typical type classes that are newtype-derived by Carriers
 module Control.Effect.Internal.Derive
   ( Alternative, MonadPlus

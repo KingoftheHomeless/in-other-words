@@ -179,7 +179,7 @@ instance Eff (Exceptional eff exc) m
 --
 -- caringProgram :: 'Eff' ('Exceptional' SomeEffect SomeEffectExc) m => m String
 -- caringProgram =
---   'catching' @eff uncaringProgram (\(exc :: SomeEffectExc) -> handlerForSomeEffectExc exc)
+--   'catching' \@eff uncaringProgram (\\(exc :: SomeEffectExc) -> handlerForSomeEffectExc exc)
 -- @
 --
 catching :: forall eff exc m a

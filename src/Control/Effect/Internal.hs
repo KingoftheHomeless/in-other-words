@@ -158,7 +158,7 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 -- The ability of a monad transformer to lift handlers of a particular
 -- primitive effect is called /threading/ that effect. /Threading constraints/
 -- correspond to the requirement that the primitive effects of the monad that's
--- being transformed can be thread by certain monad transformer.
+-- being transformed can be thread by certain monad transformers.
 --
 -- For example, the 'Control.Effect.State.runState' places the threading
 -- constraint 'Control.Effect.State.StateThreads' on @'Prims' m@, so that
@@ -171,7 +171,7 @@ deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
 -- 'Control.Effect.Error.runError' with the carrier @m@.
 --
 -- Sometimes, you may want to have a local effect which you interpret
--- inside of application code; such as a local 'Control.Effect.State.State'
+-- inside of application code, such as a local 'Control.Effect.State.State'
 -- or 'Control.Effect.Error.Error' effect. In such cases, /try to use/
 -- [split interpretation](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics#abstract-effect-interpretation) /instead of using interpreters with threading constraints/
 -- /inside of application code./ If you can't, then using 'Threaders'

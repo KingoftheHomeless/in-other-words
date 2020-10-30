@@ -48,7 +48,7 @@ import Control.Monad.Trans.Identity
 
 
 -- | An effect for debugging by printing/logging strings.
-data Trace m a where
+data Trace :: Effect where
   Trace :: String -> Trace m ()
 
 -- | Log the provided string

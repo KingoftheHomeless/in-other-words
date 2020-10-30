@@ -43,7 +43,7 @@ data MaskMode
 -- * 'Control.Effect.Error.ErrorThreads'
 -- * 'Control.Effect.Writer.WriterThreads'
 -- * 'Control.Effect.Writer.WriterLazyThreads'
-data Mask m a where
+data Mask :: Effect where
   Mask :: MaskMode
        -> ((forall x. m x -> m x) -> m a)
        -> Mask m a

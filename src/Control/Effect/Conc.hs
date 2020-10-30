@@ -122,7 +122,7 @@ type ConcToUnliftIOC = UnwrapC Conc
 -- 'Control.Effect.NonDet.NonDet'.
 -- In that case, you might sitll be able to use both effects in the same program
 -- by applying
--- [/Split Interpretation/](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics#split-interpretation)
+-- [Split Interpretation](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics#split-interpretation)
 -- to seperate their uses.
 --
 -- @'Derivs' ('ConcToIOC' m) = 'Conc' ': 'Derivs' m@
@@ -306,7 +306,7 @@ forConcurrently_ = flip mapConcurrently_
 {-# INLINE forConcurrently_ #-}
 
 replicateConcurrently :: Eff Conc m => Int -> m a -> m [a]
-replicateConcurrently cnt = runConcurrently #.  replicateM cnt .# Concurrently
+replicateConcurrently cnt = runConcurrently #. replicateM cnt .# Concurrently
 {-# INLINE replicateConcurrently #-}
 
 replicateConcurrently_ :: Eff Conc m => Int -> m a -> m ()

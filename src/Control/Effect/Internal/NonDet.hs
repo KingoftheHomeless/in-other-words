@@ -15,15 +15,15 @@ import Control.Effect.Internal.Utils
 import qualified Control.Monad.Trans.List.Church as L
 
 -- | An effect for nondeterministic computations
-newtype NonDet m a where
+newtype NonDet :: Effect where
   FromList :: [a] -> NonDet m a
 
 -- | An effect for culling nondeterministic computations.
-newtype Cull m a where
+newtype Cull :: Effect where
   Cull :: m a -> Cull m a
 
 -- | An effect to delimit backtracking within nondeterministic contexts.
-data Cut m a where
+data Cut :: Effect where
   Cutfail :: Cut m a
   Call    :: m a -> Cut m a
 
@@ -39,8 +39,8 @@ type Logic = Bundle '[NonDet, Cull, Cut, Split]
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.Type.Unravel.Unravel' @p@
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type NonDetThreads = Threads L.ListT
 

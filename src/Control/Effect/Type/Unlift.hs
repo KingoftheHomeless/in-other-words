@@ -85,7 +85,7 @@ unliftT main = liftWith $ \lower ->
 -- The following threading constraints accept 'Unlift':
 --
 -- * 'Control.Effect.ReaderThreads'
-data Unlift b m a where
+newtype Unlift b :: Effect where
   Unlift :: forall b m a. ((forall x. m x -> b x) -> b a) -> Unlift b m a
 
 -- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Unlift' b) t@ instance,

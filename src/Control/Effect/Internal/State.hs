@@ -13,7 +13,7 @@ import qualified Control.Monad.Trans.State.Lazy as LSt
 --
 -- If you need atomicity, use 'Control.Effect.AtomicState.AtomicState'
 -- instead.
-data State s m a where
+data State s :: Effect where
   Get :: State s m s
   Put :: s -> State s m ()
 
@@ -70,8 +70,8 @@ instance ( Carrier m
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.BaseControl.BaseControl' @b@
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Type.WriterPrim.WriterPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
+-- * 'Control.Effect.Type.WriterPrim.WriterPrim' @o@ (when @o@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 -- * 'Control.Effect.Mask.Mask'
 -- * 'Control.Effect.Bracket.Bracket'
@@ -87,8 +87,8 @@ instance ( forall s. Threads (LSt.StateT s) p
 -- * 'Control.Effect.Regional.Regional' @s@
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.BaseControl.BaseControl' @b@
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @s@ (when @s@ is a 'Monoid')
--- * 'Control.Effect.Type.WriterPrim.WriterPrim' @s@ (when @s@ is a 'Monoid')
+-- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
+-- * 'Control.Effect.Type.WriterPrim.WriterPrim' @o@ (when @o@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 -- * 'Control.Effect.Mask.Mask'
 -- * 'Control.Effect.Bracket.Bracket'

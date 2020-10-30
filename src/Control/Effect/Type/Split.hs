@@ -10,7 +10,7 @@ import qualified Control.Monad.Trans.Writer.Lazy   as LWr
 import qualified Control.Monad.Trans.Writer.Strict as SWr
 import qualified Control.Monad.Trans.Writer.CPS    as CPSWr
 
--- | An effect for spliting a nondeterministic computation
+-- | An effect for splitting a nondeterministic computation
 -- into its head and tail.
 --
 -- __'Split' is typically used as a primitive effect.__
@@ -26,7 +26,7 @@ import qualified Control.Monad.Trans.Writer.CPS    as CPSWr
 -- * 'Control.Effect.State.StateLazyThreads'
 -- * 'Control.Effect.Writer.WriterThreads'
 -- * 'Control.Effect.Writer.WriterLazyThreads'
-data Split m a where
+data Split :: Effect where
   Split :: (Maybe (a, m a) -> b) -> m a -> Split m b
 
 instance ThreadsEff (ReaderT s) Split where

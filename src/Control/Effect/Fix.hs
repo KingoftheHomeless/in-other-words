@@ -31,9 +31,9 @@ type FixToFinalC = InterpretPrimC FixToFinalH Fix
 -- | Run a 'Fix' effect if the final monad and
 -- all carriers transforming it are 'MonadFix'.
 --
--- @'Derivs' (FixToFinalC m) = 'Fix' ': 'Derivs' m@
+-- @'Derivs' ('FixToFinalC' m) = 'Fix' ': 'Derivs' m@
 --
--- @'Prims'  (FixToFinalC m) = 'Fix' ': 'Prims' m@
+-- @'Prims'  ('FixToFinalC' m) = 'Fix' ': 'Prims' m@
 fixToFinal :: ( Carrier m
               , MonadFix m
               )

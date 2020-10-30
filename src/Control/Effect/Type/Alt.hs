@@ -14,6 +14,6 @@ module Control.Effect.Type.Alt where
 -- how it interprets 'Alt'. This means you can use
 -- an 'Alt' interpreter to locally gain access to an 'Control.Applicative.Alternative'
 -- instance inside of application code.
-data Alt m a where
+data Alt (m :: * -> *) a where
   Empty :: Alt m a
   Alt   :: m a -> m a -> Alt m a

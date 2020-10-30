@@ -8,6 +8,7 @@ module Control.Effect.Embed
 
     -- * Interpreters
   , runM
+  , runEmbed
 
   , embedToEmbed
 
@@ -20,10 +21,12 @@ module Control.Effect.Embed
 
     -- * Carriers
   , RunMC(RunMC)
+  , EmbedC(EmbedC)
   , EmbedToMonadBaseC
   , EmbedToMonadIOC
   ) where
 
+import Data.Coerce
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Fix
@@ -65,6 +68,40 @@ instance Monad m => Carrier (RunMC m) where
 
   algDerivs u = RunMC (unEmbed (extract u))
   {-# INLINE algDerivs #-}
+
+newtype EmbedC m a = EmbedC { unEmbedC :: m a }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, Fail.MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b, MonadBaseControl b
+           )
+  deriving (MonadTrans, MonadTransControl) via IdentityT
+
+-- | Run an @'Embed' m@ effect, where the embedded monad @m@ is the current monad.
+--
+-- Not to be confused with 'runM'. This is simply an interpreter for @'Embed' m@;
+-- it doesn't extract the final monad.
+--
+-- @'Derivs' ('EmbedC' m) = 'Embed' m ': 'Derivs' m@
+--
+-- @'Prims'  ('EmbedC' m) = 'Prims' m@
+runEmbed :: Carrier m => EmbedC m a -> m a
+runEmbed = unEmbedC
+{-# INLINE runEmbed #-}
+
+instance Carrier m => Carrier (EmbedC m) where
+  type Derivs (EmbedC m) = Embed m ': Derivs m
+  type Prims  (EmbedC m) = Prims m
+
+  algPrims = coerce (algPrims @m)
+  {-# INLINEABLE algPrims #-}
+
+  reformulate n alg = powerAlg (reformulate (n .# EmbedC) alg) (n .# EmbedC .# unEmbed)
+  {-# INLINE reformulate #-}
+
+  algDerivs = powerAlg (coerce (algDerivs @m)) (EmbedC .# unEmbed)
+  {-# INLINEABLE algDerivs #-}
 
 -- | Extract the final monad @m@ from a computation of which
 -- no effects remain to be handled except for @'Embed' m@.

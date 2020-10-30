@@ -42,7 +42,7 @@ import Control.Effect.Internal.Union
 -- * 'Control.Effect.Error.ErrorThreads'
 -- * 'Control.Effect.Writer.WriterThreads'
 -- * 'Control.Effect.Writer.WriterLazyThreads'
-newtype Fix m a where
+newtype Fix :: Effect where
   Fix :: (a -> m a) -> Fix m a
 
 instance ( Reifies s (ReifiedEffAlgebra Fix m)

@@ -43,9 +43,9 @@ import Control.Monad.Trans.Identity
 -- to place constraints upon @uniq@ as necessary.
 --
 -- Any interpreter for 'Fresh' has the responsibilty of ensuring
--- that any call to 'fresh' produces an object that /never/
+-- that any call to 'fresh' produces an object that __never__
 -- compares equal to an object produced by a previous call to 'fresh'.
-data Fresh uniq m a where
+data Fresh uniq :: Effect where
   Fresh :: Fresh uniq m uniq
 
 fresh :: Eff (Fresh uniq) m => m uniq
@@ -62,6 +62,10 @@ instance Eff (Embed IO) m
 type FreshToIOC = InterpretC FreshToIOH (Fresh Unique)
 
 -- | Runs a 'Fresh' effect through generating 'Unique's using 'IO'.
+--
+-- @'Derivs' ('FreshToIOC' m) = 'Fresh' 'Unique' ': 'Derivs' m@
+--
+-- @'Control.Effect.Primitive.Prims'  ('FreshToIOC' m) = 'Control.Effect.Primitive.Prims' m@
 freshToIO :: Eff (Embed IO) m
           => FreshToIOC m a
           -> m a
@@ -135,7 +139,11 @@ type FreshEnumC uniq = CompositionC
 --      of local state. This includes 'Control.Effect.Error.errorToIO' and
 --      'Control.Effect.Conc.asyncToIO'.
 --
--- Prefer 'freshToIO' whenever possible.
+-- Prefer 'freshToIO' or 'runFreshEnumIO' whenever possible.
+--
+-- @'Derivs' ('FreshEnumC' uniq m) = 'Fresh' uniq ': 'Derivs' m@
+--
+-- @'Control.Effect.Primitive.Prims'  ('FreshEnumC' uniq m) = 'Control.Effect.Primitive.Prims' m@
 runFreshEnum :: forall uniq m a p
               . ( Enum uniq
                 , Threaders '[StateThreads] m p

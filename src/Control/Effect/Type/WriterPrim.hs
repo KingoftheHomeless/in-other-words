@@ -40,7 +40,7 @@ import Control.Effect.Type.ListenPrim
 -- __'WriterPrim' is only used as a primitive effect.__
 -- If you define a 'Control.Effect.Carrier' that relies on a novel
 -- non-trivial monad transformer @t@, then you need to make
--- a @'Monoid' w => 'ThreadsEff' t ('WriterPrim' w)@ instance (if possible).
+-- a @'Monoid' o => 'ThreadsEff' t ('WriterPrim' o)@ instance (if possible).
 -- 'threadWriterPrim' and 'threadWriterPrimViaClass' can help you with that.
 --
 -- The following threading constraints accept 'WriterPrim':
@@ -52,41 +52,41 @@ import Control.Effect.Type.ListenPrim
 -- * 'Control.Effect.Writer.WriterThreads'
 -- * 'Control.Effect.Writer.WriterLazyThreads'
 -- * 'Control.Effect.NonDet.NonDetThreads'
-data WriterPrim w m a where
-  WriterPrimTell   :: w             -> WriterPrim w m ()
-  WriterPrimListen :: m a           -> WriterPrim w m (w, a)
-  WriterPrimPass   :: m (w -> w, a) -> WriterPrim w m a
+data WriterPrim o :: Effect where
+  WriterPrimTell   :: o             -> WriterPrim o m ()
+  WriterPrimListen :: m a           -> WriterPrim o m (o, a)
+  WriterPrimPass   :: m (o -> o, a) -> WriterPrim o m a
 
 -- | Construct a valid definition of 'threadEff' for a
--- @'ThreadsEff' t ('WriterPrim' w)@ instance only be specifying how
+-- @'ThreadsEff' t ('WriterPrim' o)@ instance only be specifying how
 -- 'WriterPrimPass' should be lifted.
 --
--- This relies on an existing @'ThreadsEff' t ('ListenPrim' w)@ instance.
-threadWriterPrim :: forall w t m a
+-- This relies on an existing @'ThreadsEff' t ('ListenPrim' o)@ instance.
+threadWriterPrim :: forall o t m a
                   . ( MonadTrans t
-                    , ThreadsEff t (ListenPrim w)
+                    , ThreadsEff t (ListenPrim o)
                     , Monad m
                     )
-                 => ( (forall x. WriterPrim w m x -> m x)
-                    -> t m (w -> w, a) -> t m a
+                 => ( (forall x. WriterPrim o m x -> m x)
+                    -> t m (o -> o, a) -> t m a
                     )
-                 -> (forall x. WriterPrim w m x -> m x)
-                 -> WriterPrim w (t m) a -> t m a
+                 -> (forall x. WriterPrim o m x -> m x)
+                 -> WriterPrim o (t m) a -> t m a
 threadWriterPrim h alg = \case
-  WriterPrimTell w   -> lift (alg (WriterPrimTell w))
+  WriterPrimTell o   -> lift (alg (WriterPrimTell o))
   WriterPrimListen m -> (`threadEff` (ListenPrimListen m)) $ \case
-    ListenPrimTell   w  -> alg (WriterPrimTell w)
+    ListenPrimTell   o  -> alg (WriterPrimTell o)
     ListenPrimListen m' -> alg (WriterPrimListen m')
   WriterPrimPass m -> h alg m
 {-# INLINE threadWriterPrim #-}
 
-instance ( Reifies s (ReifiedEffAlgebra (WriterPrim w) m)
-         , Monoid w
+instance ( Reifies s (ReifiedEffAlgebra (WriterPrim o) m)
+         , Monoid o
          , Monad m
          )
-      => MonadWriter w (ViaAlg s (WriterPrim w) m) where
-  tell w = case reflect @s of
-    ReifiedEffAlgebra alg -> coerceAlg alg (WriterPrimTell w)
+      => MonadWriter o (ViaAlg s (WriterPrim o) m) where
+  tell o = case reflect @s of
+    ReifiedEffAlgebra alg -> coerceAlg alg (WriterPrimTell o)
   {-# INLINE tell #-}
 
   listen m = case reflect @s of
@@ -100,29 +100,29 @@ instance ( Reifies s (ReifiedEffAlgebra (WriterPrim w) m)
   {-# INLINE pass #-}
 
 -- | A valid definition of 'threadEff' for a
--- @'Monoid' w => 'ThreadsEff' ('WriterPrim' w) t@ instance,
+-- @'Monoid' o => 'ThreadsEff' ('WriterPrim' o) t@ instance,
 -- given that @t@ lifts @'MonadWriter' w@.
-threadWriterPrimViaClass :: forall w t m a
-                          . (Monoid w, MonadTrans t, Monad m)
+threadWriterPrimViaClass :: forall o t m a
+                          . (Monoid o, MonadTrans t, Monad m)
                          => ( RepresentationalT t
-                            , forall b. MonadWriter w b => MonadWriter w (t b)
+                            , forall b. MonadWriter o b => MonadWriter o (t b)
                             )
-                         => (forall x. WriterPrim w m x -> m x)
-                         -> WriterPrim w (t m) a -> t m a
+                         => (forall x. WriterPrim o m x -> m x)
+                         -> WriterPrim o (t m) a -> t m a
 threadWriterPrimViaClass alg = \case
-  WriterPrimTell w   -> lift (alg (WriterPrimTell w))
+  WriterPrimTell o   -> lift (alg (WriterPrimTell o))
   WriterPrimListen m ->
     reify (ReifiedEffAlgebra alg) $ \(_ :: pr s) ->
         unViaAlgT
       $ fmap (\(f, a) -> (a, f))
       $ listen
-      $ viaAlgT @s @(WriterPrim w) m
+      $ viaAlgT @s @(WriterPrim o) m
   WriterPrimPass m ->
     reify (ReifiedEffAlgebra alg) $ \(_ :: pr s) ->
         unViaAlgT
       $ pass
       $ fmap (\(f, a) -> (a, f))
-      $ viaAlgT @s @(WriterPrim w) m
+      $ viaAlgT @s @(WriterPrim o) m
 {-# INLINE threadWriterPrimViaClass #-}
 
 #define THREAD_WRITERPRIM(monadT)                              \
@@ -136,7 +136,7 @@ THREAD_WRITERPRIM(ExceptT e)
 THREAD_WRITERPRIM(LSt.StateT s)
 THREAD_WRITERPRIM(SSt.StateT s)
 
-instance Monoid s => ThreadsEff (LWr.WriterT s) (WriterPrim w) where
+instance Monoid s => ThreadsEff (LWr.WriterT s) (WriterPrim o) where
   threadEff = threadWriterPrim $ \alg m ->
       LWr.WriterT
     $ alg
@@ -145,7 +145,7 @@ instance Monoid s => ThreadsEff (LWr.WriterT s) (WriterPrim w) where
     $ LWr.runWriterT m
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff (SWr.WriterT s) (WriterPrim w) where
+instance Monoid s => ThreadsEff (SWr.WriterT s) (WriterPrim o) where
   threadEff = threadWriterPrim $ \alg m ->
       SWr.WriterT
     $ alg
@@ -154,7 +154,7 @@ instance Monoid s => ThreadsEff (SWr.WriterT s) (WriterPrim w) where
     $ SWr.runWriterT m
   {-# INLINE threadEff #-}
 
-instance Monoid s => ThreadsEff (CPSWr.WriterT s) (WriterPrim w) where
+instance Monoid s => ThreadsEff (CPSWr.WriterT s) (WriterPrim o) where
   threadEff = threadWriterPrim $ \alg m ->
       CPSWr.writerT
     $ alg
@@ -166,11 +166,11 @@ instance Monoid s => ThreadsEff (CPSWr.WriterT s) (WriterPrim w) where
 -- | Rewrite an 'Algebra' where the topmost effect is 'ListenPrim' into
 -- an 'Algebra' where the topmost effect is 'WriterPrim' by providing
 -- an implementation of 'WriterPrimPass'.
-algListenPrimIntoWriterPrim :: Algebra' (ListenPrim w ': p) m a
-                            -> (m (w -> w, a) -> m a)
-                            -> Algebra' (WriterPrim w ': p) m a
+algListenPrimIntoWriterPrim :: Algebra' (ListenPrim o ': p) m a
+                            -> (m (o -> o, a) -> m a)
+                            -> Algebra' (WriterPrim o ': p) m a
 algListenPrimIntoWriterPrim alg h = powerAlg (weakenAlg alg) $ \case
-  WriterPrimTell w   -> (alg . inj) (ListenPrimTell w)
+  WriterPrimTell o   -> (alg . inj) (ListenPrimTell o)
   WriterPrimListen m -> (alg . inj) (ListenPrimListen m)
   WriterPrimPass m   -> h m
 {-# INLINE algListenPrimIntoWriterPrim #-}

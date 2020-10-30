@@ -84,7 +84,7 @@ shift = send .# Shift
 --
 -- @'Derivs' ('ContC' r m) = 'Cont' ': 'Derivs' m@
 --
--- @'Control.Effect.Primitive.Prims'  ('ContC' r m) = 'Prims' m@
+-- @'Control.Effect.Primitive.Prims'  ('ContC' r m) = 'Control.Effect.Primitive.Prims' m@
 runCont :: forall a m p
          . ( Carrier m
            , Threaders '[ContThreads] m p
@@ -94,7 +94,8 @@ runCont =
     foldFreeT
       id
       (\c -> \case
-        Exit a -> a
+        Exit a -> pure a
+        Attempt m -> m >>= c
         GetCont -> c $ Left (c . Right)
       )
   .# unContC
@@ -135,7 +136,7 @@ runShift = coerce (runCont @r @m @p)
 
 -- | Run a @'Shift' r@ effect if the program returns @r@.
 --
--- Compared to 'runCont', this is quite a bit faster, but is significantly more
+-- Compared to 'runShift', this is quite a bit faster, but is significantly more
 -- restrictive in what interpreters are used after it, since there are very
 -- few primitive effects that the carrier for 'runContFast' is able to thread.
 -- In fact, of all the primitive effects provided by this library, only

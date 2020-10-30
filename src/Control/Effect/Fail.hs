@@ -84,7 +84,7 @@ deriving via Effly (InterpretFailC h m)
 -- For example:
 --
 -- @
---   'failToThrow' (\_ -> 'throw' exc) (do { Just a <- pure Nothing; return a})
+--   'failToThrow' (\\_ -> 'throw' exc) (do { Just a <- pure Nothing; return a})
 -- = 'throw' exc
 -- @
 --
@@ -169,7 +169,7 @@ instance Eff (Throw String) m
 -- | Run a 'Fail' effect purely, by returning @Left failureMessage@
 -- upon a pattern match failure.
 --
--- 'FailC' has an 'Alternative' instance based on the 'Alt'
+-- 'FailC' has an 'MonadFail' instance based on the 'Fail'
 -- effect it interprets.
 runFail :: forall m a p
          . ( Threaders '[ErrorThreads] m p

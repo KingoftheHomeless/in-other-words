@@ -52,7 +52,7 @@ atomicModifyIORefP ref f = do
 --
 -- Convention: the interpreter for the @AtomicState@ action must force
 -- the resulting tuple of the function, but not the end state or returned value.
-data AtomicState s m a where
+data AtomicState s :: Effect where
   AtomicState :: (s -> (s, a)) -> AtomicState s m a
   AtomicGet   :: AtomicState s m s
 
@@ -75,7 +75,7 @@ atomicState' f = atomicState $ \s -> let (!s', a) = f s in (s', a)
 -- | Read the state.
 --
 -- Depending on the interperation of 'AtomicState', this
--- can be more efficient than @'atomicState' (\s -> (s,s))@
+-- can be more efficient than @'atomicState' (\\s -> (s,s))@
 atomicGet :: Eff (AtomicState s) m => m s
 atomicGet = send AtomicGet
 {-# INLINE atomicGet #-}

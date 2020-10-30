@@ -117,6 +117,7 @@ type AltMaybeC = CompositionC
 -- effect it interprets.
 --
 -- @'Derivs' ('AltMaybeC' m) = 'Alt' ': 'Derivs' m@
+--
 -- @'Prims'  ('AltMaybeC' m) = 'Control.Effect.Optional.Optional' ((->) ()) ': 'Prims' m@
 runAltMaybe :: forall m a p
              . ( Threaders '[ErrorThreads] m p
