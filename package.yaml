@@ -1,5 +1,5 @@
 name:                in-other-words
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            A higher-order effect system where the sky's the limit
 description:
   A low-boilerplate effect system with easy higher-order effects and very high expressive power
@@ -11,6 +11,7 @@ copyright:           BSD3
 category:            Control
 extra-source-files:
 - README.md
+- ChangeLog.md
 
 dependencies:
   - base >= 4.7 && < 5
