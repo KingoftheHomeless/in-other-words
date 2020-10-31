@@ -40,7 +40,7 @@ type Logic = Bundle '[NonDet, Cull, Cut, Split]
 -- * 'Control.Effect.Optional.Optional' @s@ (when @s@ is a functor)
 -- * 'Control.Effect.Type.Unravel.Unravel' @p@
 -- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
--- * 'Control.Effect.Type.ListenPrim.ListenPrim' @o@ (when @o@ is a 'Monoid')
+-- * 'Control.Effect.Type.WriterPrim.WriterPrim' @o@ (when @o@ is a 'Monoid')
 -- * 'Control.Effect.Type.ReaderPrim.ReaderPrim' @i@
 type NonDetThreads = Threads L.ListT
 
