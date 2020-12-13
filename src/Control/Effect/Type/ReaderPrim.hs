@@ -23,8 +23,6 @@ import qualified Control.Monad.Trans.State.Lazy as LSt
 import qualified Control.Monad.Trans.Writer.Lazy as LWr
 import qualified Control.Monad.Trans.Writer.Strict as SWr
 import qualified Control.Monad.Trans.Writer.CPS as CPSWr
-import Control.Monad.Trans.Cont (ContT(..))
-import qualified Control.Monad.Trans.Cont as C
 
 import Control.Effect.Internal.ViaAlg
 import Control.Effect.Type.Regional
@@ -58,7 +56,6 @@ import Control.Effect.Internal.Union
 -- * 'Control.Effect.NonDet.NonDetThreads'
 -- * 'Control.Effect.Stepped.SteppedThreads'
 -- * 'Control.Effect.Cont.ContThreads'
--- * 'Control.Effect.Cont.ContFastThreads'
 data ReaderPrim i :: Effect where
   ReaderPrimAsk   :: ReaderPrim i m i
   ReaderPrimLocal :: (i -> i) -> m a -> ReaderPrim i m a
@@ -147,4 +144,5 @@ THREAD_READER(SSt.StateT s)
 THREAD_READER(LSt.StateT s)
 THREAD_READER_CTX(Monoid w, LWr.WriterT w)
 THREAD_READER_CTX(Monoid w, SWr.WriterT w)
-THREAD_READER(C.ContT r)
+
+-- We don't thread ReaderPrim for ContT; its MonadReader instance isn't lawful.

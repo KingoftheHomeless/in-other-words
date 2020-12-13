@@ -4,7 +4,7 @@ module Control.Effect.Newtype
 
     -- * Unwrapping
   , EffNewtype(..)
-  , WrapperOf
+  , WrapperOf(..)
 
   , unwrap
 

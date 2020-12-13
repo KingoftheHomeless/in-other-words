@@ -10,7 +10,6 @@ import Control.Effect.Type.Regional
 import Control.Effect.Carrier.Internal.Interpret
 
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Identity
 
 newtype HoistCall b = HoistCall (forall x. b x -> b x)
 

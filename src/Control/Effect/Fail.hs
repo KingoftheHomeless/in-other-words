@@ -43,10 +43,11 @@ import Control.Effect.Carrier
 
 -- Imports for coercion
 import Control.Effect.Internal.Utils
+import Control.Effect.Internal.Error
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Intro
 import Control.Effect.Carrier.Internal.Compose
-import Control.Monad.Trans.Identity
+import Control.Monad.Trans.Except
 
 
 -- | Like 'InterpretC' specialized to interpret 'Fail', but with a 'MonadFail'
@@ -156,10 +157,30 @@ failToNonDet = interpretViaHandler .# unInterpretFailC
 
 data FailH
 
-type FailC = CompositionC
- '[ ReinterpretC FailH Fail '[Throw String]
-  , ThrowC String
-  ]
+newtype FailC m a = FailC {
+    unFailC ::
+        ReinterpretC FailH Fail '[Throw String]
+      ( ThrowC String
+      ( m
+      )) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ ReinterpretC FailH Fail '[Throw String]
+      , ThrowC String
+      ]
+
+deriving via  Effly (FailC m)
+    instance (Carrier m, Threads (ExceptT String) (Prims m))
+          => MonadFail (FailC m)
+
+deriving instance (Carrier m, Threads (ExceptT String) (Prims m))
+               => Carrier (FailC m)
 
 instance Eff (Throw String) m
       => Handler FailH Fail m where
@@ -171,6 +192,10 @@ instance Eff (Throw String) m
 --
 -- 'FailC' has an 'MonadFail' instance based on the 'Fail'
 -- effect it interprets.
+--
+-- @'Derivs' ('FailC' m) = 'Fail' ': 'Derivs' m@
+--
+-- @'Control.Effect.Primitive.Prims'  ('FailC' m) = 'Control.Effect.Primitive.Prims' m@
 runFail :: forall m a p
          . ( Threaders '[ErrorThreads] m p
            , Carrier m
@@ -180,7 +205,7 @@ runFail :: forall m a p
 runFail =
      runThrow
   .# reinterpretViaHandler
-  .# runComposition
+  .# unFailC
 
 -- | Like 'InterpretSimpleC' specialized to interpret 'Fail', but with
 -- a 'MonadFail' instance based on the interpreted 'Fail'.

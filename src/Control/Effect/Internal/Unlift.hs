@@ -8,8 +8,6 @@ import Control.Effect.Carrier.Internal.Interpret
 
 import Control.Effect.Type.Unlift
 
-import Control.Monad.Trans.Identity
-
 
 data UnliftH
 

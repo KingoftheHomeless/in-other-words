@@ -121,7 +121,7 @@ instance ( Carrier m
     powerAlg
       (liftReform reformulate n alg)
       $ \case
-        FromList l -> n $ NonDetC $ L.ListT $ \_ c b _ -> foldr c b l
+        FromList l -> n $ NonDetC $ L.ListT $ \c b _ -> foldr c b l
   {-# INLINEABLE reformulate #-}
 
 
@@ -169,7 +169,6 @@ runNonDet1 :: forall m a p
            -> m (Maybe a)
 runNonDet1 m =
   L.unListT (unNonDetC m)
-            (>>=)
             (\a _ -> pure (Just a))
             (pure Nothing)
             (pure Nothing)

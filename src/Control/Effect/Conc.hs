@@ -83,6 +83,7 @@ import Control.Concurrent.Async (Async)
 import qualified Control.Concurrent.Async as A
 
 import Control.Effect
+import Control.Effect.Internal.Conc
 import Control.Effect.Unlift
 
 import Control.Exception (SomeException, Exception)
@@ -90,22 +91,8 @@ import Control.Effect.Internal.Newtype
 
 -- For coercion purposes
 import Control.Effect.Internal.Utils
-import Control.Monad.Trans.Identity
-import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Interpret
 
--- | An effect for concurrent execution.
-newtype Conc m a = Conc (Unlift IO m a)
-  deriving EffNewtype via Conc `WrapperOf` Unlift IO
-
-unliftConc :: Eff Conc m => ((forall x. m x -> IO x) -> IO a) -> m a
-unliftConc main = wrapWith Conc $ unlift (\lower -> main (lower .# lift))
-{-# INLINE unliftConc #-}
-
-type ConcToIOC = CompositionC
- '[ UnwrapTopC Conc
-  , UnliftToFinalC IO
-  ]
 
 type ConcToUnliftIOC = UnwrapC Conc
 
@@ -137,7 +124,7 @@ concToIO :: ( Carrier m
 concToIO =
      unliftToFinal
   .# unwrapTop
-  .# runComposition
+  .# unConcToIOC
 {-# INLINE concToIO #-}
 
 -- | Transform a 'Conc' effect into @'Unlift' IO@.

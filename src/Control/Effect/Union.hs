@@ -38,11 +38,6 @@ import Control.Effect.Internal.Derive
 import Control.Effect.Internal.Membership
 import Control.Effect.Internal.KnownList
 
--- For coercion purposes
-import Control.Monad.Trans.Identity
-import Control.Effect.Carrier.Internal.Compose
-import Control.Effect.Carrier.Internal.Intro
-
 
 newtype UnionC (l :: [Effect]) m a = UnionC { unUnionC :: m a }
   deriving ( Functor, Applicative, Monad
@@ -98,7 +93,7 @@ runUnion = unUnionC
 
 -- | Sends uses of effects in @b@ to a @'Union' b@ effect.
 --
--- @'Derivs' (UnionizeC b m) = b ++ 'Derivs' m@
+-- @'Derivs' ('UnionizeC' b m) = b ++ 'Derivs' m@
 unionize :: ( Eff (Union b) m
             , KnownList b
             )
@@ -107,21 +102,46 @@ unionize :: ( Eff (Union b) m
 unionize = unUnionizeC
 {-# INLINE unionize #-}
 
-type UnionizeHeadC b = CompositionC
- '[ IntroC b '[Union b]
-  , UnionizeC b
-  ]
+newtype UnionizeHeadC b m a = UnionizeHeadC { unUnionizeHeadC :: m a }
+  deriving ( Functor, Applicative, Monad
+           , Alternative, MonadPlus
+           , MonadFix, MonadFail, MonadIO
+           , MonadThrow, MonadCatch, MonadMask
+           , MonadBase b', MonadBaseControl b'
+           )
+  deriving (MonadTrans, MonadTransControl) via IdentityT
 
+instance ( HeadEff (Union b) m
+         , KnownList b
+         )
+      => Carrier (UnionizeHeadC b m) where
+  type Derivs (UnionizeHeadC b m) = Append b (StripPrefix '[Union b] (Derivs m))
+  type Prims  (UnionizeHeadC b m) = Prims m
+
+  algPrims = coerce (algPrims @m)
+  {-# INLINE algPrims #-}
+
+  reformulate n alg (Union pr e) =
+    case splitMembership @(StripPrefix '[Union b] (Derivs m)) (singList @b) pr of
+      Left pr'  -> reformulate (n .# UnionizeHeadC) alg $ inj (Union pr' e)
+      Right pr' -> reformulate (n .# UnionizeHeadC) alg (Union (There pr') e)
+  {-# INLINE reformulate #-}
+
+  algDerivs (Union pr e) =
+    case splitMembership @(StripPrefix '[Union b] (Derivs m)) (singList @b) pr of
+      Left pr'  -> UnionizeHeadC $ algDerivs @m $ inj (Union pr' e)
+      Right pr' -> UnionizeHeadC $ algDerivs @m (Union (There pr') e)
+  {-# INLINE algDerivs #-}
 
 -- | Rewrite uses of effects in @b@ into a @'Union' b@ effect on top of the effect stack.
 --
--- @'Derivs' (UnionizeC b m) = b ++ StripPrefix '['Union' b] 'Derivs' m@
+-- @'Derivs' ('UnionizeHeadC' b m) = b ++ StripPrefix '['Union' b] ('Derivs' m)@
 unionizeHead :: ( HeadEff (Union b) m
                 , KnownList b
                 )
              => UnionizeHeadC b m a
              -> m a
-unionizeHead = coerce
+unionizeHead = unUnionizeHeadC
 {-# INLINE unionizeHead #-}
 
 

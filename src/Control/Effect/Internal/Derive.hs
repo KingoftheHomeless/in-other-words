@@ -6,7 +6,7 @@ module Control.Effect.Internal.Derive
   , MonadThrow, MonadCatch, MonadMask
   , MonadBase, MonadBaseControl
   , MonadTrans, MonadTransControl
-  , IdentityT
+  , IdentityT(..)
   ) where
 
 -- TODO(KingoftheHomeless?): Make a TH macro which may be used to newtype-derive as many of these classes as possible.

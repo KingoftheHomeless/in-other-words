@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 module Control.Effect.Trace
   ( -- * Effects
     Trace(..)
@@ -33,6 +34,7 @@ module Control.Effect.Trace
   ) where
 
 import Data.IORef
+import Data.Semigroup
 
 import Control.Effect
 import Control.Effect.Writer
@@ -40,11 +42,12 @@ import Control.Effect.Writer
 import System.IO
 
 -- For coercion purposes
+import Control.Effect.Carrier
 import Control.Effect.Internal.Utils
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Intro
-import Control.Monad.Trans.Identity
+import qualified Control.Monad.Trans.Writer.CPS as CPS
 
 
 -- | An effect for debugging by printing/logging strings.
@@ -61,10 +64,26 @@ traceShow :: (Show a, Eff Trace m) => a -> m ()
 traceShow = trace . show
 {-# INLINE traceShow #-}
 
-type TraceListC = CompositionC
- '[ TraceIntoTellC
-  , TellListC String
-  ]
+newtype TraceListC m a = TraceListC {
+    unTraceListC ::
+        TraceIntoTellC
+      ( TellListC String
+      ( m
+      )) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ TraceIntoTellC
+      , TellListC String
+      ]
+
+deriving instance (Carrier m, Threads (CPS.WriterT (Dual [String])) (Prims m))
+               => Carrier (TraceListC m)
 
 -- | Run a 'Trace' effect purely by accumulating all 'trace'd strings
 -- into a list.
@@ -77,7 +96,7 @@ runTraceList :: forall m a p
 runTraceList =
      runTellList
   .# traceIntoTell
-  .# runComposition
+  .# unTraceListC
 {-# INLINE runTraceList #-}
 
 data TracePrintingH

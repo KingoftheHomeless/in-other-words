@@ -1,5 +1,31 @@
 # Changelog for `in-other-words`
 
+## Unreleased
+### Breaking Changes
+* `-Fast` interpretations of every continuation-related effect have been removed due
+  lack of usefulness.
+* The `ThreadsEff (ContT r) (ReaderPrim i)` instance has been removed due to unlawfulness.
+* `Control.Monad.Trans.List.Church` and `Control.Monad.Free.Church.Alternate` have
+    received a minor revamp. Notably, the representations of `ListT` and `FreeT` have been
+    changed to become lawful monad transformers.
+* `bracketToIO` now executes the cleanup action of any `generalBracket`
+    _uninterruptibly masked_.
+
+### Non-breaking Changes
+* Fixed a bug where `listen` when using `listenToIO` would be lifted incorrectly by carriers
+    based on `FreeT` and `ListT`, which arose due to these not having been lawful
+    monad transformers.
+* All uses of `CompositionC` in the library has been changed to proper newtypes.
+    This should improve the quality of error messages as well as compilation times.
+* Added `bracketToIOUnsafe`, which has the previous semantics of `bracketToIO`
+    -- that is, the cleanup action of each `generalBracket` is only executed
+    _interruptibly masked_.
+* `Control.Efffect.Newtype` now exports the constructors of `WrapperOf`, thus
+     addressing an issue where users wouldn't be allowed to derive via `WrapperOf`.
+* `Control.Efffect.Carrier` now exports the constructors of `IdentityT`, thus
+     addressing an issue where users wouldn't be allowed to derive via `IdentityT`.
+* Fixed an issue where `FailC` lacked a `MonadFail` instance.
+
 ## 0.1.1.0 (2020-10-30)
 * Added `runTellAction` and `ignoreTell` interpreters.
 * Added `runEmbed` interpreter

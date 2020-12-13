@@ -46,7 +46,7 @@ atomicModifyIORefP ref f = do
   Box a <- atomicModifyIORef ref $ \s -> let !(s', a) = f s in (s', Box a)
   return a
 {-# INLINE atomicModifyIORefP #-}
-# endif
+#endif
 
 -- | An effect for atomically reading and modifying a piece of state.
 --

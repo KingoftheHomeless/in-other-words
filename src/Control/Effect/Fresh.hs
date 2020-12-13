@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 module Control.Effect.Fresh
   ( -- * Effects
     Fresh(..)
@@ -31,11 +32,12 @@ import Control.Effect
 import Control.Effect.State
 
 -- For coercion purposes
+import Control.Effect.Carrier
 import Control.Effect.Internal.Utils
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Intro
-import Control.Monad.Trans.Identity
+import Control.Monad.Trans.State.Strict (StateT)
 
 
 -- | An effect for creating unique objects which may be used as references,
@@ -120,10 +122,27 @@ instance (Enum uniq, Eff (State uniq) m)
   effHandler Fresh = state' (\s -> (succ s, s))
   {-# INLINEABLE effHandler #-}
 
-type FreshEnumC uniq = CompositionC
- '[ ReinterpretC FreshEnumH (Fresh uniq) '[State uniq]
-  , StateC uniq
-  ]
+newtype FreshEnumC uniq m a = FreshEnumC {
+    unFreshEnumC ::
+        ReinterpretC FreshEnumH (Fresh uniq) '[State uniq]
+      ( StateC uniq
+      ( m
+      )) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ ReinterpretC FreshEnumH (Fresh uniq) '[State uniq]
+      , StateC uniq
+      ]
+
+deriving instance (Carrier m, Enum uniq, Threads (StateT uniq) (Prims m))
+               => Carrier (FreshEnumC uniq m)
+
 -- | Run a 'Fresh' effect purely by specifying an 'Enum' to be used as the
 -- type of unique objects.
 --
@@ -154,5 +173,5 @@ runFreshEnum :: forall uniq m a p
 runFreshEnum =
      evalState (toEnum 0)
   .# reinterpretViaHandler
-  .# runComposition
+  .# unFreshEnumC
 {-# INLINE runFreshEnum #-}

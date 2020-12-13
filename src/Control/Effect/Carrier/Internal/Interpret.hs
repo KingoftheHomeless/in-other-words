@@ -405,7 +405,7 @@ instance ( Threads (ReaderT (ReifiedPrimHandler e m)) (Prims m)
 -- echo = readTTY >>= sendTTY
 --
 -- teletypeToIO :: 'Eff' ('Control.Effect.Embed' IO) m => 'Control.Effect.InterpreterFor' Teletype m
--- teletypeToIO = 'interpret' $ \case
+-- teletypeToIO = 'interpret' $ \\case
 --   ReadTTY -> 'Control.Effect.embed' getLine
 --   WriteTTY str -> 'Control.Effect.embed' $ putStrLn str
 --
@@ -458,7 +458,7 @@ interpret h m = reify (ReifiedHandler h) $ \(_ :: p s) ->
 -- echo = readTTY >>= sendTTY
 --
 -- teletypeToIO :: 'Eff' ('Control.Effect.Embed' IO) m => 'Control.Effect.SimpleInterpreterFor' Teletype m
--- teletypeToIO = 'interpretSimple' $ \case
+-- teletypeToIO = 'interpretSimple' $ \\case
 --   ReadTTY -> 'Control.Effect.embed' getLine
 --   WriteTTY str -> 'Control.Effect.embed' $ putStrLn str
 --
@@ -511,7 +511,7 @@ interpretSimple h m = coerce m (ReifiedHandler @e @m h)
 --
 -- instance 'Eff' ('Control.Effect.Embed' IO) m
 --       => 'Handler' TeletypeToIOH Teletype m where
---   effHandler = \case
+--   effHandler = \\case
 --     ReadTTY -> 'Control.Effect.embed' getLine
 --     WriteTTY str -> 'Control.Effect.embed' $ putStrLn str
 --

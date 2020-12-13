@@ -43,7 +43,6 @@ import Control.Effect.Internal.Itself
 
 import Control.Effect.Internal.Utils
 
-import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Control
 import GHC.Exts (Proxy#, proxy#)
 
@@ -105,9 +104,9 @@ withLowerToBase main = join $ send $
 --   WithFile :: FilePath -> IOMode -> (Handle -> m a) -> WithFile m a
 --
 -- runWithFile :: 'Eff' ('BaseControl' IO) m => 'SimpleInterpreterFor' WithFile m
--- runWithFile = 'interpretSimple' $ \case
---   WithFile fp mode c -> 'gainBaseControl' $ 'control' $ \lower ->
---     SysIO.withFile fp mode (\hdl -> lower (lift (c hdl)))
+-- runWithFile = 'interpretSimple' $ \\case
+--   WithFile fp mode c -> 'gainBaseControl' $ 'control' $ \\lower ->
+--     SysIO.withFile fp mode (\\hdl -> lower (lift (c hdl)))
 -- @
 --
 gainBaseControl

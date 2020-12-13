@@ -114,6 +114,7 @@ import Control.Effect.Internal.Writer
 
 import qualified Control.Monad.Catch as C
 
+import Control.Monad.Trans.Reader (ReaderT)
 import qualified Control.Monad.Trans.Writer.CPS as W
 import qualified Control.Monad.Trans.Writer.Lazy as LW
 
@@ -122,7 +123,6 @@ import Control.Effect.Internal.Utils
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Intro
-import Control.Monad.Trans.Identity
 
 -- | A pseudo-effect for connected @'Tell' o@, @'Listen' o@ and @'Pass' o@ effects.
 --
@@ -149,10 +149,27 @@ censor f = pass . fmap ((,) f)
 
 data TellListH
 
-type TellListC o = CompositionC
- '[ ReinterpretC TellListH (Tell o) '[Tell (Dual [o])]
-  , TellC (Dual [o])
-  ]
+newtype TellListC o m a = TellListC {
+    unTellListC ::
+        ReinterpretC TellListH (Tell o) '[Tell (Dual [o])]
+      ( TellC (Dual [o])
+      ( m
+      )) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ ReinterpretC TellListH (Tell o) '[Tell (Dual [o])]
+      , TellC (Dual [o])
+      ]
+
+deriving instance (Carrier m, Threads (W.WriterT (Dual [o])) (Prims m))
+               => Carrier (TellListC o m)
+
 
 instance Eff (Tell (Dual [o])) m
       => Handler TellListH (Tell o) m where
@@ -177,15 +194,31 @@ runTellList =
      (fmap . first) (reverse .# getDual)
   .  runTell
   .# reinterpretViaHandler
-  .# runComposition
+  .# unTellListC
 {-# INLINE runTellList #-}
 
 data TellListLazyH
 
-type TellListLazyC o = CompositionC
- '[ ReinterpretC TellListLazyH (Tell o) '[Tell (Endo [o])]
-  , TellLazyC (Endo [o])
-  ]
+newtype TellListLazyC o m a = TellListLazyC {
+    unTellListLazyC ::
+        ReinterpretC TellListLazyH (Tell o) '[Tell (Endo [o])]
+      ( TellLazyC (Endo [o])
+      ( m
+      )) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ ReinterpretC TellListLazyH (Tell o) '[Tell (Endo [o])]
+      , TellLazyC (Endo [o])
+      ]
+
+deriving instance (Carrier m, Threads (LW.WriterT (Endo [o])) (Prims m))
+               => Carrier (TellListLazyC o m)
 
 instance Eff (Tell (Endo [o])) m
       => Handler TellListLazyH (Tell o) m where
@@ -211,7 +244,7 @@ runTellListLazy =
      fromEndoWriter
   .  runTellLazy
   .# reinterpretViaHandler
-  .# runComposition
+  .# unTellListLazyC
 {-# INLINE runTellListLazy #-}
 
 
@@ -426,11 +459,29 @@ tellIntoEndoTell :: ( Monoid o
 tellIntoEndoTell = reinterpretViaHandler
 {-# INLINE tellIntoEndoTell #-}
 
-type ListenIntoEndoListenC o = CompositionC
-  '[ IntroC '[Listen o, Tell o] '[Listen (Endo o), Tell (Endo o)]
-   , InterpretC WriterToEndoWriterH (Listen o)
-   , InterpretC WriterToEndoWriterH (Tell o)
-   ]
+newtype ListenIntoEndoListenC o m a = ListenIntoEndoListenC {
+    unListenIntoEndoListenC ::
+        IntroC '[Listen o, Tell o] '[Listen (Endo o), Tell (Endo o)]
+      ( InterpretC WriterToEndoWriterH (Listen o)
+      ( InterpretC WriterToEndoWriterH (Tell o)
+      ( m
+      ))) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ IntroC '[Listen o, Tell o] '[Listen (Endo o), Tell (Endo o)]
+      , InterpretC WriterToEndoWriterH (Listen o)
+      , InterpretC WriterToEndoWriterH (Tell o)
+      ]
+
+deriving instance (Monoid o, HeadEffs '[Listen (Endo o), Tell (Endo o)] m)
+               => Carrier (ListenIntoEndoListenC o m)
+
 
 -- | Rewrite connected @'Listen' o@ and @'Tell' o@ effects into
 -- connected @'Listen' ('Endo' o)@ and @'Tell' ('Endo' o)@ effects.
@@ -439,7 +490,7 @@ type ListenIntoEndoListenC o = CompositionC
 -- asymptotically improves performance if the time complexity of '<>' for the
 -- 'Monoid' depends only on the size of the first argument.
 -- In particular, you should use this (if you can be bothered) if the monoid
--- is a list, such as String.
+-- is a list, such as 'String'.
 --
 -- Usage is to combine this with the 'Listen' interpreter of your choice,
 -- followed by 'fromEndoWriter', like this:
@@ -462,16 +513,35 @@ listenIntoEndoListen =
      interpretViaHandler
   .# interpretViaHandler
   .# introUnderMany
-  .# runComposition
+  .# unListenIntoEndoListenC
 {-# INLINE listenIntoEndoListen #-}
 
-type WriterIntoEndoWriterC o = CompositionC
-  '[ IntroC '[Pass o, Listen o, Tell o]
-            '[Pass (Endo o), Listen (Endo o), Tell (Endo o)]
-   , InterpretC WriterToEndoWriterH (Pass o)
-   , InterpretC WriterToEndoWriterH (Listen o)
-   , InterpretC WriterToEndoWriterH (Tell o)
-   ]
+newtype WriterIntoEndoWriterC o m a = WriterIntoEndoWriterC {
+    unWriterIntoEndoWriterC ::
+        IntroC '[Pass o, Listen o, Tell o]
+               '[Pass (Endo o), Listen (Endo o), Tell (Endo o)]
+      ( InterpretC WriterToEndoWriterH (Pass o)
+      ( InterpretC WriterToEndoWriterH (Listen o)
+      ( InterpretC WriterToEndoWriterH (Tell o)
+      ( m
+      )))) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ IntroC '[Pass o, Listen o, Tell o]
+               '[Pass (Endo o), Listen (Endo o), Tell (Endo o)]
+      , InterpretC WriterToEndoWriterH (Pass o)
+      , InterpretC WriterToEndoWriterH (Listen o)
+      , InterpretC WriterToEndoWriterH (Tell o)
+      ]
+
+deriving instance (Monoid o, HeadEffs '[Pass (Endo o), Listen (Endo o), Tell (Endo o)] m)
+               => Carrier (WriterIntoEndoWriterC o m)
 
 -- | Rewrite connected @'Pass' o@, @'Listen' o@ and @'Tell' o@ effects
 -- -- i.e. @'Writer' o@ -- into connected @'Pass' ('Endo' o)@,
@@ -507,7 +577,7 @@ writerIntoEndoWriter =
   .# interpretViaHandler
   .# interpretViaHandler
   .# introUnderMany
-  .# runComposition
+  .# unWriterIntoEndoWriterC
 {-# INLINE writerIntoEndoWriter #-}
 
 -- | Transform a 'Tell' effect into another 'Tell' effect by providing a function
@@ -660,13 +730,37 @@ passTVar main = do
 
 data WriterToBracketH
 
-type WriterToBracketC o = CompositionC
- '[ IntroC '[Pass o, Listen o, Tell o] '[Local (o -> STM ()), Ask (o -> STM ())]
-  , InterpretC WriterToBracketH (Pass o)
-  , InterpretC WriterToBracketH (Listen o)
-  , InterpretC WriterTVarH (Tell o)
-  , ReaderC (o -> STM ())
-  ]
+newtype WriterToBracketC o m a = WriterToBracketC {
+    unWriterToBracketC ::
+        IntroC '[Pass o, Listen o, Tell o]
+               '[Local (o -> STM ()), Ask (o -> STM ())]
+      ( InterpretC WriterToBracketH (Pass o)
+      ( InterpretC WriterToBracketH (Listen o)
+      ( InterpretC WriterTVarH (Tell o)
+      ( ReaderC (o -> STM ())
+      ( m
+      ))))) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ IntroC '[Pass o, Listen o, Tell o]
+               '[Local (o -> STM ()), Ask (o -> STM ())]
+      , InterpretC WriterToBracketH (Pass o)
+      , InterpretC WriterToBracketH (Listen o)
+      , InterpretC WriterTVarH (Tell o)
+      , ReaderC (o -> STM ())
+      ]
+
+deriving instance ( Effs '[Bracket, Embed IO] m
+                  , Monoid o
+                  , Threads (ReaderT (o -> STM ())) (Prims m)
+                  )
+               => Carrier (WriterToBracketC o m)
 
 instance ( Monoid o
          , Effs '[Reader (o -> STM ()), Embed IO, Bracket] m
@@ -733,43 +827,100 @@ writerToBracketTVar tvar =
   .# interpretViaHandler
   .# interpretViaHandler
   .# introUnderMany
-  .# runComposition
+  .# unWriterToBracketC
 {-# INLINE writerToBracketTVar #-}
 
 data WriterTVarH
 
-type ListenTVarC o = CompositionC
- '[ IntroC '[Listen o, Tell o]
-     '[ ListenPrim o
-      , Local (o -> STM ())
-      , Ask (o -> STM ())
+newtype ListenTVarC o m a = ListenTVarC {
+    unListenTVarC ::
+        IntroC '[Listen o, Tell o]
+         '[ ListenPrim o
+          , Local (o -> STM ())
+          , Ask (o -> STM ())
+          ]
+      ( InterpretC WriterTVarH (Listen o)
+      ( InterpretC WriterTVarH (Tell o)
+      ( InterpretPrimC WriterTVarH (ListenPrim o)
+      ( ReaderC (o -> STM ())
+      ( m
+      ))))) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ IntroC '[Listen o, Tell o]
+         '[ ListenPrim o
+          , Local (o -> STM ())
+          , Ask (o -> STM ())
+          ]
+      , InterpretC WriterTVarH (Listen o)
+      , InterpretC WriterTVarH (Tell o)
+      , InterpretPrimC WriterTVarH (ListenPrim o)
+      , ReaderC (o -> STM ())
       ]
-  , InterpretC WriterTVarH (Listen o)
-  , InterpretC WriterTVarH (Tell o)
-  , InterpretPrimC WriterTVarH (ListenPrim o)
-  , ReaderC (o -> STM ())
-  ]
 
-type WriterTVarC o = CompositionC
- '[ IntroC '[Pass o, Listen o, Tell o]
-     '[ ListenPrim o
-      , WriterPrim o
-      , Local (o -> STM ())
-      , Ask (o -> STM ())
+deriving instance ( Monoid o
+                  , Eff (Embed IO) m
+                  , MonadMask m
+                  , Threads (ReaderT (o -> STM ())) (Prims m)
+                  )
+               => Carrier (ListenTVarC o m)
+
+newtype WriterTVarC o m a = WriterTVarC {
+    unWriterTVarC ::
+        IntroC '[Pass o, Listen o, Tell o]
+         '[ ListenPrim o
+          , WriterPrim o
+          , Local (o -> STM ())
+          , Ask (o -> STM ())
+          ]
+      ( InterpretC WriterTVarH (Pass o)
+      ( InterpretC WriterTVarH (Listen o)
+      ( InterpretC WriterTVarH (Tell o)
+      ( InterpretC WriterTVarH (ListenPrim o)
+      ( InterpretPrimC WriterTVarH (WriterPrim o)
+      ( ReaderC (o -> STM ())
+      ( m
+      ))))))) a
+  } deriving ( Functor, Applicative, Monad
+             , Alternative, MonadPlus
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ IntroC '[Pass o, Listen o, Tell o]
+         '[ ListenPrim o
+          , WriterPrim o
+          , Local (o -> STM ())
+          , Ask (o -> STM ())
+          ]
+      , InterpretC WriterTVarH (Pass o)
+      , InterpretC WriterTVarH (Listen o)
+      , InterpretC WriterTVarH (Tell o)
+      , InterpretC WriterTVarH (ListenPrim o)
+      , InterpretPrimC WriterTVarH (WriterPrim o)
+      , ReaderC (o -> STM ())
       ]
-  , InterpretC WriterTVarH (Pass o)
-  , InterpretC WriterTVarH (Listen o)
-  , InterpretC WriterTVarH (Tell o)
-  , InterpretC WriterTVarH (ListenPrim o)
-  , InterpretPrimC WriterTVarH (WriterPrim o)
-  , ReaderC (o -> STM ())
-  ]
+
+deriving instance ( Monoid o
+                  , Eff (Embed IO) m
+                  , MonadMask m
+                  , Threads (ReaderT (o -> STM ())) (Prims m)
+                  )
+               => Carrier (WriterTVarC o m)
 
 instance ( Monoid o
          , Effs '[Reader (o -> STM ()), Embed IO] m
          )
       => Handler WriterTVarH (Tell o) m where
-  effHandler (Tell o) = tellTVar o
+  effHandler (Tell o) = liftBase (tellTVar o)
   {-# INLINEABLE effHandler #-}
 
 instance Eff (ListenPrim o) m
@@ -982,7 +1133,7 @@ runListenTVar tvar =
   .# interpretViaHandler
   .# interpretViaHandler
   .# introUnderMany
-  .# runComposition
+  .# unListenTVarC
 {-# INLINE runListenTVar #-}
 
 -- | Run connected @'Pass' o@, @'Listen' o@ and @'Tell' o@ effects
@@ -1038,7 +1189,7 @@ runWriterTVar tvar =
   .# interpretViaHandler
   .# interpretViaHandler
   .# introUnderMany
-  .# runComposition
+  .# unWriterTVarC
 {-# INLINE runWriterTVar #-}
 
 

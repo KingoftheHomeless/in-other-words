@@ -51,9 +51,6 @@ module Control.Effect.Exceptional
   , SafeErrorToErrorIOSimpleC
   ) where
 
-import Data.Coerce
-import Data.Either
-
 import Control.Effect
 import Control.Effect.Error
 import Control.Effect.ErrorIO
@@ -61,107 +58,14 @@ import Control.Effect.Union
 
 import Control.Effect.Carrier
 
+import Control.Effect.Internal.Exceptional
 import Control.Effect.Internal.Utils
-import Control.Monad.Trans.Identity
 
 -- For coercion purposes
 import Control.Monad.Trans.Except
 import Control.Effect.Internal.Error
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Intro
-import Control.Effect.Carrier.Internal.Compose
-
-
--- | An effect that allows for the safe use of an effect @eff@ that may
--- throw exceptions of the type @exc@ by forcing the user to eventually
--- catch those exceptions at some point of the program.
---
--- The main combinator of 'Exceptional' is 'catching'.
---
--- __This could be unsafe in the presence of 'Control.Effect.Conc.Conc'__.
--- If you use 'catching' on a computation that:
---
--- * Spawns an asynchronous computation
--- * Throws an exception inside the asynchronous computation from a use of @eff@
--- * Returns the 'Control.Effect.Conc.Async' of that asynchronous computation
---
--- Then 'Control.Effect.Conc.wait'ing on that 'Control.Effect.Conc.Async'
--- outside of the 'catching' will throw that exception without it being caught.
-newtype Exceptional eff exc m a = Exceptional (Union '[eff, Catch exc] m a)
-
--- | A particularly useful specialization of 'Exceptional', for gaining
--- restricted access to an @'Error' exc@ effect.
--- Main combinators are 'catchSafe' and 'trySafe'.
-type SafeError exc = Exceptional (Throw exc) exc
-
-{-
-"ExceptionallyC" can easily be implemented using Handler:
-
-data ExceptionallyH exc
-
-instance ( Eff (Exceptional eff exc) m
-         , RepresentationalEff eff
-         )
-      => Handler (ExceptionallH exc) eff m where where
-  effHandler e = send $ Exceptionally $ inj e
-
-type ExceptionallyC eff exc = InterpretC (ExceptionallH exc) eff
-
-catching :: forall eff exc m a
-          . ( Eff (Exceptional eff exc) m
-            , RepresentationalEff eff
-            )
-         => ExceptionallyC exc eff m a
-         -> (exc -> m a)
-         -> m a
-catching m h =
-  send $ Exceptional @eff @exc $
-    inj (Catch @exc (interpretViaHandler m) h)
-
-We use a standalone carrier to hide the RepresentationalEff constraint,
-which is just noise in this case.
--}
-
-newtype ExceptionallyC (eff :: Effect) (exc :: *) m a = ExceptionallyC {
-    unExceptionallyC :: m a
-  }
-  deriving ( Functor, Applicative, Monad
-           , Alternative, MonadPlus
-           , MonadFix, MonadFail, MonadIO
-           , MonadThrow, MonadCatch, MonadMask
-           , MonadBase b, MonadBaseControl b
-           )
-  deriving (MonadTrans, MonadTransControl) via IdentityT
-
-instance Eff (Exceptional eff exc) m
-      => Carrier (ExceptionallyC eff exc m) where
-  type Derivs (ExceptionallyC eff exc m) = eff ': Catch exc ': Derivs m
-  type Prims  (ExceptionallyC eff exc m) = Prims m
-
-  algPrims = coerce (algPrims @m)
-  {-# INLINEABLE algPrims #-}
-
-  reformulate n alg =
-    powerAlg' (
-    powerAlg (
-      reformulate (n .# lift) alg
-    ) $ \e ->
-      reformulate (n .# lift) alg $ inj $
-        Exceptional @eff @exc (Union (There Here) e)
-    ) $ \e ->
-      reformulate (n .# lift) alg $ inj $
-        Exceptional @eff @exc (Union Here e)
-  {-# INLINEABLE reformulate #-}
-
-  algDerivs =
-    powerAlg' (
-    powerAlg (
-      coerce (algDerivs @m)
-    ) $ \e ->
-      coerceAlg (algDerivs @m) $ inj $ Exceptional @eff @exc (Union (There Here) e)
-    ) $ \e ->
-      coerceAlg (algDerivs @m) $ inj $ Exceptional @eff @exc (Union Here e)
-  {-# INLINEABLE algDerivs #-}
 
 -- | Gain access to @eff@ and @'Catch' exc@ within a region,
 -- but only if you're ready to handle any unhandled exception @e :: exc@
@@ -179,7 +83,7 @@ instance Eff (Exceptional eff exc) m
 --
 -- caringProgram :: 'Eff' ('Exceptional' SomeEffect SomeEffectExc) m => m String
 -- caringProgram =
---   'catching' \@eff uncaringProgram (\\(exc :: SomeEffectExc) -> handlerForSomeEffectExc exc)
+--   'catching' \@SomeEffect uncaringProgram (\\(exc :: SomeEffectExc) -> handlerForSomeEffectExc exc)
 -- @
 --
 catching :: forall eff exc m a
@@ -232,33 +136,14 @@ throwing :: forall eff exc m a
 throwing m = m `catching` throw
 {-# INLINE throwing #-}
 
-data ExceptionalH
-
-instance ( Member eff (Derivs m)
-         , Eff (Catch exc) m
-         )
-      => Handler ExceptionalH (Exceptional eff exc) m where
-  -- Explicit pattern mathing and use of 'algDerivs' instead of using
-  -- 'decomp' and 'send' so that we don't introduce the
-  -- RepresentationalEff constraint.
-  effHandler (Exceptional e) = case e of
-    Union Here eff             -> algDerivs (Union membership eff)
-    Union (There Here) eff     -> algDerivs (Union membership eff)
-    Union (There (There pr)) _ -> absurdMember pr
-  {-# INLINEABLE effHandler #-}
-
-type ExceptionalC eff exc = InterpretC ExceptionalH (Exceptional eff exc)
-
-type SafeErrorToErrorC exc = ExceptionalC (Throw exc) exc
-
 -- | Run an @'Exceptional' eff exc@ effect if both @eff@ and @'Catch' exc@
 -- are part of the effect stack.
 --
 -- In order for this to be safe, you must ensure that the @'Catch' exc@
 -- catches all exceptions that arise from the use of @eff@ and that
 -- only uses of @eff@ throws those exceptions.
--- Otherwise, the use of 'catching' is liable to catch
--- exceptions not arising from uses of @eff@, or fail to catch
+-- Otherwise, the use of 'catching' is liable to catch exceptions
+-- not arising from uses of @eff@, or fail to catch
 -- exceptions that do arise from uses of @eff@.
 runExceptional :: forall eff exc m a
                 . ( Member eff (Derivs m)
@@ -334,12 +219,6 @@ safeErrorToError :: forall exc m a
 safeErrorToError = runExceptional
 {-# INLINE safeErrorToError #-}
 
-type SafeErrorC exc = CompositionC
- '[ IntroUnderC (SafeError exc) '[Catch exc, Throw exc]
-  , SafeErrorToErrorC exc
-  , ErrorC exc
-  ]
-
 -- | Run a @'SafeError' e@ effect purely.
 --
 -- @'Derivs' ('SafeErrorC' e m) = 'SafeError' e ': 'Prims' m@
@@ -352,11 +231,11 @@ runSafeError :: forall e m a p
              => SafeErrorC e m a
              -> m a
 runSafeError =
-     fmap (fromRight bombPure)
+    (>>= either (\_ -> bombPure) return)
   .# runError
   .# safeErrorToError
   .# introUnder
-  .# runComposition
+  .# unSafeErrorC
 {-# INLINE runSafeError #-}
 
 bombPure :: a
@@ -374,17 +253,6 @@ bombIO str = errorWithoutStackTrace $
   \then this could be a bug. If so, make an issue about \
   \it on the GitHub repository for in-other-words."
 
-
-type SafeErrorToIOC' s s' exc = CompositionC
-  '[ IntroUnderC (SafeError exc) '[Catch exc, Throw exc]
-   , SafeErrorToErrorC exc
-   , ErrorToIOC' s s' exc
-   ]
-
-type SafeErrorToIOC e m a =
-     forall s s'
-   . ReifiesErrorHandler s s' e (ErrorIOToIOC m)
-  => SafeErrorToIOC' s s' e m a
 
 -- | Runs a @'SafeError' e@ effect by making use of 'IO' exceptions.
 --
@@ -405,24 +273,14 @@ safeErrorToIO :: forall e m a
               => SafeErrorToIOC e m a
               -> m a
 safeErrorToIO m =
-    fmap (fromRight (bombIO "safeErrorToIO"))
+    (>>= either (\_ -> bombIO "safeErrorToIO") return)
   $ errorToIO
   $ safeErrorToError
   $ introUnder
-  $ runComposition
+  $ unSafeErrorToIOC'
   $ m
 {-# INLINE safeErrorToIO #-}
 
-type SafeErrorToErrorIOC' s s' exc = CompositionC
-  '[ IntroUnderC (SafeError exc) '[Catch exc, Throw exc]
-   , SafeErrorToErrorC exc
-   , InterpretErrorC' s s' exc
-   ]
-
-type SafeErrorToErrorIOC e m a =
-     forall s s'
-   . ReifiesErrorHandler s s' e m
-  => SafeErrorToErrorIOC' s s' e m a
 
 -- | Runs a @'SafeError' e@ effect by transforming it into 'ErrorIO'
 -- and @'Embed' IO@.
@@ -438,19 +296,13 @@ safeErrorToErrorIO :: forall e m a
                    => SafeErrorToErrorIOC e m a
                    -> m a
 safeErrorToErrorIO m =
-    fmap (fromRight (bombIO "safeErrorToErrorIO"))
+    (>>= either (\_ -> bombIO "safeErrorToErrorIO") return)
   $ errorToErrorIO
   $ safeErrorToError
   $ introUnder
-  $ runComposition
+  $ unSafeErrorToErrorIOC'
   $ m
 {-# INLINE safeErrorToErrorIO #-}
-
-type SafeErrorToIOSimpleC exc = CompositionC
-  '[ IntroUnderC (SafeError exc) '[Catch exc, Throw exc]
-   , SafeErrorToErrorC exc
-   , ErrorToIOSimpleC exc
-   ]
 
 -- | Runs a @'SafeError' e@ effect by making use of 'IO' exceptions.
 --
@@ -468,18 +320,12 @@ safeErrorToIOSimple :: forall e m a p
                     => SafeErrorToIOSimpleC e m a
                     -> m a
 safeErrorToIOSimple =
-     fmap (fromRight (bombIO "safeErrorToIOSimple"))
+     (>>= either (\_ -> bombIO "safeErrorToIOSimple") return)
   .  errorToIOSimple
   .# safeErrorToError
   .# introUnder
-  .# runComposition
+  .# unSafeErrorToIOSimpleC
 {-# INLINE safeErrorToIOSimple #-}
-
-type SafeErrorToErrorIOSimpleC exc = CompositionC
-  '[ IntroUnderC (SafeError exc) '[Catch exc, Throw exc]
-   , SafeErrorToErrorC exc
-   , InterpretErrorSimpleC exc
-   ]
 
 -- | Runs a @'SafeError' e@ effect by transforming it into 'ErrorIO'
 -- and @'Embed' IO@.
@@ -493,9 +339,9 @@ safeErrorToErrorIOSimple :: forall e m a p
                          => SafeErrorToErrorIOSimpleC e m a
                          -> m a
 safeErrorToErrorIOSimple =
-     fmap (fromRight (bombIO "safeErrorToErrorIOSimple"))
+     (>>= either (\_ -> bombIO "safeErrorToErrorIOSimple") return)
   .  errorToErrorIOSimple
   .# safeErrorToError
   .# introUnder
-  .# runComposition
+  .# unSafeErrorToErrorIOSimpleC
 {-# INLINE safeErrorToErrorIOSimple #-}

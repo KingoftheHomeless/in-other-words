@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 module Control.Effect.ErrorIO
   ( -- * Effects
     ErrorIO(..)
@@ -21,24 +22,16 @@ module Control.Effect.ErrorIO
   , ErrorIOToErrorC
   ) where
 
-import Control.Monad
-
 import Control.Effect
-import Control.Effect.Optional
 import Control.Effect.Type.ErrorIO
 import Control.Effect.Type.Throw
 import Control.Effect.Type.Catch
 
+import Control.Effect.Internal.ErrorIO
+
 import Control.Exception (SomeException)
 import qualified Control.Exception as X
 import qualified Control.Monad.Catch as C
-
--- For coercion purposes
-import Control.Monad.Trans.Identity
-import Control.Effect.Carrier.Internal.Intro
-import Control.Effect.Carrier.Internal.Compose
-import Control.Effect.Carrier.Internal.Interpret
-import Control.Effect.Internal.Utils
 
 throwIO :: (X.Exception e, Eff ErrorIO m) => e -> m a
 throwIO = send . ThrowIO
@@ -46,33 +39,7 @@ throwIO = send . ThrowIO
 catchIO :: (X.Exception e, Eff ErrorIO m) => m a -> (e -> m a) -> m a
 catchIO m h = send (CatchIO m h)
 
-data ErrorIOFinalH
-
 data ErrorIOToErrorH
-
-instance ( C.MonadThrow m
-         , Eff (Optional ((->) SomeException)) m
-         )
-      => Handler ErrorIOFinalH ErrorIO m where
-  effHandler = \case
-    ThrowIO x   -> liftBase $ C.throwM x
-    CatchIO m h -> join $
-      optionally
-        (\x -> case X.fromException x of
-            Just e -> h e
-            Nothing -> liftBase $ C.throwM x
-        )
-        (fmap pure m)
-  {-# INLINEABLE effHandler #-}
-
-instance ( C.MonadCatch m
-         , Carrier m
-         )
-      => PrimHandler ErrorIOFinalH (Optional ((->) SomeException)) m where
-  effPrimHandler = \case
-    Optionally h m -> m `C.catch` (return . h)
-  {-# INLINEABLE effPrimHandler #-}
-
 
 instance ( Eff (Error SomeException) m
          , Carrier m
@@ -86,12 +53,6 @@ instance ( Eff (Error SomeException) m
   {-# INLINEABLE effHandler #-}
 
 
-type ErrorIOToIOC = CompositionC
- '[ ReinterpretC ErrorIOFinalH ErrorIO
-     '[Optional ((->) SomeException)]
-  , InterpretPrimC ErrorIOFinalH (Optional ((->) SomeException))
-  ]
-
 type ErrorIOToErrorC = InterpretC ErrorIOToErrorH ErrorIO
 
 -- | Transform an @'ErrorIO'@ effect into an @'Error' 'SomeException'@
@@ -101,17 +62,3 @@ errorIOToError :: Eff (Error SomeException) m
                -> m a
 errorIOToError = interpretViaHandler
 {-# INLINE errorIOToError #-}
-
--- | Run an @'ErrorIO'@ effect by making use of 'IO' exceptions.
---
--- @'Derivs' (ErrorIOToIOC e m) = 'ErrorIO' ': 'Derivs' m@
---
--- @'Control.Effect.Carrier.Prims' (ErrorIOToIOC e m) = 'Control.Effect.Optional.Optional' ((->) 'SomeException') ': 'Control.Effect.Carrier.Prims' m@
-errorIOToIO :: (Carrier m, C.MonadCatch m)
-            => ErrorIOToIOC m a
-            -> m a
-errorIOToIO =
-     interpretPrimViaHandler
-  .# reinterpretViaHandler
-  .# runComposition
-{-# INLINE errorIOToIO #-}

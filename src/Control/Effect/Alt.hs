@@ -44,7 +44,6 @@ import Control.Effect.Carrier.Internal.Compose
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Effect.Carrier.Internal.Intro
 import Control.Monad.Trans.Except
-import Control.Monad.Trans.Identity
 
 -- | Like InterpretC specialized to interpret 'Alt', but has 'Alternative' and
 -- 'MonadPlus' instances based on the interpreted 'Alt'.
@@ -103,12 +102,33 @@ instance Eff (Error ()) m
     Alt ma mb -> ma `catch` \() -> mb
   {-# INLINEABLE effHandler #-}
 
-type AltMaybeC = CompositionC
- '[ IntroUnderC Alt '[Catch (), Throw ()]
-  , InterpretAltC AltToErrorUnitH
-  , ErrorC ()
-  ]
+newtype AltMaybeC m a = AltMaybeC {
+    unAltMaybeC ::
+      IntroUnderC Alt '[Catch (), Throw ()]
+    ( InterpretAltC AltToErrorUnitH
+    ( ErrorC ()
+    ( m
+    ))) a
+  } deriving ( Functor, Applicative, Monad
+             , MonadFix, MonadFail, MonadIO
+             , MonadThrow, MonadCatch, MonadMask
+             , MonadBase b, MonadBaseControl b
+             )
+    deriving (MonadTrans, MonadTransControl)
+    via CompositionBaseT
+     '[ IntroUnderC Alt '[Catch (), Throw ()]
+      , InterpretAltC AltToErrorUnitH
+      , ErrorC ()
+      ]
 
+deriving newtype instance (Carrier m, Threads (ExceptT ()) (Prims m))
+                       => Alternative (AltMaybeC m)
+
+deriving newtype instance (Carrier m, Threads (ExceptT ()) (Prims m))
+                       => MonadPlus (AltMaybeC m)
+
+deriving newtype instance (Carrier m, Threads (ExceptT ()) (Prims m))
+                       => Carrier (AltMaybeC m)
 
 -- | Run an 'Alt' effect purely, returning @Nothing@ on an unhandled
 -- 'empty'.
@@ -131,7 +151,7 @@ runAltMaybe =
   .# interpretViaHandler
   .# unInterpretAltC
   .# introUnder
-  .# runComposition
+  .# unAltMaybeC
 {-# INLINE runAltMaybe #-}
 
 -- | Transform an 'Alt' effect into 'Error' by describing it in

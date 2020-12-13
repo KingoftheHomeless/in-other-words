@@ -113,6 +113,28 @@ DERIVE_COMP_M(Carrier)
 DERIVE_COMP_T(MonadTrans)
 DERIVE_COMP_T(MonadTransControl)
 
+-- KingoftheHomeless: Why a left fold? Consider:
+--
+--   CompositionBaseT [t, u, v] m a
+-- = ComposeT (ComposeT (ComposeT IdentityT t) u) v m a
+-- ~ ComposeT (ComposeT IdentityT t) u (v m) a
+-- ~ ComposeT IdentityT t (u (v m)) a
+-- ~ IdentityT (t (u (v m))) a
+-- ~ t (u (v m)) a
+--
+-- Where "~" is representational equality.
+--
+-- In constrast, imagine if CompositionBaseT were a right fold, instead. Then we'd get:
+--
+--   CompositionBaseT [t, u, v] m a
+-- = ComposeT t (ComposeT u (ComposeT v IdentityT)) m a
+-- ~ t (ComposeT u (ComposeT v IdentityT) m) a
+--
+-- ... and we can't reduce this further. Why? Because t,u,v may not be reprentational in the monads they're transforming!
+-- This matters! In fact, this library even makes use of monad transformers that aren't representational in the monad,
+-- such as InterpretSimpleC.
+--
+-- So only with a left fold can we guarantee that the unsafeCoerce in runComposition is safe.
 type family CompositionBaseT' acc ts :: (* -> *) -> * -> * where
   CompositionBaseT' acc '[] = acc
   CompositionBaseT' acc (t ': ts) = CompositionBaseT' (ComposeT acc t) ts

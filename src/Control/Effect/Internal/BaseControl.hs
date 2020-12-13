@@ -6,7 +6,6 @@ import Control.Effect.Carrier
 import Control.Effect.Internal.Itself
 import Control.Effect.Carrier.Internal.Interpret
 
-import Control.Monad.Trans.Identity
 import Control.Effect.Type.Internal.BaseControl
 
 import GHC.Exts (Proxy#, proxy#)

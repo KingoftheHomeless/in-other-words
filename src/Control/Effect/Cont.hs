@@ -9,22 +9,17 @@ module Control.Effect.Cont
 
     -- * Interpretations
   , runCont
-  , runContFast
 
   , runShift
-  , runShiftFast
 
   , contToShift
 
     -- * Threading constraints
   , ContThreads
-  , ContFastThreads
 
     -- * Carriers
   , ContC
-  , ContFastC
   , ShiftC
-  , ShiftFastC
   , ContToShiftC
   ) where
 
@@ -35,7 +30,6 @@ import Control.Effect.Internal.Cont
 
 import Control.Effect.Internal.Utils
 
-import qualified Control.Monad.Trans.Cont as C
 import Control.Monad.Trans.Free.Church.Alternate
 
 -- | Call with current continuation. The argument computation is provided
@@ -101,26 +95,6 @@ runCont =
   .# unContC
 {-# INLINE runCont #-}
 
--- | Run a 'Cont' effect.
---
--- Compared to 'runCont', this is quite a bit faster, but is significantly more
--- restrictive in what interpreters are used after it, since there are very
--- few primitive effects that the carrier for 'runContFast' is able to thread.
--- In fact, of all the primitive effects provided by this library, only
--- one satisfies 'ContFastThreads': namely,
--- 'Control.Effect.Type.ReaderPrim.ReaderPrim'.
---
--- @'Derivs' ('ContFastC' r m) = 'Cont' ': 'Derivs' m@
---
--- @'Control.Effect.Primitive.Prims'  ('ContFastC' r m) = 'Control.Effect.Primitive.Prims' m@
-runContFast :: forall a m p
-             . ( Carrier m
-               , Threaders '[ContFastThreads] m p
-               )
-            => ContFastC a m a -> m a
-runContFast = C.evalContT .# unContFastC
-{-# INLINE runContFast #-}
-
 -- | Run a @'Shift' r@ effect if the program returns @r@.
 --
 -- @'Derivs' ('ShiftC' r m) = 'Shift' r ': 'Derivs' m@
@@ -133,27 +107,6 @@ runShift :: forall r m p
          => ShiftC r m r -> m r
 runShift = coerce (runCont @r @m @p)
 {-# INLINE runShift #-}
-
--- | Run a @'Shift' r@ effect if the program returns @r@.
---
--- Compared to 'runShift', this is quite a bit faster, but is significantly more
--- restrictive in what interpreters are used after it, since there are very
--- few primitive effects that the carrier for 'runContFast' is able to thread.
--- In fact, of all the primitive effects provided by this library, only
--- one satisfies 'ContFastThreads': namely,
--- 'Control.Effect.Type.ReaderPrim.ReaderPrim'.
---
--- @'Derivs' ('ShiftFastC' r m) = 'Shift' r ': 'Derivs' m@
---
--- @'Control.Effect.Primitive.Prims'  ('ShiftFastC' r m) = 'Control.Effect.Primitive.Prims' m@
-runShiftFast :: forall r m p
-              . ( Carrier m
-                , Threaders '[ContFastThreads] m p
-                )
-             => ShiftFastC r m r -> m r
-runShiftFast = C.evalContT .# unShiftFastC
-{-# INLINE runShiftFast #-}
-
 data ContToShiftH r
 
 instance Eff (Shift r) m

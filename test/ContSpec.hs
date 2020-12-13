@@ -34,18 +34,3 @@ spec = do
       let (i', j') = run $ runShift $ runReader @Int 1 $ test
       i' `shouldBe` 6
       j' `shouldBe` 7
-
-
-  describe "runShiftFast" $ do
-    it "should have horrible semantics when threading ReaderPrim. \
-       \See Issue #6." $ do
-      let (i, j) = run $ runReader @Int 1 $ runShiftFast $ test
-      i `shouldBe` 6
-      j `shouldNotBe` 35 -- This is what we actually want it to be
-      j `shouldBe` 7
-      let (i', j') = run $ runReader @Int 1 $ runShiftFast $ test1
-      i' `shouldBe` 3
-      j' `shouldBe` 35
-      let (i'', j'') = run $ runShiftFast $ runReader @Int 1 $ test
-      i'' `shouldBe` 6
-      j'' `shouldBe` 7

@@ -15,7 +15,6 @@ import Control.Effect.Internal.Derive
 import Control.Effect.Internal.Union
 import Control.Effect.Internal.Utils
 import Control.Effect.Internal.KnownList
-import Control.Monad.Trans.Identity
 
 newtype IntroC (top :: [Effect])
                (new :: [Effect])

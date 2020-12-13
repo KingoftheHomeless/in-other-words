@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 {-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Internal.Intercept where
 
@@ -17,6 +18,9 @@ import Control.Effect.Type.Unravel
 import Control.Effect.Type.ListenPrim
 
 import Control.Effect.Internal.Utils
+
+-- For coercion purposes
+import Control.Effect.Carrier.Internal.Compose
 
 
 -- | An effect for intercepting actions of a first-order effect.
@@ -66,14 +70,36 @@ interceptB h m = join $ send $
     (fmap pure m)
 {-# INLINE interceptB #-}
 
-type InterceptContC e = CompositionC
- '[ IntroC '[InterceptCont e, Intercept e]
-            '[Unravel (InterceptB e)]
-  , InterpretC InterceptH (InterceptCont e)
-  , InterpretC InterceptH (Intercept e)
-  , InterpretPrimC InterceptH (Unravel (InterceptB e))
-  , SteppedC e
-  ]
+
+newtype InterceptContC e m a = InterceptContC {
+    unInterceptContC ::
+        IntroC '[InterceptCont e, Intercept e]
+               '[Unravel (InterceptB e)]
+      ( InterpretC InterceptH (InterceptCont e)
+      ( InterpretC InterceptH (Intercept e)
+      ( InterpretPrimC InterceptH (Unravel (InterceptB e))
+      ( SteppedC e
+      ( m
+      ))))) a
+  } deriving ( Functor, Applicative, Monad
+             , MonadFail, MonadIO
+             , MonadThrow, MonadCatch
+             , MonadBase b
+             )
+    deriving MonadTrans
+    via CompositionBaseT
+     '[ IntroC '[InterceptCont e, Intercept e]
+                '[Unravel (InterceptB e)]
+      , InterpretC InterceptH (InterceptCont e)
+      , InterpretC InterceptH (Intercept e)
+      , InterpretPrimC InterceptH (Unravel (InterceptB e))
+      , SteppedC e
+      ]
+
+deriving instance ( FirstOrder e, Carrier m, Member e (Derivs m)
+                  , Threaders '[SteppedThreads] m p
+                  )
+               => Carrier (InterceptContC e m)
 
 data InterceptH
 
@@ -117,11 +143,11 @@ instance ( FirstOrder e
                      (Unravel (InterceptB e))
                      (SteppedC e m) where
   effPrimHandler (Unravel (InterceptB cataEff) cataM main) =
-    return $
-      unFreeT (unSteppedC main)
-        (\mx c -> cataM $ fmap c $ lift mx)
-        (\(FOEff e) c -> cataEff c e)
-        id
+    return $ cataM
+           $ lift
+           $ unFreeT (unSteppedC main)
+                     (\(FOEff e) c -> return $ cataEff (cataM . lift . c) e)
+                     return
   {-# INLINEABLE effPrimHandler #-}
 
 
@@ -154,7 +180,6 @@ runInterceptCont :: forall e m a p
                  -> m a
 runInterceptCont m =
        (\m' -> unFreeT m'
-                       (>>=)
                        (\(FOEff e) c -> send @e (coerce e) >>= c)
                        return
        )
@@ -163,7 +188,7 @@ runInterceptCont m =
      $ interpretViaHandler
      $ interpretViaHandler
      $ introUnderMany
-     $ runComposition
+     $ unInterceptContC
      $ m
 {-# INLINE runInterceptCont #-}
 
@@ -174,16 +199,15 @@ runStateStepped :: forall s m a p
                 => s
                 -> SteppedC (State s) m a
                 -> m (s, a)
-runStateStepped s0 m =
-  unFreeT
-    (unSteppedC m)
-    (\mx c s -> mx >>= (`c` s))
-    (\(FOEff e) c s -> case e of
-        Get -> c s s
-        Put s' -> c () s'
-    )
-    (\a s -> return (s, a))
-    s0
+runStateStepped s0 main = do
+  foldFreeT' (\m s -> m >>= \f -> f s)
+             (\a s -> return (s, a))
+             (\c (FOEff e) s -> case e of
+                 Get -> c s s
+                 Put s' -> c () s'
+             )
+             (unSteppedC main)
+             s0
 {-# INLINE runStateStepped #-}
 
 -- | A variant of 'runTell' with a 'SteppedThreads' threading constraint
@@ -194,13 +218,12 @@ runTellListStepped :: forall o m a p
                       )
                    => SteppedC (Tell o) m a
                    -> m ([o], a)
-runTellListStepped m =
-  unFreeT
-    (unSteppedC m)
-    (\mx c s -> mx >>= (`c` s))
-    (\(FOEff (Tell o)) c s -> c () (o : s))
-    (\a s -> return (reverse s, a))
-    []
+runTellListStepped main =
+  foldFreeT' (\m acc -> m >>= \f -> f acc)
+             (\a acc -> return (reverse acc, a))
+             (\c (FOEff (Tell o)) acc -> c () $! (o:acc))
+             (unSteppedC main)
+             []
 {-# INLINE runTellListStepped #-}
 
 -- | A variant of 'runTell' with a 'SteppedThreads' threading constraint
@@ -212,13 +235,12 @@ runTellStepped :: forall w m a p
                   )
                => SteppedC (Tell w) m a
                -> m (w, a)
-runTellStepped m =
-  unFreeT
-    (unSteppedC m)
-    (\mx c s -> mx >>= (`c` s))
-    (\(FOEff (Tell o)) c s -> c () $! s <> o)
-    (\a s -> return (s, a))
-    mempty
+runTellStepped main =
+  foldFreeT' (\m acc -> m >>= \f -> f acc)
+             (\a acc -> return (acc, a))
+             (\c (FOEff (Tell o)) acc -> c () $! acc <> o)
+             (unSteppedC main)
+             mempty
 {-# INLINE runTellStepped #-}
 
 data ListenSteppedH
@@ -232,19 +254,37 @@ instance (Monoid w, Carrier m, Threaders '[SteppedThreads] m p)
       => PrimHandler ListenSteppedH (ListenPrim w) (SteppedC (Tell w) m) where
   effPrimHandler = \case
     ListenPrimTell w -> tell w
-    ListenPrimListen m -> SteppedC $ FreeT $ \bind handler c ->
-      unFreeT (unSteppedC m)
-        (\mx c' s -> mx `bind` (`c'` s))
-        (\e@(FOEff (Tell o)) c' s -> handler e $ \a -> c' a $! s <> o)
-        (\a s -> c (s, a))
-        mempty
+    ListenPrimListen main -> SteppedC $ FreeT $ \handler c -> do
+      foldFreeT' (\mx acc -> mx >>= \f -> f acc)
+                 (\a acc -> c (acc, a))
+                 (\cn e@(FOEff (Tell o)) acc -> do
+                     handler e $ \t -> cn t $! acc <> o
+                 )
+                 (unSteppedC main)
+                 mempty
   {-# INLINEABLE effPrimHandler #-}
 
-type ListenSteppedC w = CompositionC
- '[ ReinterpretC ListenSteppedH (Listen w) '[ListenPrim w]
-  , InterpretPrimC ListenSteppedH (ListenPrim w)
-  , SteppedC (Tell w)
-  ]
+newtype ListenSteppedC w m a = ListenSteppedC {
+    unListenSteppedC ::
+        ReinterpretC ListenSteppedH (Listen w) '[ListenPrim w]
+      ( InterpretPrimC ListenSteppedH (ListenPrim w)
+      ( SteppedC (Tell w)
+      ( m
+      ))) a
+  } deriving ( Functor, Applicative, Monad
+             , MonadFail, MonadIO
+             , MonadThrow, MonadCatch
+             , MonadBase b
+             )
+    deriving MonadTrans
+    via CompositionBaseT
+     '[ ReinterpretC ListenSteppedH (Listen w) '[ListenPrim w]
+      , InterpretPrimC ListenSteppedH (ListenPrim w)
+      , SteppedC (Tell w)
+      ]
+
+deriving instance (Monoid w, Carrier m, Threaders '[SteppedThreads] m p)
+               => Carrier (ListenSteppedC w m)
 
 -- | A variant of 'runListen' with a 'SteppedThreads' threading constraint
 -- instead of a 'StateThreads' threading constraint.
@@ -263,7 +303,7 @@ runListenStepped m =
     runTellStepped
   $ interpretPrimViaHandler
   $ reinterpretViaHandler
-  $ runComposition
+  $ unListenSteppedC
   $ m
 {-# INLINE runListenStepped #-}
 

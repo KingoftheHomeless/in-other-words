@@ -13,6 +13,7 @@ module Control.Effect.Bracket
 
     -- * Interpretations
   , bracketToIO
+  , bracketToIOUnsafe
 
   , runBracketLocally
 
@@ -26,6 +27,7 @@ module Control.Effect.Bracket
 
     -- * Carriers
   , BracketToIOC
+  , BracketToIOUnsafeC
   , BracketLocallyC
   , IgnoreBracketC
   ) where
@@ -93,7 +95,9 @@ data BracketToIOH
 instance (Carrier m, MonadMask m)
       => PrimHandler BracketToIOH Bracket m where
   effPrimHandler (GeneralBracket acquire release use) =
-    C.generalBracket acquire release use
+    C.generalBracket acquire
+                     (\a ec -> C.uninterruptibleMask_ (release a ec))
+                     use
   {-# INLINEABLE effPrimHandler #-}
 
 type BracketToIOC = InterpretPrimC BracketToIOH Bracket
@@ -103,6 +107,11 @@ type BracketToIOC = InterpretPrimC BracketToIOH Bracket
 -- any abortive computation of any effect, as well
 -- as any IO exceptions and asynchronous exceptions.
 --
+-- Any 'generalBracket' will have its cleanup action be executed
+-- /uninterruptibly masked/.
+-- This means that the cleanup action /cannot/, under any circumstance,
+-- be interrupted by asynchronous exceptions.
+--
 -- @'Derivs' ('BracketToIOC' m) = 'Bracket' ': 'Derivs' m@
 --
 -- @'Prims'  ('BracketToIOC' m) = 'Bracket' ': 'Prims' m@
@@ -111,6 +120,36 @@ bracketToIO :: (Carrier m, MonadMask m)
             -> m a
 bracketToIO = interpretPrimViaHandler
 {-# INLINE bracketToIO #-}
+
+data BracketToIOUnsafeH
+
+instance (Carrier m, MonadMask m)
+      => PrimHandler BracketToIOUnsafeH Bracket m where
+  effPrimHandler (GeneralBracket acquire release use) =
+    C.generalBracket acquire release use
+  {-# INLINEABLE effPrimHandler #-}
+
+type BracketToIOUnsafeC = InterpretPrimC BracketToIOUnsafeH Bracket
+
+-- | Run a 'Bracket' by effect that protects against
+-- any abortive computation of any effect, as well
+-- as any IO exceptions and asynchronous exceptions.
+--
+-- Any 'generalBracket' will have its cleanup action
+-- be executed /interruptibly masked/.
+-- This means that the cleanup action /can/ be interrupted by
+-- asynchronous exceptions if the cleanup action executes
+-- interruptible (blocking) operations,
+-- such as 'Control.Concurrent.MVar.putMVar'.
+--
+-- @'Derivs' ('BracketToIOUnsafeC' m) = 'Bracket' ': 'Derivs' m@
+--
+-- @'Prims'  ('BracketToIOUnsafeC' m) = 'Bracket' ': 'Prims' m@
+bracketToIOUnsafe :: (Carrier m, MonadMask m)
+                  => BracketToIOUnsafeC m a
+                  -> m a
+bracketToIOUnsafe = interpretPrimViaHandler
+{-# INLINE bracketToIOUnsafe #-}
 
 data BracketLocallyH
 
