@@ -162,7 +162,7 @@ challengePure testInputs =
     -- one by one.
     -- Throw an exception if we go through all the inputs without completing the
     -- challenge.
-  $ runAskActionSimple (do
+  $ runAskActionSimple @String (do
       get >>= \case
         []     -> throw "Inputs exhausted!"
         (x:xs) -> put xs >> return x
