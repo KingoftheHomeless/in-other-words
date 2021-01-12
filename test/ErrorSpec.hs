@@ -5,6 +5,7 @@ import Test.Hspec
 import Control.Effect
 import Control.Effect.Error
 import Control.Effect.Conc
+import Control.Exception (throwIO, Exception)
 
 
 test1 :: IO (Either () (Either () ()))
@@ -25,6 +26,18 @@ test4 = runM $ errorToIO $ concToIO $ do
   a <- async $ throw ()
   wait a `catch` \() -> return ()
 
+data MyExec = MyExec deriving (Show, Eq)
+
+instance Exception MyExec
+
+test5 :: IO (Either MyExec ())
+test5 = runM $ errorToIOAsExc @MyExec $
+  fmap Right (embed (throwIO MyExec)) `catch` (pure . Left)
+
+test6 :: IO (Either MyExec ())
+test6 = runM $ errorToIOAsExc @MyExec $
+  fmap Right (throw MyExec) `catch` (pure . Left)
+
 spec :: Spec
 spec = do
   describe "errorToIO" $ do
@@ -41,3 +54,12 @@ spec = do
 
       res4 <- test4
       res4 `shouldBe` Right ()
+
+  describe "errorToIO'" $ do
+    it "should catch any exceptions of this specific type that\
+       \was thrown by other layers of the effect stack" $ do
+      res5 <- test5
+      res5 `shouldBe` Left MyExec
+
+      res6 <- test6
+      res6 `shouldBe` Left MyExec
