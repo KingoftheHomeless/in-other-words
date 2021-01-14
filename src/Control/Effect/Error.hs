@@ -21,8 +21,12 @@ module Control.Effect.Error
 
   , errorToIO
 
+  , errorToIOAsExc
+
     -- * Other interpreters
   , errorToErrorIO
+
+  , errorToErrorIOAsExc
 
   , throwToThrow
   , catchToError
