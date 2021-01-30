@@ -29,7 +29,7 @@ newtype Shift r :: Effect where
   Shift :: ((a -> m r) -> m r) -> Shift r m a
 
 data ContBase mr r a where
-  Exit    :: r -> ContBase mr r a
+  Exit    :: r -> ContBase mr r void
   Attempt :: mr -> ContBase mr r r
   GetCont :: ContBase mr r (Either (a -> mr) a)
 

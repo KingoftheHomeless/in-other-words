@@ -236,16 +236,21 @@ errorToErrorIO main = do
 
 data ErrorToErrorIOAsExcH
 
-instance (Eff ErrorIO m, Exception e) => Handler ErrorToErrorIOAsExcH (Throw e) m where
+instance (Eff ErrorIO m, Exception e)
+      => Handler ErrorToErrorIOAsExcH (Throw e) m where
   effHandler (Throw e) = throwIO e
 
-instance (Eff ErrorIO m, Exception e) => Handler ErrorToErrorIOAsExcH (Catch e) m where
+
+instance (Eff ErrorIO m, Exception e)
+      => Handler ErrorToErrorIOAsExcH (Catch e) m where
   effHandler (Catch m f) =  m `catchIO` f
 
 newtype ErrorToErrorIOAsExcC e m a = ErrorToErrorIOAsExcC  {
     unErrorToErrorIOAsExcC ::
-      InterpretC ErrorToErrorIOAsExcH (Catch e)
-        (InterpretC ErrorToErrorIOAsExcH (Throw e) m) a
+        InterpretC ErrorToErrorIOAsExcH (Catch e)
+      ( InterpretC ErrorToErrorIOAsExcH (Throw e)
+      ( m
+      )) a
   } deriving ( Functor, Applicative, Monad
              , Alternative, MonadPlus
              , MonadFix, MonadFail, MonadIO
@@ -258,23 +263,29 @@ newtype ErrorToErrorIOAsExcC e m a = ErrorToErrorIOAsExcC  {
       , InterpretC ErrorToErrorIOAsExcH (Throw e)
       ]
 
-deriving instance (Eff ErrorIO m, Exception e) => Carrier (ErrorToErrorIOAsExcC e m)
+deriving instance (Eff ErrorIO m, Exception e)
+               => Carrier (ErrorToErrorIOAsExcC e m)
 
 -- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
--- by transforming them into 'ErrorIO'
+-- by transforming them into 'ErrorIO'.
+--
+-- Unlike 'errorToErrorIO', values of @e@ are thrown and caught directly as 'IO'
+-- exceptions. This means that, for example, 'catchIO' is able to catch
+-- exceptions of @e@ that you throw with 'throw', -and 'catch' is able to catch
+-- exceptions of type @e@ that are thrown with 'throwIO', or by 'embed'ded 'IO'
+-- actions.
 --
 -- @'Derivs' ('ErrorToErrorIOAsExcC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
 -- @'Control.Effect.Primitive.Prims' ('ErrorToErrorIOAsExcC' e m) = 'Control.Effect.Primitive.Prims' m@
---
--- Unlike 'errorToErrorIO', values of @e@ are thrown and caught directly as 'IO' exceptions.
--- This means that, for example, 'catchIO' is able to catch exceptions of @e@ that you throw with 'throw',
--- and 'catch' is able to catch exceptions of type @e@ that are thrown with 'throwIO', or by 'embed'ded 'IO' actions.
-errorToErrorIOAsExc ::
-  (Exception e, Eff ErrorIO m) =>
-  ErrorToErrorIOAsExcC e m a ->
-  m a
-errorToErrorIOAsExc = interpretViaHandler .# interpretViaHandler .# unErrorToErrorIOAsExcC
+errorToErrorIOAsExc
+  :: (Exception e, Eff ErrorIO m)
+  => ErrorToErrorIOAsExcC e m a
+  -> m a
+errorToErrorIOAsExc =
+     interpretViaHandler
+  .# interpretViaHandler
+  .# unErrorToErrorIOAsExcC
 {-# INLINE errorToErrorIOAsExc #-}
 
 -- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
@@ -306,9 +317,11 @@ errorToIO m =
 
 newtype ErrorToIOAsExcC e m a = ErrorToIOAsExcC {
     unErrorToIOAsExcC ::
-      IntroC '[Catch e, Throw e] '[ErrorIO]
-        (ErrorToErrorIOAsExcC e
-          (ErrorIOToIOC m)) a
+        IntroC '[Catch e, Throw e] '[ErrorIO]
+      ( ErrorToErrorIOAsExcC e
+      ( ErrorIOToIOC
+        m
+      )) a
   } deriving ( Functor, Applicative, Monad
              , Alternative, MonadPlus
              , MonadFix, MonadFail, MonadIO
@@ -322,27 +335,30 @@ newtype ErrorToIOAsExcC e m a = ErrorToIOAsExcC {
       , ErrorIOToIOC
       ]
 
-deriving instance (Eff (Embed IO) m, Exception e, C.MonadCatch m) => Carrier (ErrorToIOAsExcC e m)
+deriving instance (Exception e, C.MonadCatch m, Carrier m)
+               => Carrier (ErrorToIOAsExcC e m)
 
 -- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
--- by treating @e@ as an 'IO' exception.
+-- by treating values of @e@ as an 'IO' exceptions.
+--
+-- Unlike 'errorToIO', values of @e@ are thrown and caught directly as 'IO'
+-- exceptions. This means that, for example, 'catchIO' is able to catch
+-- exceptions of @e@ that you throw with 'throw', and 'catch' is able to catch
+-- exceptions of type @e@ that are thrown with 'throwIO', or by 'embed'ded 'IO'
+-- actions.
 --
 -- @'Derivs' ('ErrorToIOAsExcC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
 -- @'Control.Effect.Primitive.Prims' ('ErrorToIOAsExcC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Control.Effect.Primitive.Prims' m@
---
--- Unlike 'errorToIO', values of @e@ are thrown and caught directly as 'IO' exceptions.
--- This means that, for example, 'catchIO' is able to catch exceptions of @e@ that you throw with 'throw',
--- and 'catch' is able to catch exceptions of type @e@ that are thrown with 'throwIO', or by 'embed'ded 'IO' actions.
-errorToIOAsExc ::
-  ( Exception e
-  , C.MonadCatch m
-  , Eff (Embed IO) m
-  ) =>
-  ErrorToIOAsExcC e m a ->
-  m a 
+errorToIOAsExc
+  :: ( Exception e
+     , C.MonadCatch m
+     , Carrier m
+     )
+  => ErrorToIOAsExcC e m a
+  -> m a
 errorToIOAsExc =
-  errorIOToIO
+     errorIOToIO
   .# errorToErrorIOAsExc
   .# introUnderMany
   .# unErrorToIOAsExcC

@@ -145,6 +145,8 @@ type BracketToIOUnsafeC = InterpretPrimC BracketToIOUnsafeH Bracket
 -- @'Derivs' ('BracketToIOUnsafeC' m) = 'Bracket' ': 'Derivs' m@
 --
 -- @'Prims'  ('BracketToIOUnsafeC' m) = 'Bracket' ': 'Prims' m@
+--
+-- @since 0.2.0.0
 bracketToIOUnsafe :: (Carrier m, MonadMask m)
                   => BracketToIOUnsafeC m a
                   -> m a

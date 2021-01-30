@@ -124,13 +124,13 @@ DERIVE_COMP_T(MonadTransControl)
 --
 -- Where "~" is representational equality.
 --
--- In constrast, imagine if CompositionBaseT were a right fold, instead. Then we'd get:
+-- In contrast, imagine if CompositionBaseT were a right fold, instead. Then we'd get:
 --
 --   CompositionBaseT [t, u, v] m a
 -- = ComposeT t (ComposeT u (ComposeT v IdentityT)) m a
 -- ~ t (ComposeT u (ComposeT v IdentityT) m) a
 --
--- ... and we can't reduce this further. Why? Because t,u,v may not be reprentational in the monads they're transforming!
+-- ... and we can't reduce this further. Why? Because t,u,v may not be representational in the monads they're transforming!
 -- This matters! In fact, this library even makes use of monad transformers that aren't representational in the monad,
 -- such as InterpretSimpleC.
 --

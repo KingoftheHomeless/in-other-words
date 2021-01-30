@@ -86,6 +86,8 @@ newtype EmbedC m a = EmbedC { unEmbedC :: m a }
 -- @'Derivs' ('EmbedC' m) = 'Embed' m ': 'Derivs' m@
 --
 -- @'Prims'  ('EmbedC' m) = 'Prims' m@
+--
+-- @since 0.1.1.0
 runEmbed :: Carrier m => EmbedC m a -> m a
 runEmbed = unEmbedC
 {-# INLINE runEmbed #-}
@@ -98,7 +100,7 @@ instance Carrier m => Carrier (EmbedC m) where
   {-# INLINEABLE algPrims #-}
 
   reformulate n alg = powerAlg (reformulate (n .# EmbedC) alg) (n .# EmbedC .# unEmbed)
-  {-# INLINE reformulate #-}
+  {-# INLINEABLE reformulate #-}
 
   algDerivs = powerAlg (coerce (algDerivs @m)) (EmbedC .# unEmbed)
   {-# INLINEABLE algDerivs #-}

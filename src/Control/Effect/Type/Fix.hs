@@ -24,7 +24,7 @@ import Control.Effect.Internal.Union
 
 -- | An effect corresponding to the 'MonadFix' type class.
 --
--- 'Control.Effect.Effly.Effly''s 'MonadFix' instance is based
+-- 'Control.Effect.Effly''s 'MonadFix' instance is based
 -- on this effect; by having access to 'Fix', you're able to
 -- use recursive do notation inside of effect handlers.
 --

@@ -164,7 +164,7 @@ runAltMaybe =
 -- For example:
 --
 -- @
--- 'altToError' ('throw' exc) 'empty' = 'throw' exc
+-- 'altToError' exc 'empty' = 'throw' exc
 -- @
 --
 -- 'altToError' has a higher-rank type, as it makes use of 'InterpretAltReifiedC'.

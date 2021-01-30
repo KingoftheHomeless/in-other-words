@@ -100,14 +100,14 @@ type ConcToUnliftIOC = UnwrapC Conc
 -- past and future -- are eventually reduced to operations on 'IO'.
 --
 -- Due to its very restrictive primitive effect and carrier constraint,
--- `concToIO` can't be used together with most pure interpreters.
+-- 'concToIO' can't be used together with most pure interpreters.
 -- For example, instead of 'Control.Effect.Error.runError', you must use
 -- 'Control.Effect.Error.errorToIO'.
 --
 -- This poses a problem if you want to use some effect that /doesn't have/
 -- an interpreter compatible with 'concToIO' -- like
 -- 'Control.Effect.NonDet.NonDet'.
--- In that case, you might sitll be able to use both effects in the same program
+-- In that case, you might still be able to use both effects in the same program
 -- by applying
 -- [Split Interpretation](https://github.com/KingoftheHomeless/in-other-words/wiki/Advanced-Topics#split-interpretation)
 -- to seperate their uses.

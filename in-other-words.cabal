@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5bbd7d2c80fcf724a6ba6e44eae1bd7cd6d72cbb624240c3cdf72967507b92ef
+-- hash: 23f13ec99ba16dbc5f6be206d3f5064643c9a539264cb3a24cf786e9bd3a7933
 
 name:           in-other-words
-version:        0.1.1.0
+version:        0.2.0.0
 synopsis:       A higher-order effect system where the sky's the limit
 description:    A low-boilerplate effect system with easy higher-order effects and very high expressive power
 category:       Control
@@ -20,7 +20,7 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
+    CHANGELOG.md
 
 library
   exposed-modules:

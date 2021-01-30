@@ -4,7 +4,7 @@ module Control.Effect.Type.Alt where
 -- | An effect corresponding to the
 -- 'Control.Applicative.Alternative' type class.
 --
--- 'Control.Effect.Effly.Effly''s 'Control.Applicative.Alternative' instance
+-- 'Control.Effect.Effly''s 'Control.Applicative.Alternative' instance
 -- is based on this effect; by having access to 'Alt', you're able to use
 -- 'Control.Applicative.<|>' and 'Control.Applicative.empty' inside of effect
 -- handlers.

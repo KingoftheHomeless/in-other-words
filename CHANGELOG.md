@@ -1,11 +1,11 @@
 # Changelog for `in-other-words`
 
-## Unreleased
+## 0.2.0.0 (2021-01-30)
 ### Breaking Changes
 * `-Fast` interpretations of every continuation-related effect have been removed due
-  lack of usefulness.
+  to lack of usefulness.
 * The `ThreadsEff (ContT r) (ReaderPrim i)` instance has been removed due to unlawfulness.
-* `Control.Monad.Trans.List.Church` and `Control.Monad.Free.Church.Alternate` have
+* `Control.Monad.Trans.List.Church` and `Control.Monad.Trans.Free.Church.Alternate` have
     received a minor revamp. Notably, the representations of `ListT` and `FreeT` have been
     changed to become lawful monad transformers.
 * `bracketToIO` now executes the cleanup action of any `generalBracket`
@@ -27,6 +27,7 @@
 * Fixed an issue where `FailC` lacked a `MonadFail` instance.
 
 ## 0.1.1.0 (2020-10-30)
+### Non-breaking Changes
 * Added `runTellAction` and `ignoreTell` interpreters.
 * Added `runEmbed` interpreter
 * Fixed an issue with `runShift` where HO-actions applied on a `shift` could affect the continuation provided to the argument of `shift`.

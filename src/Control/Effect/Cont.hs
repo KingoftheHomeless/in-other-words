@@ -107,6 +107,8 @@ runShift :: forall r m p
          => ShiftC r m r -> m r
 runShift = coerce (runCont @r @m @p)
 {-# INLINE runShift #-}
+
+
 data ContToShiftH r
 
 instance Eff (Shift r) m

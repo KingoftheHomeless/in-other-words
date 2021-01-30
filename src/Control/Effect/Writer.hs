@@ -1202,6 +1202,8 @@ runWriterTVar tvar =
 --
 -- If performance is secondary, consider using the slower 'runTellActionSimple',
 -- which doesn't have a higher-rank type.
+--
+-- @since 0.1.1.0
 runTellAction :: forall o m a
                . Carrier m
               => (o -> m ())
@@ -1235,6 +1237,8 @@ instance Carrier m
 type IgnoreTellC o = InterpretC IgnoreTellH (Tell o)
 
 -- | Run a 'Tell' effect by ignoring it, doing no output at all.
+--
+-- @since 0.1.1.0
 ignoreTell :: forall o m a
             . Carrier m
            => IgnoreTellC o m a -> m a
