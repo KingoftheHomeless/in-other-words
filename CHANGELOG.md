@@ -25,12 +25,15 @@
 * `Control.Efffect.Carrier` now exports the constructors of `IdentityT`, thus
      addressing an issue where users wouldn't be allowed to derive via `IdentityT`.
 * Fixed an issue where `FailC` lacked a `MonadFail` instance.
+* Added `errorToIOAsExc` and `errorToErrorIOAsExc` (thanks @poscat0x04!)
+
 
 ## 0.1.1.0 (2020-10-30)
 ### Non-breaking Changes
 * Added `runTellAction` and `ignoreTell` interpreters.
 * Added `runEmbed` interpreter
 * Fixed an issue with `runShift` where HO-actions applied on a `shift` could affect the continuation provided to the argument of `shift`.
+
 
 ## 0.1.0.0 (2020-10-10)
 Initial release.

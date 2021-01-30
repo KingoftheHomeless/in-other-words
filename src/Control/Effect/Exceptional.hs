@@ -86,6 +86,14 @@ import Control.Effect.Carrier.Internal.Intro
 --   'catching' \@SomeEffect uncaringProgram (\\(exc :: SomeEffectExc) -> handlerForSomeEffectExc exc)
 -- @
 --
+-- It's possible the @'Catch' exc@ effect @'catching'@ gives you access to
+-- would override another, identical @'Catch' exc@ effect that you want to use
+-- inside the region. To avoid this, use 'catching' together with 'intro1':
+--
+-- @'catching' \@SomeEffect ('intro1' uncaringProgram) ...@
+--
+-- If you do this, then @'catching'@ will only introduce @eff@ to be used
+-- in @uncaringProgram@, and not @'Catch' exc@.
 catching :: forall eff exc m a
           . Eff (Exceptional eff exc) m
          => ExceptionallyC eff exc m a
@@ -107,9 +115,9 @@ catchSafe :: forall exc m a
 catchSafe = catching
 {-# INLINE catchSafe #-}
 
--- | Gain access to @eff@ within a region. If any use of @eff@
--- within that region 'throw's an unhandled exception @e :: exc@,
--- then this returns @Left e@.
+-- | Gain access to @eff@ and @'Catch' exc@ within a region.
+-- If any use of @eff@ within that region 'throw's an unhandled exception
+-- @e :: exc@, then this returns @Left e@.
 trying :: forall eff exc m a
         . Eff (Exceptional eff exc) m
        => ExceptionallyC eff exc m a
@@ -126,8 +134,8 @@ trySafe :: forall exc m a
 trySafe = trying
 {-# INLINE trySafe #-}
 
--- | Gain access to @eff@ within a region, rethrowing
--- any exception @e :: exc@ that may occur from the use of
+-- | Gain access to @eff@ and @'Catch' exc@ within a region,
+-- rethrowing any exception @e :: exc@ that may occur from the use of
 -- @eff@ within that region.
 throwing :: forall eff exc m a
           . Effs [Exceptional eff exc, Throw exc] m

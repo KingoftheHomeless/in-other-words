@@ -271,13 +271,15 @@ deriving instance (Eff ErrorIO m, Exception e)
 --
 -- Unlike 'errorToErrorIO', values of @e@ are thrown and caught directly as 'IO'
 -- exceptions. This means that, for example, 'catchIO' is able to catch
--- exceptions of @e@ that you throw with 'throw', -and 'catch' is able to catch
--- exceptions of type @e@ that are thrown with 'throwIO', or by 'embed'ded 'IO'
--- actions.
+-- exceptions of @e@ that you throw with 'Control.Effect.Error.throw',
+-- and 'Control.Effect.Error.catch' is able to catch exceptions of type @e@ that
+-- are thrown with 'throwIO', or by 'embed'ded 'IO' actions.
 --
 -- @'Derivs' ('ErrorToErrorIOAsExcC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
 -- @'Control.Effect.Primitive.Prims' ('ErrorToErrorIOAsExcC' e m) = 'Control.Effect.Primitive.Prims' m@
+--
+-- @since 0.2.0.0
 errorToErrorIOAsExc
   :: (Exception e, Eff ErrorIO m)
   => ErrorToErrorIOAsExcC e m a
@@ -339,17 +341,20 @@ deriving instance (Exception e, C.MonadCatch m, Carrier m)
                => Carrier (ErrorToIOAsExcC e m)
 
 -- | Runs connected 'Throw' and 'Catch' effects -- i.e. 'Error' --
--- by treating values of @e@ as an 'IO' exceptions.
+-- by treating values of @e@ as 'IO' exceptions.
 --
 -- Unlike 'errorToIO', values of @e@ are thrown and caught directly as 'IO'
 -- exceptions. This means that, for example, 'catchIO' is able to catch
--- exceptions of @e@ that you throw with 'throw', and 'catch' is able to catch
+-- exceptions of @e@ that you throw with 'Control.Effect.Error.throw',
+-- and 'Control.Effect.Error.catch' is able to catch
 -- exceptions of type @e@ that are thrown with 'throwIO', or by 'embed'ded 'IO'
 -- actions.
 --
 -- @'Derivs' ('ErrorToIOAsExcC' e m) = 'Catch' e ': 'Throw' e ': 'Derivs' m@
 --
 -- @'Control.Effect.Primitive.Prims' ('ErrorToIOAsExcC' e m) = 'Control.Effect.Optional.Optional' ((->) 'Control.Exception.SomeException') ': 'Control.Effect.Primitive.Prims' m@
+--
+-- @since 0.2.0.0
 errorToIOAsExc
   :: ( Exception e
      , C.MonadCatch m

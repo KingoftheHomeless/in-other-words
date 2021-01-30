@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 23f13ec99ba16dbc5f6be206d3f5064643c9a539264cb3a24cf786e9bd3a7933
+-- hash: 94e61819ea6e924b216d8fa7fe755ab80100afa6a3ebf73d3da409a983481ce9
 
 name:           in-other-words
 version:        0.2.0.0
@@ -110,7 +110,7 @@ library
   hs-source-dirs:
       src
   default-extensions: BangPatterns ConstraintKinds DataKinds DerivingStrategies EmptyCase FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving LambdaCase PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies UndecidableInstances
-  ghc-options: -Wall
+  ghc-options: -Wall -haddock
   build-depends:
       async >=2.2 && <2.3
     , base >=4.7 && <5
