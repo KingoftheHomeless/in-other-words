@@ -4,6 +4,7 @@
 ### Non-breaking Changes
 * Added `hoistSteps`
 * Added `threadBaseControlViaUnlift`
+* GHC 9.0.1 compatiblity (thanks @berberman!)
 
 ## 0.2.0.0 (2021-01-30)
 ### Breaking Changes

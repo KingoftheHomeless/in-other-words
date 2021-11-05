@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 94e61819ea6e924b216d8fa7fe755ab80100afa6a3ebf73d3da409a983481ce9
+-- hash: 63c053f88fc44761f95d97eedcd3be8a6130b0202778be539bab361549d74523
 
 name:           in-other-words
-version:        0.2.0.0
+version:        0.2.1.0
 synopsis:       A higher-order effect system where the sky's the limit
 description:    A low-boilerplate effect system with easy higher-order effects and very high expressive power
 category:       Control
@@ -109,15 +109,35 @@ library
       Paths_in_other_words
   hs-source-dirs:
       src
-  default-extensions: BangPatterns ConstraintKinds DataKinds DerivingStrategies EmptyCase FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving LambdaCase PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies UndecidableInstances
+  default-extensions:
+      BangPatterns
+      ConstraintKinds
+      DataKinds
+      DerivingStrategies
+      EmptyCase
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TypeApplications
+      TypeOperators
+      TypeFamilies
+      UndecidableInstances
   ghc-options: -Wall -haddock
   build-depends:
-      async >=2.2 && <2.3
+      async ==2.2.*
     , base >=4.7 && <5
-    , exceptions >=0.10 && <0.11
-    , monad-control >=1.0 && <1.1
-    , mtl >=2.2 && <2.3
-    , stm >=2.5 && <2.6
+    , exceptions ==0.10.*
+    , monad-control ==1.0.*
+    , mtl ==2.2.*
+    , stm ==2.5.*
     , transformers >=0.5.6 && <0.6
     , transformers-base >=0.4.5 && <0.5
   default-language: Haskell2010
@@ -134,19 +154,39 @@ test-suite in-other-words-test
       Paths_in_other_words
   hs-source-dirs:
       test
-  default-extensions: BangPatterns ConstraintKinds DataKinds DerivingStrategies EmptyCase FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving LambdaCase PolyKinds QuantifiedConstraints RankNTypes ScopedTypeVariables StandaloneDeriving TypeApplications TypeOperators TypeFamilies UndecidableInstances
+  default-extensions:
+      BangPatterns
+      ConstraintKinds
+      DataKinds
+      DerivingStrategies
+      EmptyCase
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      PolyKinds
+      QuantifiedConstraints
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TypeApplications
+      TypeOperators
+      TypeFamilies
+      UndecidableInstances
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
   build-tool-depends:
       hspec-discover:hspec-discover >=2.0
   build-depends:
-      async >=2.2 && <2.3
+      async ==2.2.*
     , base >=4.7 && <5
-    , exceptions >=0.10 && <0.11
+    , exceptions ==0.10.*
     , hspec >=2.6.0 && <3
     , in-other-words
-    , monad-control >=1.0 && <1.1
-    , mtl >=2.2 && <2.3
-    , stm >=2.5 && <2.6
+    , monad-control ==1.0.*
+    , mtl ==2.2.*
+    , stm ==2.5.*
     , transformers >=0.5.6 && <0.6
     , transformers-base >=0.4.5 && <0.5
   default-language: Haskell2010
