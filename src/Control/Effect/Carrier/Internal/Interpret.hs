@@ -45,7 +45,7 @@ data CarrierReform m
 instance (Carrier m, r ~ Derivs m, p ~ Prims m)
       => Reifies (CarrierReform m)
                  (ReifiedReformulation r p m) where
-  reflect = ReifiedReformulation reformulate
+  reflect = ReifiedReformulation $ \n alg -> reformulate n alg
   {-# INLINE reflect #-}
 
 
