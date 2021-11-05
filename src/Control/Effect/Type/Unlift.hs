@@ -1,3 +1,4 @@
+{-# LANGUAGE MagicHash #-}
 {-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Type.Unlift
  ( -- * Effects
@@ -5,6 +6,7 @@ module Control.Effect.Type.Unlift
 
    -- Threading utilities
  , threadUnliftViaClass
+ , threadBaseControlViaUnlift
 
    -- 'MonadBaseControlPure' and 'MonadTransControlPure'
  , MonadBaseControlPure
@@ -14,7 +16,13 @@ module Control.Effect.Type.Unlift
  , unliftT
  ) where
 
+import GHC.Exts (Proxy#, proxy#)
+import Data.Coerce
 import Control.Effect.Internal.Union
+import Control.Effect.Internal.Utils
+import Control.Effect.Type.Internal.BaseControl
+import Control.Monad.Base
+import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Reader
 
@@ -88,8 +96,9 @@ unliftT main = liftWith $ \lower ->
 newtype Unlift b :: Effect where
   Unlift :: forall b m a. ((forall x. m x -> b x) -> b a) -> Unlift b m a
 
--- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Unlift' b) t@ instance,
--- given that @t@ is a 'MonadTransControl' where @'StT' t a ~ a@ holds for all @a@.
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' ('Unlift' b) t@
+-- instance, given that @t@ is a 'MonadTransControl' where @'StT' t a ~ a@ holds
+-- for all @a@.
 threadUnliftViaClass :: forall b t m a
                       . (MonadTransControlPure t, Monad m)
                      => (forall x. Unlift b m x -> m x)
@@ -97,6 +106,47 @@ threadUnliftViaClass :: forall b t m a
 threadUnliftViaClass alg (Unlift main) = unliftT $ \lowerT ->
   alg $ Unlift $ \lowerM -> main (lowerM . lowerT)
 {-# INLINE threadUnliftViaClass #-}
+
+-- | A valid definition of 'threadEff' for a @'ThreadsEff' ('BaseControl' b) t@
+-- instance, given that @t@ threads @'Unlift' z@ for any 'Monad' @z@.
+threadBaseControlViaUnlift :: forall b t m a
+                            . ( Monad m
+                              , MonadTrans t
+                              , forall z. Monad z => Monad (t z)
+                              ,    forall z
+                                 . Coercible z m
+                                => Coercible (t z) (t m)
+                              , forall z. Monad z => ThreadsEff t (Unlift z)
+                              )
+                           => (forall x. BaseControl b m x -> m x)
+                           -> BaseControl b (t m) a -> t m a
+threadBaseControlViaUnlift alg (GainBaseControl main) =
+    lift $ alg $ GainBaseControl $ \(_ :: Proxy# z) ->
+      main (proxy# :: Proxy# (Unlifted t z))
+{-# INLINE threadBaseControlViaUnlift #-}
+
+newtype Unlifted t m a = Unlifted { unUnlifted :: t m a }
+  deriving (Functor, Applicative, Monad)
+  deriving MonadTrans
+
+instance (MonadBase b m, MonadTrans t, Monad (t m))
+      => MonadBase b (Unlifted t m) where
+  liftBase = lift . liftBase
+  {-# INLINE liftBase #-}
+
+instance (MonadBaseControl b m, MonadTrans t, ThreadsEff t (Unlift m),
+          Monad (t m))
+      => MonadBaseControl b (Unlifted t m) where
+  type StM (Unlifted t m) a = StM m a
+
+  liftBaseWith main =
+    Unlifted $ threadEff (\(Unlift main') -> main' id) $ Unlift $ \lower ->
+      liftBaseWith $ \run_it -> main $ run_it . lower .# unUnlifted
+  {-# INLINE liftBaseWith #-}
+
+  restoreM = Unlifted #. lift . restoreM
+  {-# INLINE restoreM #-}
+
 
 instance ThreadsEff (ReaderT i) (Unlift b) where
   threadEff alg (Unlift main) = ReaderT $ \s ->

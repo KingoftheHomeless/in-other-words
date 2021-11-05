@@ -17,6 +17,7 @@ module Control.Effect.BaseControl
 
    -- * Threading utilities
   , threadBaseControlViaClass
+  , threadBaseControlViaUnlift
 
     -- * Combinators for 'Algebra's
     -- Intended to be used for custom 'Carrier' instances when
@@ -40,6 +41,7 @@ import Control.Effect.Carrier
 import Control.Effect.Type.Internal.BaseControl
 import Control.Effect.Internal.BaseControl
 import Control.Effect.Internal.Itself
+import Control.Effect.Type.Unlift
 
 import Control.Effect.Internal.Utils
 

@@ -95,6 +95,10 @@ liftSteps :: (MonadTrans t, Monad m) => Steps e m a -> Steps e (t m) a
 liftSteps (Done a) = Done a
 liftSteps (More e c) = More e (lift . fmap liftSteps . c)
 
+hoistSteps :: Functor n => (forall x. m x -> n x) -> Steps e m a -> Steps e n a
+hoistSteps _ (Done a) = Done a
+hoistSteps n (More e c) = More e (fmap (hoistSteps n) . n . c)
+
 -- | Execute all the steps of a computation.
 unsteps :: forall e m a
          . ( FirstOrder e

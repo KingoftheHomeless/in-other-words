@@ -1,5 +1,10 @@
 # Changelog for `in-other-words`
 
+## 0.2.1.0 (2021-11-05)
+### Non-breaking Changes
+* Added `hoistSteps`
+* Added `threadBaseControlViaUnlift`
+
 ## 0.2.0.0 (2021-01-30)
 ### Breaking Changes
 * `-Fast` interpretations of every continuation-related effect have been removed due

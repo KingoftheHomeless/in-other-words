@@ -76,7 +76,7 @@ import Control.Effect.Internal.Utils
 
 
 throw :: Eff (Throw e) m => e -> m a
-throw = send . Throw
+throw = send .# Throw
 {-# INLINE throw #-}
 
 catch :: Eff (Catch e) m => m a -> (e -> m a) -> m a

@@ -103,7 +103,7 @@ instance (Carrier m, MonadMask m)
 type BracketToIOC = InterpretPrimC BracketToIOH Bracket
 
 
--- | Run a 'Bracket' by effect that protects against
+-- | Run a 'Bracket' effect that protects against
 -- any abortive computation of any effect, as well
 -- as any IO exceptions and asynchronous exceptions.
 --
@@ -131,7 +131,7 @@ instance (Carrier m, MonadMask m)
 
 type BracketToIOUnsafeC = InterpretPrimC BracketToIOUnsafeH Bracket
 
--- | Run a 'Bracket' by effect that protects against
+-- | Run a 'Bracket' effect that protects against
 -- any abortive computation of any effect, as well
 -- as any IO exceptions and asynchronous exceptions.
 --

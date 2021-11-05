@@ -280,14 +280,16 @@ data ViaReifiedH (s :: *)
 instance ( RepresentationalEff e
          , Carrier m
          , Reifies s (ReifiedHandler e m)
-         ) => Handler (ViaReifiedH s) e m where
+         )
+        => Handler (ViaReifiedH s) e m where
   effHandler = getReifiedHandler (reflect @s)
   {-# INLINE effHandler #-}
 
 instance ( RepresentationalEff e
          , Carrier m
          , Reifies s (ReifiedPrimHandler e m)
-         ) => PrimHandler (ViaReifiedH s) e m where
+         )
+      => PrimHandler (ViaReifiedH s) e m where
   effPrimHandler = getReifiedPrimHandler (reflect @s)
   {-# INLINE effPrimHandler #-}
 

@@ -4,6 +4,7 @@ module Control.Effect.Stepped
   , steps
   , unsteps
   , liftSteps
+  , hoistSteps
 
   , FirstOrder
 
