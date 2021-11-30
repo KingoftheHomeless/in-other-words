@@ -138,6 +138,7 @@ type Effs es m = (EffMembers es (Derivs m), Carrier m)
 -- checkString str = send (CheckString str)
 -- @
 --
+-- In most cases you probably want to use 'makeEff' instead.
 send :: (Member e (Derivs m), Carrier m) => e m a -> m a
 send = algDerivs . inj
 {-# INLINE send #-}

@@ -110,11 +110,7 @@ data Teletype m a where
   ReadTTY  :: Teletype m String
   WriteTTY :: String -> Teletype m ()
 
-readTTY :: Eff Teletype m => m String
-readTTY = send ReadTTY
-
-writeTTY :: Eff Teletype m => String -> m ()
-writeTTY str = send (WriteTTY str)
+makeEff ''Teletype
 
 challenge :: Eff Teletype m => m ()
 challenge = do
@@ -192,10 +188,9 @@ import Control.Effect.Trace
 import GHC.Clock (getMonotonicTime)
 
 data ProfileTiming m a where
-  ProfileTiming :: String -> m a -> ProfileTiming m a
+  Time :: String -> m a -> ProfileTiming m a
 
-time :: Eff ProfileTiming m => String -> m a -> m a
-time label m = send (ProfileTiming label m)
+makeEff ''ProfileTiming
 
 -- Interpret a ProfileTiming effect in terms of IO operations,
 -- 'Trace', and 'Bracket'.
