@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.5.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63c053f88fc44761f95d97eedcd3be8a6130b0202778be539bab361549d74523
+-- hash: 2471b1ba7a609291d71df339ea44768cd3da8fddc1feab8316b73c19f6dffad7
 
 name:           in-other-words
 version:        0.2.1.0
@@ -66,6 +66,8 @@ library
       Control.Effect.Internal.Regional
       Control.Effect.Internal.Select
       Control.Effect.Internal.State
+      Control.Effect.Internal.TH.Common
+      Control.Effect.Internal.TH.Effect
       Control.Effect.Internal.Union
       Control.Effect.Internal.Unlift
       Control.Effect.Internal.Utils
@@ -134,10 +136,14 @@ library
   build-depends:
       async ==2.2.*
     , base >=4.7 && <5
+    , containers ==0.6.*
     , exceptions ==0.10.*
     , monad-control ==1.0.*
     , mtl ==2.2.*
     , stm ==2.5.*
+    , syb ==0.7.*
+    , template-haskell >=2.15 && <2.19
+    , th-abstraction >=0.3 && <0.5
     , transformers >=0.5.6 && <0.6
     , transformers-base >=0.4.5 && <0.5
   default-language: Haskell2010
@@ -181,12 +187,16 @@ test-suite in-other-words-test
   build-depends:
       async ==2.2.*
     , base >=4.7 && <5
+    , containers ==0.6.*
     , exceptions ==0.10.*
     , hspec >=2.6.0 && <3
     , in-other-words
     , monad-control ==1.0.*
     , mtl ==2.2.*
     , stm ==2.5.*
+    , syb ==0.7.*
+    , template-haskell >=2.15 && <2.19
+    , th-abstraction >=0.3 && <0.5
     , transformers >=0.5.6 && <0.6
     , transformers-base >=0.4.5 && <0.5
   default-language: Haskell2010
