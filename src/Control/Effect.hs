@@ -60,6 +60,10 @@ module Control.Effect
   , Effly(..)
   , subsume
 
+   -- * Template Haskell
+  , makeEff
+  , makeEff_
+
     -- * Reexports from other modules
   , MonadBase(..)
   , MonadTrans(..)
@@ -95,6 +99,7 @@ import Control.Effect.Carrier.Internal.Intro
 import Control.Effect.Carrier.Internal.Interpret
 import Control.Monad.Base
 import Control.Monad.Trans
+import Control.Effect.Internal.TH.Effect (makeEff, makeEff_)
 
 -- | A useful type synonym for the type of 'interpret' provided a handler
 --
