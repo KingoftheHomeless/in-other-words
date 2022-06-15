@@ -27,7 +27,7 @@ import Control.Effect.Internal.Utils
 newtype WrapC (e :: Effect)
               (e' :: Effect)
               m
-              (a :: *) = WrapC { unWrapC :: m a }
+              (a :: Type) = WrapC { unWrapC :: m a }
   deriving ( Functor, Applicative, Monad
            , Alternative, MonadPlus
            , MonadFix, MonadFail, MonadIO
@@ -89,7 +89,7 @@ wrapWith _ = wrap
 
 newtype UnwrapC (e :: Effect)
                 m
-                (a :: *) = UnwrapC { unUnwrapC :: m a }
+                (a :: Type) = UnwrapC { unUnwrapC :: m a }
   deriving ( Functor, Applicative, Monad
            , Alternative, MonadPlus
            , MonadFix, MonadFail, MonadIO
@@ -119,7 +119,7 @@ instance ( Carrier m
 
 newtype UnwrapTopC (e :: Effect)
                 m
-                (a :: *) = UnwrapTopC { unUnwrapTopC :: m a }
+                (a :: Type) = UnwrapTopC { unUnwrapTopC :: m a }
   deriving ( Functor, Applicative, Monad
            , Alternative, MonadPlus
            , MonadFix, MonadFail, MonadIO

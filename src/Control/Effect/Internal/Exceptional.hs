@@ -71,7 +71,7 @@ We use a standalone carrier to hide the RepresentationalEff constraint,
 which is just noise in this case.
 -}
 
-newtype ExceptionallyC (eff :: Effect) (exc :: *) m a = ExceptionallyC {
+newtype ExceptionallyC (eff :: Effect) (exc :: Type) m a = ExceptionallyC {
     unExceptionallyC :: m a
   }
   deriving ( Functor, Applicative, Monad

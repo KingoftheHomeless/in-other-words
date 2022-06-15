@@ -3,7 +3,8 @@
 [![build GHC 8.6](https://github.com/KingoftheHomeless/in-other-words/workflows/build%20GHC%208.6/badge.svg)](https://github.com/KingoftheHomeless/in-other-words/actions?query=workflow%3A%22build+GHC+8.6%22)
 [![build GHC 8.8](https://github.com/KingoftheHomeless/in-other-words/workflows/build%20GHC%208.8/badge.svg)](https://github.com/KingoftheHomeless/in-other-words/actions?query=workflow%3A%22build+GHC+8.8%22)
 [![build GHC 8.10](https://github.com/KingoftheHomeless/in-other-words/workflows/build%20GHC%208.10/badge.svg)](https://github.com/KingoftheHomeless/in-other-words/actions?query=workflow%3A%22build+GHC+8.10%22)
-[![build GHC 9.0.1](https://github.com/KingoftheHomeless/in-other-words/workflows/build%20GHC%209.0.1/badge.svg)](https://github.com/KingoftheHomeless/in-other-words/actions?query=workflow%3A%22build+GHC+9.0.1%22)
+[![build GHC 9.0.2](https://github.com/KingoftheHomeless/in-other-words/workflows/build%20GHC%209.0.2/badge.svg)](https://github.com/KingoftheHomeless/in-other-words/actions?query=workflow%3A%22build+GHC+9.0.2%22)
+[![build GHC 9.2.3](https://github.com/KingoftheHomeless/in-other-words/workflows/build%20GHC%209.2.3/badge.svg)](https://github.com/KingoftheHomeless/in-other-words/actions?query=workflow%3A%22build+GHC+9.2.3%22)
 
 - [Overview][]
 - [Features][]

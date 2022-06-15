@@ -14,7 +14,7 @@ import Control.Effect.Type.Regional
 import Control.Effect.Type.Optional
 import Control.Monad.Catch hiding (handle)
 
-newtype FreeT f (m :: * -> *) a = FreeT {
+newtype FreeT f (m :: Type -> Type) a = FreeT {
     unFreeT :: forall r
              . (forall x. f x -> (x -> m r) -> m r)
             -> (a -> m r) -> m r

@@ -142,7 +142,7 @@ send :: (Member e (Derivs m), Carrier m) => e m a -> m a
 send = algDerivs . inj
 {-# INLINE send #-}
 
-deriving via (m :: * -> *) instance Carrier m => Carrier (IdentityT m)
+deriving via (m :: Type -> Type) instance Carrier m => Carrier (IdentityT m)
 
 -- | A constraint that @'Prims' m@ satisfies all the constraints in the list
 -- @cs@.

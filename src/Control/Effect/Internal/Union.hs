@@ -21,7 +21,7 @@ import Control.Effect.Internal.Utils
 --   Output :: o -> InOut i o m ()
 -- @
 --
-type Effect = (* -> *) -> * -> *
+type Effect = (Type -> Type) -> Type -> Type
 
 -- | An effect for collecting multiple effects into one effect.
 --

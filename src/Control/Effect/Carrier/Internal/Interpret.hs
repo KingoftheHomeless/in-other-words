@@ -32,11 +32,11 @@ newtype ReifiedReformulation r p m = ReifiedReformulation {
 
 newtype
     HandlerC
-      (sHandler :: *)
-      (sReform :: *)
+      (sHandler :: Type)
+      (sReform :: Type)
       (r :: [Effect])
       (p :: [Effect])
-      (m :: * -> *) z (a :: *)
+      (m :: Type -> Type) z (a :: Type)
   = HandlerC { unHandlerC :: z a }
   deriving (Functor, Applicative, Monad) via z
 
@@ -94,7 +94,7 @@ instance ( Reifies sHandler (HandlerCState p m z)
       HandlerC (n m)
   {-# INLINE liftBase #-}
 
-newtype InterpretPrimC (s :: *) (e :: Effect) (m :: * -> *) a =
+newtype InterpretPrimC (s :: Type) (e :: Effect) (m :: Type -> Type) a =
   InterpretPrimC {
       unInterpretPrimC :: m a
     }
@@ -125,7 +125,7 @@ newtype InterpretPrimC (s :: *) (e :: Effect) (m :: * -> *) a =
 class ( RepresentationalEff e
       , Carrier m
       )
-   => Handler (h :: *) e m where
+   => Handler (h :: Type) e m where
   effHandler :: EffHandler e m
 
 
@@ -204,7 +204,7 @@ type EffPrimHandler e m = forall x. e m x -> m x
 -- See 'EffPrimHandler'.
 class ( RepresentationalEff e
       , Carrier m
-      ) => PrimHandler (h :: *) e m where
+      ) => PrimHandler (h :: Type) e m where
   effPrimHandler :: EffPrimHandler e m
 
 instance ( Carrier m
@@ -229,7 +229,7 @@ instance ( Carrier m
     InterpretC $ unItself $ runEffly $ effHandler @h @e (coerce e)
   {-# INLINEABLE algDerivs #-}
 
-newtype InterpretC (h :: *) (e :: Effect) (m :: * -> *) a = InterpretC {
+newtype InterpretC (h :: Type) (e :: Effect) (m :: Type -> Type) a = InterpretC {
       unInterpretC :: m a
     }
   deriving ( Functor, Applicative, Monad
@@ -275,7 +275,7 @@ instance PrimHandler h e m => Carrier (InterpretPrimC h e m) where
       (coerceHandler (effPrimHandler @h @e @m))
   {-# INLINEABLE algDerivs #-}
 
-data ViaReifiedH (s :: *)
+data ViaReifiedH (s :: Type)
 
 instance ( RepresentationalEff e
          , Carrier m
@@ -303,7 +303,7 @@ type InterpretPrimReifiedC e m a =
    . ReifiesPrimHandler s e m
   => InterpretPrimC (ViaReifiedH s) e m a
 
-newtype InterpretSimpleC (e :: Effect) (m :: * -> *) a = InterpretSimpleC {
+newtype InterpretSimpleC (e :: Effect) (m :: Type -> Type) a = InterpretSimpleC {
       unInterpretSimpleC :: ReaderT (ReifiedHandler e m) m a
     }
   deriving ( Functor, Applicative, Monad
@@ -337,7 +337,7 @@ instance ( Threads (ReaderT (ReifiedHandler e m)) (Prims m)
         handler (coerce e)
   {-# INLINEABLE reformulate #-}
 
-newtype InterpretPrimSimpleC (e :: Effect) (m :: * -> *) a =
+newtype InterpretPrimSimpleC (e :: Effect) (m :: Type -> Type) a =
     InterpretPrimSimpleC {
       unInterpretPrimSimpleC :: ReaderT (ReifiedPrimHandler e m) m a
     }

@@ -12,6 +12,7 @@ import Control.Effect.Carrier.Internal.Interpret
 
 import Control.Effect.Type.Optional
 
+import Data.Kind (Type)
 
 newtype HoistOptionCall b a = HoistOptionCall (forall x. (a -> x) -> b x -> b x)
   deriving (Functor)
@@ -19,7 +20,7 @@ newtype HoistOptionCall b a = HoistOptionCall (forall x. (a -> x) -> b x -> b x)
 -- | A useful specialization of 'Optional' where the functor is
 -- @'HoistOptionCall' b@. From this, you can derive
 -- 'Control.Effect.Optional.hoistOption'.
-type HoistOption (b :: * -> *) = Optional (HoistOptionCall b)
+type HoistOption (b :: Type -> Type) = Optional (HoistOptionCall b)
 
 data HoistOptionH
 

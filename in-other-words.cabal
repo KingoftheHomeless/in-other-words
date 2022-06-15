@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63c053f88fc44761f95d97eedcd3be8a6130b0202778be539bab361549d74523
+-- hash: cb8b99f7f5a97bd2225716b40c6c61d182c84c8f61b047561eff935b7da2e482
 
 name:           in-other-words
-version:        0.2.1.0
+version:        0.2.1.1
 synopsis:       A higher-order effect system where the sky's the limit
 description:    A low-boilerplate effect system with easy higher-order effects and very high expressive power
 category:       Control
 homepage:       https://github.com/KingoftheHomeless/in-other-words#readme
 author:         Love Waern
-maintainer:     combiner8761@gmail.com
+maintainer:     love.waern@gmail.com
 copyright:      BSD3
 license:        BSD3
 license-file:   LICENSE

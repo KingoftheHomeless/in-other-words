@@ -1,6 +1,8 @@
 {-# OPTIONS_HADDOCK not-home #-}
 module Control.Effect.Type.Fail where
 
+import Data.Kind (Type)
+
 -- | An effect corresponding to the 'Control.Monad.Fail.MonadFail' type class.
 --
 -- 'Control.Effect.Effly''s 'Control.Monad.Fail.MonadFail' instance is based
@@ -12,5 +14,5 @@ module Control.Effect.Type.Fail where
 -- how it interprets 'Fail'. This means you can use
 -- an 'Fail' interpreter to locally gain access to an 'Control.Monad.Fail.MonadFail'
 -- instance inside of application code.
-newtype Fail (m :: * -> *) (a :: *) where
+newtype Fail (m :: Type -> Type) (a :: Type) where
   Fail :: String -> Fail m a

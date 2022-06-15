@@ -2,11 +2,12 @@
 module Control.Effect.Debug where
 
 import Control.Effect.Carrier
+import Data.Kind (Type)
 import GHC.TypeLits
 
 -- Type family needed to delay the TypeError until when 'debugEffects'
 -- is used.
-type family DebugEffects (m :: * -> *) :: k where
+type family DebugEffects (m :: Type -> Type) :: k where
   DebugEffects m = TypeError (     'Text "Control.Effect.Debug.debugEffects"
                              ':$$: 'Text "Derivs: " ':<>: 'ShowType (Derivs m)
                              ':$$: 'Text "Prims:  " ':<>: 'ShowType (Prims m)

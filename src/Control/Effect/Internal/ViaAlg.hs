@@ -1,11 +1,12 @@
 module Control.Effect.Internal.ViaAlg where
 
-import Data.Coerce
 import Control.Effect.Internal.Union
+import Data.Coerce
+import Data.Kind (Type)
 
 type RepresentationalT = RepresentationalEff
 
-newtype ViaAlg (s :: *) (e :: Effect) m a = ViaAlg {
+newtype ViaAlg (s :: Type) (e :: Effect) m a = ViaAlg {
     unViaAlg :: m a
   }
   deriving (Functor, Applicative, Monad)

@@ -8,6 +8,7 @@ module Control.Effect.Internal.Reflection
   ) where
 
 import Unsafe.Coerce
+import Data.Kind (Type)
 import Data.Proxy
 
 newtype Tagged s a = Tagged { getTagged :: a }
@@ -24,10 +25,10 @@ data Skolem
 newtype Magic a r = Magic (Reifies Skolem a => Tagged Skolem r)
 
 
-reifyTagged :: forall a r. a -> (forall (s :: *). Reifies s a => Tagged s r) -> r
+reifyTagged :: forall a r. a -> (forall (s :: Type). Reifies s a => Tagged s r) -> r
 reifyTagged a k = unsafeCoerce (Magic k :: Magic a r) a
 {-# INLINE reifyTagged #-}
 
-reify :: forall a r. a -> (forall (s :: *) pr. (pr ~ Proxy, Reifies s a) => pr s -> r) -> r
+reify :: forall a r. a -> (forall (s :: Type) pr. (pr ~ Proxy, Reifies s a) => pr s -> r) -> r
 reify a k = reifyTagged a (unproxy k)
 {-# INLINE reify #-}

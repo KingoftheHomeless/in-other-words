@@ -16,7 +16,7 @@ import Control.Monad.Trans.Control
 import Unsafe.Coerce
 
 -- | Composition of monad/carrier transformers.
-newtype ComposeT t (u :: (* -> *) -> * -> *) m a = ComposeT {
+newtype ComposeT t (u :: (Type -> Type) -> Type -> Type) m a = ComposeT {
     getComposeT :: t (u m) a
   }
   deriving ( Functor, Applicative, Monad
@@ -135,13 +135,13 @@ DERIVE_COMP_T(MonadTransControl)
 -- such as InterpretSimpleC.
 --
 -- So only with a left fold can we guarantee that the unsafeCoerce in runComposition is safe.
-type family CompositionBaseT' acc ts :: (* -> *) -> * -> * where
+type family CompositionBaseT' acc ts :: (Type -> Type) -> Type -> Type where
   CompositionBaseT' acc '[] = acc
   CompositionBaseT' acc (t ': ts) = CompositionBaseT' (ComposeT acc t) ts
 
 type CompositionBaseT ts = CompositionBaseT' IdentityT ts
 
-type family CompositionBaseM (ts :: [(* -> *) -> * -> *]) (m :: * -> *) where
+type family CompositionBaseM (ts :: [(Type -> Type) -> Type -> Type]) (m :: Type -> Type) where
   CompositionBaseM '[] m = m
   CompositionBaseM (t ': ts) m = t (CompositionBaseM ts m)
 

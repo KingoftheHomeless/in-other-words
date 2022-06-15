@@ -7,6 +7,8 @@ import Control.Monad.Trans
 import qualified Control.Monad.Catch as C
 import qualified Control.Monad.Fail as Fail
 
+import Data.Kind (Type)
+
 import Control.Effect.Carrier
 
 import Control.Effect.Type.ListenPrim
@@ -16,7 +18,7 @@ import Control.Effect.Type.Optional
 import Control.Effect.Type.Unravel
 import Control.Effect.Type.ReaderPrim
 
-newtype ListT (m :: * -> *) a = ListT {
+newtype ListT (m :: Type -> Type) a = ListT {
   unListT :: forall r
            . (a -> m r -> m r)
           -> m r -- lose

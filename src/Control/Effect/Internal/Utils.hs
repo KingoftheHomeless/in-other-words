@@ -1,6 +1,10 @@
-module Control.Effect.Internal.Utils where
+module Control.Effect.Internal.Utils
+  ( Type,
+    module Control.Effect.Internal.Utils
+  ) where
 
 import Data.Coerce
+import Data.Kind (Type)
 
 infixr 9 #.
 (#.) :: Coercible c b => (b -> c) -> (a -> b) -> (a -> c)

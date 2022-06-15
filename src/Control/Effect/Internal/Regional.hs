@@ -11,12 +11,14 @@ import Control.Effect.Carrier.Internal.Interpret
 
 import Control.Monad.Trans.Control
 
+import Data.Kind (Type)
+
 newtype HoistCall b = HoistCall (forall x. b x -> b x)
 
 -- | A useful specialization of 'Regional' where the
 -- constant type is @'HoistCall' b@. From this,
 -- you can derive 'Control.Effect.Regional.hoist'.
-type Hoist (b :: * -> *) = Regional (HoistCall b)
+type Hoist (b :: Type -> Type) = Regional (HoistCall b)
 
 data HoistH
 

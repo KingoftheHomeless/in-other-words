@@ -18,7 +18,7 @@ import Control.Effect.Internal.KnownList
 
 newtype IntroC (top :: [Effect])
                (new :: [Effect])
-               (m :: * -> *)
+               (m :: Type -> Type)
                a
     = IntroC { runIntroC :: m a }
   deriving ( Functor, Applicative, Monad
