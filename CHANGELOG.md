@@ -1,5 +1,9 @@
 # Changelog for `in-other-words`
 
+## 0.2.1.1 (2022-06-15)
+### Non-breaking Changes
+* GHC 9.2.3 compatiblity
+
 ## 0.2.1.0 (2021-11-05)
 ### Non-breaking Changes
 * Added `hoistSteps`
